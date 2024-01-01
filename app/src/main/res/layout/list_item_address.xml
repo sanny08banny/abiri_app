@@ -21,5 +21,14 @@
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceSmall"
         android:textColor="#808080" />
+<!--    <ImageButton-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:background="@android:color/transparent"-->
+<!--        android:src="@drawable/baseline_arrow_forward_24"-->
+<!--        app:tint="?attr/imageButtonStyle"-->
+<!--        android:layout_marginHorizontal="12dp"-->
+<!--        android:layout_marginVertical="16dp"-->
+<!--        android:id="@+id/search_icon"/>-->
 
 </LinearLayout>

@@ -6,7 +6,7 @@
 
     <fragment
         android:id="@+id/mainFragment"
-        android:name="com.example.carapp.fragments.MainFragment"
+        android:name="com.sanny_tech.carapp.fragments.MainFragment"
         android:label="Main Fragment">
         <action
             android:id="@+id/action_mainFragment_to_searchFragment"
@@ -17,16 +17,16 @@
     </fragment>
     <fragment
         android:id="@+id/driverMainFragment"
-        android:name="com.example.carapp.fragments.DriverMainFragment"
+        android:name="com.sanny_tech.carapp.fragments.DriverMainFragment"
         android:label="Driver Fragment" />
     <fragment
         android:id="@+id/searchFragment"
-        android:name="com.example.carapp.fragments.SearchFragment"
+        android:name="com.sanny_tech.carapp.fragments.SearchFragment"
         android:label="Search Fragment" />
 
     <fragment
         android:id="@+id/extrasFragment"
-        android:name="com.example.carapp.fragments.ExtrasFragment"
+        android:name="com.sanny_tech.carapp.fragments.ExtrasFragment"
         android:label="Extras Fragment" />
 
 </navigation>

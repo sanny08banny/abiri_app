@@ -4,6 +4,9 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".fragments.DriverMainFragment">
 
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -24,7 +27,7 @@
                 android:layout_marginTop="32dp"
                 android:fontFamily="@font/jost_semibold"
                 android:text="Set Availability Status"
-                android:textColor="@color/black"
+                android:textColor="@color/white"
                 android:textSize="24sp" />
 
             <TextView
@@ -35,7 +38,7 @@
                 android:layout_centerHorizontal="true"
                 android:layout_marginTop="16dp"
                 android:text="Currently: Available"
-                android:textColor="@color/black"
+                android:textColor="@color/white"
                 android:textSize="18sp" />
 
             <LinearLayout
@@ -45,22 +48,38 @@
                 android:layout_centerHorizontal="true"
                 android:orientation="horizontal">
 
-                <ImageView
+                <ImageButton
                     android:layout_width="100dp"
                     android:layout_height="100dp"
-                    android:layout_margin="32dp"
+                    android:layout_margin="16dp"
+                    android:layout_weight="0"
+                    app:tint="?attr/imageButtonStyle"
                     android:src="@drawable/baseline_directions_car_24" />
                 <LinearLayout
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_weight="1"
                     android:layout_gravity="center_vertical"
                     android:orientation="vertical">
-                    <LinearLayout
+                    <RelativeLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_horizontal"
                         android:layout_marginVertical="8dp"
                         android:layout_marginHorizontal="8dp">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:layout_marginTop="8dp"
+                            android:textSize="10sp"
+                            android:id="@+id/seat_count_text"
+                            android:textColor="@color/white"
+                            android:text="Seat count"/>
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_below="@id/seat_count_text"
+                        android:layout_height="wrap_content">
 
                         <ImageButton
                             android:id="@+id/minus_seats"
@@ -74,7 +93,7 @@
                             android:id="@+id/seat_count"
                             android:layout_width="100dp"
                             android:layout_height="24dp"
-                            android:textColor="?attr/backgroundColor"
+                            android:textColor="@color/white"
                             android:gravity="center"
                             android:text="1" />
 
@@ -86,6 +105,7 @@
                             app:tint="?attr/imageButtonStyle"
                             android:src="@drawable/baseline_add_24" />
                     </LinearLayout>
+                    </RelativeLayout>
                 <com.google.android.material.switchmaterial.SwitchMaterial
                     android:id="@+id/statusSwitch"
                     android:layout_width="wrap_content"
@@ -95,7 +115,43 @@
             </LinearLayout>
 
         </RelativeLayout>
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/view_active_request_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginBottom="8dp"
+            android:visibility="gone"
+            android:backgroundTint="@color/blue"
+            app:cornerRadius="8dp" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+            <TextView
+                android:id="@+id/dialogTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="My Payment Methods"
+                android:textAppearance="@style/TextAppearance.AppCompat.Large"
+                android:layout_marginStart="16dp"/>
 
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/paymentMethodsList"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"/>
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/fab_payment"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom|end"
+                android:layout_margin="16dp"
+                app:srcCompat="@drawable/baseline_add_24"
+                style="@style/MyFloatingActionButtonStyle" />
+
+        </LinearLayout>
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -173,7 +229,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Oops!! an error occurred"
+                    android:text="Nothing to show"
                     android:textColor="@color/blue"
                     android:textSize="18sp"
                     android:textStyle="bold" />
@@ -191,4 +247,5 @@
             </LinearLayout>
         </RelativeLayout>
     </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
 </layout>

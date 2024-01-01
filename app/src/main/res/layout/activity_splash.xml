@@ -1,9 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".activities.SplashActivity">
+    xmlns:tools="http://schemas.android.com/tools">
+    <!-- activity_splash.xml -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/splash_background"
+        tools:context=".activities.SplashActivity">
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+        <!-- Title at the top -->
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="50dp"
+            android:text="Welcome to ABIRI AFRICA"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"
+            android:textSize="24sp" />
+
+        <!-- Some nice text somewhere else -->
+        <com.sanny_tech.carapp.utils.TypewriterEffect
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:text="Your ride, your way"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"
+            android:id="@+id/text2"
+            android:textSize="18sp" />
+
+    </RelativeLayout>
+
+
+</layout>

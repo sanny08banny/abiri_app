@@ -60,7 +60,7 @@
                 android:id="@+id/radioButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Naturaw pay powered by M-PESA"
+                android:text="Abiri pay powered by M-PESA"
                 android:layout_marginStart="16dp"
                 android:layout_centerVertical="true"
                 android:layout_marginTop="8dp"/>

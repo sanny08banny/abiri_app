@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Car App</string>
+    <string name="app_name">Abiri</string>
     <string name="base_url_title">http://44.205.252.185:4000</string>
     <string name="downpayment">Down payment</string>
     <string name="search">Search</string>
@@ -59,4 +59,11 @@
     <string name="title_activity_taxi_maps">TaxiMapsActivity</string>
     <string name="log_out">LOG OUT</string>
     <string name="notification_channel">abiri_message</string>
+    <string-array name="transaction_types">
+        <item>Send Money</item>
+        <item>Buy Goods and Services</item>
+        <item>Pay Bill</item>
+        <item>Pochi La Biashara</item>
+        <item>Check Balance</item>
+    </string-array>
 </resources>

@@ -15,35 +15,15 @@
             android:layout_height="wrap_content">
 
             <RelativeLayout
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="end">
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_centerVertical="true">
-                    <RatingBar
-                        android:id="@+id/carRatingBar"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:numStars="5"
-                        android:stepSize="0.5"
-                        android:rating="3.5" />
-
-                    <TextView
-                        android:id="@+id/carRatingText"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="3.5" />
-                </LinearLayout>
 
                 <ImageButton
                     android:id="@+id/close"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="16dp"
-                    android:layout_alignParentEnd="true"
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:src="@drawable/baseline_close_48"
                     app:tint="?attr/imageButtonStyle" />
@@ -156,10 +136,31 @@
                 android:layout_marginEnd="16dp"
                 android:backgroundTint="#80000000"
                 android:text="Rent now"
+                app:iconTint="@color/white"
+                android:textColor="@color/transparent_white"
                 app:cornerRadius="8dp"
                 app:icon="@drawable/baseline_arrow_forward_24"
                 app:iconGravity="end" />
         </RelativeLayout>
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_centerVertical="true">
+            <RatingBar
+                android:id="@+id/carRatingBar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:numStars="5"
+                android:stepSize="0.5"
+                android:rating="3.5" />
+
+            <TextView
+                android:id="@+id/carRatingText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="3.5" />
+        </LinearLayout>
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

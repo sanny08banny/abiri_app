@@ -6,9 +6,6 @@
     <item
         android:id="@+id/fav"
         android:title="Add to favourites" />
-    <item
-        android:id="@+id/wish_list"
-        android:title="Add to wishlist" />
 <!--    <item-->
 <!--        android:id="@+id/menu_toggle_availability"-->
 <!--        android:title="Toggle Availability"-->

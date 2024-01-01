@@ -12,7 +12,6 @@
         android:id="@+id/manage_profile_toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:background="#00000000"
         app:contentInsetStartWithNavigation="0dp"
         app:layout_scrollFlags="scroll|enterAlways">
 
@@ -96,6 +95,7 @@
                 android:layout_marginHorizontal="8dp"
                 android:layout_marginVertical="8dp"
                 android:layout_weight="0"
+                app:tint="?attr/imageButtonStyle"
                 android:background="@android:color/transparent"
                 android:src="@drawable/baseline_arrow_forward_ios_32" />
         </LinearLayout>

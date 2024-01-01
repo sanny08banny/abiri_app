@@ -64,7 +64,6 @@
             android:id="@+id/location_pick_proceed"
             android:layout_marginHorizontal="32dp"
             app:cornerRadius="8dp"
-            android:textColor="@color/material_dynamic_neutral0"
             android:layout_marginVertical="8dp"
             android:text="Proceed" />
     </LinearLayout>
