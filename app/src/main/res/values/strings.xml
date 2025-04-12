@@ -8,6 +8,9 @@
     <string name="first_fragment_label">First Fragment</string>
     <string name="second_fragment_label">Second Fragment</string>
     <string name="next">Next</string>
+    <string name="edit">EDIT</string>
+    <string name="edit_profile">Edit profile</string>
+
     <string name="previous">Previous</string>
 
     <string name="lorem_ipsum">
@@ -59,6 +62,45 @@
     <string name="title_activity_taxi_maps">TaxiMapsActivity</string>
     <string name="log_out">LOG OUT</string>
     <string name="notification_channel">abiri_message</string>
+    <string name="decoration_icon">decoration icon</string>
+    <string name="change_user_name">Change user name</string>
+    <string name="refresh">refresh</string>
+    <string name="back_button">back_button</string>
+    <string name="first_time_prompt">First Time Prompt</string>
+    <string name="upload_car">Upload car</string>
+    <string name="profile_image">profile image</string>
+    <string name="options">options</string>
+    <string name="close">close</string>
+    <string name="notifications">Notifications</string>
+    <string name="image">Image</string>
+    <string name="like">like</string>
+    <string name="dislike">dislike</string>
+    <string name="navigation_icon">navigation_icon</string>
+    <string name="taxi_guide_txt1">Request Affordable Rides From our Verified Drivers</string>
+    <string name="taxi_guide_txt2">Request for a ride and get picked by a driver near you in minutes</string>
+    <string name="fun_guide_txt2">View and visit fun spaces near you to have some fun after a tiring day at work.</string>
+    <string name="hire_guide_txt1">Rent your Dream Car an Affordable Price</string>
+    <string name="hire_guide_txt2">We have a number of luxurious vehicles available for hire at an affordable cost.</string>
+    <string name="rating">rating</string>
+    <string name="cancel_ride">Cancel ride</string>
+    <string name="waiting_for_driver_s_response">Finding a ride for you</string>
+    <string name="welcome_to_abiri_driver">Welcome to Abiri Driver</string>
+    <string name="image_placeholder">image_placeholder</string>
+    <string name="identity_policy">This document will be used according to our terms and conditions. Its sole aim is to help us identify you.</string>
+    <string name="add_national_id">Add National ID</string>
+    <string name="confirm_your_identity">Confirm your Identity</string>
+    <string name="upload_the_necessary_documents">Upload the necessary documents</string>
+    <string name="clear">Clear</string>
+    <string name="tell_us_about_your_car">Tell us about your vehicle</string>
+    <string name="rent_a_car_near_you">Rent a car Near You</string>
+    <string name="history">History</string>
+    <string name="common_places">Common places</string>
+    <string name="what_type_of_ride_would_like_to_register_with_us">What type of ride would like to register with us?</string>
+    <string name="let_riders_identify_your_car">Let riders identify your car</string>
+    <string name="setup_your_drivers_account_with_us">Setup your Drivers Account With Us</string>
+    <string name="location_button">location_button</string>
+    <string name="icon">icon</string>
+    <string name="default_web_client_id">922289955998-p7guel3j7175moknmtelbqjp7rh6rqig.apps.googleusercontent.com</string>
     <string-array name="transaction_types">
         <item>Send Money</item>
         <item>Buy Goods and Services</item>
@@ -66,4 +108,5 @@
         <item>Pochi La Biashara</item>
         <item>Check Balance</item>
     </string-array>
+    <string name="title_activity_maps2">MapsActivity2</string>
 </resources>

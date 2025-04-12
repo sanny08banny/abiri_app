@@ -10,13 +10,29 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.loader.content.AsyncTaskLoader;
 
+import com.google.firebase.analytics.FirebaseAnalytics;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.sanny_tech.carapp.enums.ActionType;
 import com.sanny_tech.carapp.services.TaxiApiService;
+import com.sanny_tech.carapp.taxi_utils.PricingDetails;
 import com.sanny_tech.carapp.taxi_utils.TaxiRequest;
 import com.sanny_tech.carapp.utils.IpAddressManager;
+import com.sanny_tech.carapp.utils.SimCardManager;
 
 import java.io.IOException;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+
+import okhttp3.OkHttpClient;
 import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
@@ -25,22 +41,26 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class TaxiLoader extends AsyncTaskLoader<String> {
     private static final String TAG = TaxiLoader.class.getSimpleName();
     private String baseUrl;
-    private String driver_id;
-    private float dest_lat,dest_lon;
-    private float current_lat,current_lon;
+    private Double price;
+    private PricingDetails pricingDetails;
     private ActionType actionType;
+    private FirebaseAnalytics mFirebaseAnalytics;
+    private FirebaseDatabase database;
+    private DatabaseReference reference;
+    private String dest_name;
+    private TaxiRequest request;
+    private String category;
 
-    public TaxiLoader(@NonNull Context context, String driver_id,
-                      float dest_lat, float dest_lon, float current_lat, float current_lon,
-                      ActionType actionType) {
+    public TaxiLoader(@NonNull Context context, Double price, PricingDetails pricingDetails,
+                      ActionType actionType, String destName, TaxiRequest request, String category) {
         super(context);
-        this.driver_id = driver_id;
-        this.dest_lat = dest_lat;
-        this.dest_lon = dest_lon;
-        this.current_lat = current_lat;
-        this.current_lon = current_lon;
+        this.price = price;
+        this.pricingDetails = pricingDetails;
         this.actionType = actionType;
         this.baseUrl = IpAddressManager.getIpAddress(context);
+        dest_name = destName;
+        this.request = request;
+        this.category = category;
     }
 
     @Override
@@ -53,32 +73,89 @@ public class TaxiLoader extends AsyncTaskLoader<String> {
     @Override
     public String loadInBackground() {
         try {
+            TrustManager[] trustAllCerts = new TrustManager[]{
+                    new X509TrustManager() {
+                        @Override
+                        public void checkClientTrusted(java.security.cert.X509Certificate[] chain,
+                                                       String authType) {
+                        }
+
+                        @Override
+                        public void checkServerTrusted(java.security.cert.X509Certificate[] chain,
+                                                       String authType) {
+                        }
+
+                        @Override
+                        public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                            return new java.security.cert.X509Certificate[]{};
+                        }
+                    }
+            };
+
+// Install the all-trusting trust manager
+            SSLContext sslContext = SSLContext.getInstance("SSL");
+            sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
+            SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
+
+            OkHttpClient client = new OkHttpClient.Builder()
+                    .connectTimeout(60, TimeUnit.SECONDS)
+                    .readTimeout(60, TimeUnit.SECONDS)
+                    .sslSocketFactory(sslSocketFactory, (X509TrustManager) trustAllCerts[0])
+                    .hostnameVerifier((hostname, session) -> true)
+                    .build();
             Retrofit retrofit = new Retrofit.Builder()
                     .baseUrl(baseUrl + "/")
+                    .client(client)
                     .addConverterFactory(GsonConverterFactory.create())
                     .build();
+            database = FirebaseDatabase.getInstance();
+            reference = database.getReference("verified_requests");
+
 
             TaxiApiService service = retrofit.create(TaxiApiService.class);
             Log.e(TAG, "UserId " + getCurrentAccountId());
 
             if (actionType == ActionType.BOOK) {
                 TaxiRequest taxiRequest = new TaxiRequest();
-                taxiRequest.setClient_id(getCurrentAccountId());
-                taxiRequest.setRecepient_id(driver_id);
-                taxiRequest.setCurrent_lat(current_lat);
-                taxiRequest.setCurrent_lon(current_lon);
-                taxiRequest.setDest_lat(dest_lat);
-                taxiRequest.setDest_lon(dest_lon);
+                taxiRequest.setPricing_details(pricingDetails);
+                taxiRequest.setDest_name(dest_name);
+                taxiRequest.setPrice(price);
+                taxiRequest.setDeclined(new ArrayList<>());
+                taxiRequest.setPhone_number(SimCardManager.getPhoneNumber(getContext()));
+                taxiRequest.setTaxi_category(category);
+                Log.d(TAG, "Sending TaxiRequest: " + pricingDetails.toString() + "\n" +
+                        taxiRequest.toString());
                 Call<Void> call = service.requestTaxi(taxiRequest);
+                Response<Void> response = call.execute();
+                if (response.isSuccessful()) {
+                    reference.child(getCurrentAccountId()).setValue(taxiRequest);
+                    // Handle the successful response for booking
+                    return "Booking successful";
+                } else {
+                    reference.child(getCurrentAccountId()).setValue(response.code() + " - " + response.message());
+                    // Log the error message
+                    Log.e(TAG, "Error: " + response.code() + " - " + response.message() +
+                            response.body() );
+                }
+
+            } else if (actionType == ActionType.DECLINE) {
+                List<String> declines = request.getDeclined();
+                declines.add("declined_driver_id_" + getCurrentAccountId());
+                request.setDeclined(declines);
+                Call<Void> call = service.requestTaxi(request);
                 Response<Void> response = call.execute();
                 if (response.isSuccessful()) {
                     // Handle the successful response for booking
                     return "Booking successful";
                 } else {
-                    Log.e(TAG, "Error: " + response.code() + " - " + response.message());
-                    // Handle the error response for booking
+                    reference.child(getCurrentAccountId()).setValue(response.code() + " - " + response.message());
+                    // Log the error message
+                    Log.e(TAG, "Error: " + response.code() + " - " + response.message() +
+                            response.body() );
+                    return null;
                 }
-            } else if (actionType == ActionType.DELETE) {
+
+            }else if (actionType == ActionType.DELETE) {
                 // Perform delete action here
 //                BookingRequest bookingRequest = new BookingRequest(getCurrentAccountId(), car_id, "unbook");
 //                Call<Void> call = service.bookCar(bookingRequest);
@@ -89,6 +166,7 @@ public class TaxiLoader extends AsyncTaskLoader<String> {
 //                } else {
 //                    Log.e(TAG, "Error: " + response.code() + " - " + response.message());
 //                    // Handle the error response for booking
+                reference.child(getCurrentAccountId()).removeValue();
 //                }
             } else if (actionType == ActionType.UPDATE) {
                 // Perform update action here
@@ -97,6 +175,8 @@ public class TaxiLoader extends AsyncTaskLoader<String> {
         } catch (IOException e) {
             Log.e(TAG, "Error: " + e.getMessage());
             // Handle the failure
+        } catch (NoSuchAlgorithmException | KeyManagementException e) {
+            Log.e(TaxiLoader.class.getSimpleName(), "Error making API call: " + e.getMessage());
         }
         return null;
     }
@@ -104,5 +184,9 @@ public class TaxiLoader extends AsyncTaskLoader<String> {
     public String getCurrentAccountId() {
         SharedPreferences sharedPreferences = getContext().getSharedPreferences("AccountPrefs", MODE_PRIVATE);
         return sharedPreferences.getString("currentUserId", null);
+    }
+    public String getCurrentEmail() {
+        SharedPreferences sharedPreferences = getContext().getSharedPreferences("AccountPrefs", MODE_PRIVATE);
+        return sharedPreferences.getString("currentUserEmail", null);
     }
 }

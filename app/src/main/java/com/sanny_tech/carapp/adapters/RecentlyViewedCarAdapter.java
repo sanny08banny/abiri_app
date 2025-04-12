@@ -95,7 +95,7 @@ public class RecentlyViewedCarAdapter extends RecyclerView.Adapter<RecentlyViewe
                 glideImage(car, recentlyViewedCarBinding.imageView);
             }
 
-            double amount = car.getAmount();
+            double amount = car.getDaily_amount();
             Locale kenyanLocale = new Locale("sw", "KE");
             Currency kenyanShilling = Currency.getInstance("KES");
             NumberFormat numberFormat = NumberFormat.getCurrencyInstance(kenyanLocale);

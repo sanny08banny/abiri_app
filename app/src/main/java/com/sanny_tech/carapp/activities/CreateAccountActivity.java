@@ -65,32 +65,6 @@ public class CreateAccountActivity extends AppCompatActivity {
             }
         });
 
-// Registers a photo picker activity launcher in single-select mode.
-        pickSingleMedia =
-                registerForActivityResult(new ActivityResultContracts.PickVisualMedia(), uri -> {
-                    // Callback is invoked after the user selects a single media item or closes the
-                    // photo picker.
-                    if (uri != null) {
-                        Log.d("PhotoPicker", "Selected image URI: " + uri.toString());
-
-                        // Assign the selected image URI to the selectedImageUri variable
-                        selectedImageUri[0] = uri.toString();
-                        handleImage(selectedImageUri[0]);
-                        // Now, selectedImageUri contains the URI of the selected image
-                    } else {
-                        Log.d("PhotoPicker", "No media selected");
-                    }
-                });
-        createAccountBinding.createProfileImage.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S_V2) {
-                    openPhotoPicker();
-                } else {
-                    openMediaPicker();
-                }
-            }
-        });
         String passwordRegex = "^(?=.*[A-Z])(?=.*\\d)[A-Za-z\\d]{8,}$";
         Pattern pattern = Pattern.compile(passwordRegex);
 
@@ -118,6 +92,7 @@ public class CreateAccountActivity extends AppCompatActivity {
             public void onClick(View v) {
                 Intent intent = new Intent(CreateAccountActivity.this, SignInActivity.class);
                 startActivity(intent);
+                finish();
             }
         });
         createAccountBinding.createProfileButton.setOnClickListener(new View.OnClickListener() {
@@ -143,13 +118,6 @@ public class CreateAccountActivity extends AppCompatActivity {
                     profile.setPassword(password);
                     profile.setAccountType(accountType);
                     profile.setDateCreated(dateCreated);
-                    if (selectedImagePath != null) {
-                        File imageFile = new File(selectedImagePath);
-                        Uri imageUri = Uri.fromFile(imageFile);
-                        Uri uri = Uri.parse(selectedImagePath);
-                    } else {
-                        Toast.makeText(CreateAccountActivity.this, "Please select a profile image", Toast.LENGTH_SHORT).show();
-                    }
                     createUser(profile);
                 }
             }
@@ -196,23 +164,10 @@ public class CreateAccountActivity extends AppCompatActivity {
             selectedImagePaths = data.getStringArrayListExtra("selectedImagePaths");
             if (selectedImagePaths != null) {
                 selectedImagePath = selectedImagePaths.get(0);
-               handleImage(selectedImagePath);
-
             }
             // Set click listener for createAccount button
         }
         super.onActivityResult(requestCode, resultCode, data);
-    }
-
-    private void handleImage(String selectedImagePath) {
-        Glide.with(this)
-                .load(selectedImagePath)
-                .override(ViewGroup.LayoutParams.WRAP_CONTENT, 300) // Set thedesired width and height for resizing
-                .centerCrop()
-                .into(createAccountBinding.createProfileImage);
-
-        // Set the selected image path as a tag on the ImageView
-        createAccountBinding.createProfileImage.setTag(selectedImagePath);
     }
 
     private void saveUser(User profile) {
@@ -231,7 +186,9 @@ public class CreateAccountActivity extends AppCompatActivity {
     }
 
     private void createUser(User user) {
-        UserLoader userLoader = new UserLoader(this, email, password, FCMTokenManager.getToken(this), ActionType.BOOK);
+        UserLoader userLoader = new UserLoader(this, email, password,
+                FCMTokenManager.getToken(this), ActionType.BOOK, user.getUsername(),
+                null);
         showProgressBar();
         userLoader.forceLoad();
         userLoader.registerListener(7, new Loader.OnLoadCompleteListener<String>() {
@@ -243,7 +200,8 @@ public class CreateAccountActivity extends AppCompatActivity {
                     saveUser(user);
                     ProfileFetchRunnable profileFetchRunnable = new ProfileFetchRunnable(user.getEmail(),
                             user.getPassword(), CreateAccountActivity.this,
-                            createAccountBinding.progressBar, LoginActions.LOGIN, null);
+                            createAccountBinding.progressBar, LoginActions.LOGIN, null,
+                            user.getUsername());
 
                     Thread thread = new Thread(profileFetchRunnable);
                     thread.start();

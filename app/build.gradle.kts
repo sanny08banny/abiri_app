@@ -1,3 +1,5 @@
+import java.util.Properties
+
 @Suppress("DSL_SCOPE_VIOLATION") // TODO: Remove once KTIJ-19369 is fixed
 plugins {
     alias(libs.plugins.androidApplication)
@@ -13,16 +15,20 @@ android {
 
     defaultConfig {
         applicationId = "com.sanny_tech.carapp"
-        minSdk = 21
+        minSdk = 23
         targetSdk = 34
-        versionCode = 2
+        versionCode = 63
         versionName = "1.0"
 
+        buildConfigField("String", "MAPS_API_KEY", properties["MAP_API_KEY"].toString())
+
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
     }
     buildFeatures {
         dataBinding = true
         viewBinding = true
+        buildConfig = true
     }
 
     buildTypes {
@@ -58,19 +64,26 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.play.services.maps)
-    implementation(libs.firebase.database)
+    implementation(libs.android.maps.utils)
     implementation(libs.places)
-    implementation(libs.firebase.messaging)
-    implementation(libs.firebase.analytics)
-    implementation(libs.firebase.crashlytics)
-    implementation(libs.firebase.firestore)
+
     implementation(libs.androidx.activity)
-    implementation(libs.firebase.auth)
+    implementation(libs.firebase.analytics)
+    implementation(libs.google.firebase.auth)
+    implementation(libs.firebase.database)
+    implementation(platform("com.google.firebase:firebase-bom:33.2.0"))
+    implementation(libs.firebase.firestore)
+    implementation(libs.firebase.crashlytics)
+    implementation(libs.firebase.messaging)
+    implementation(libs.firebase.storage)
+    implementation(libs.google.firebase.appcheck.playintegrity)
+
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.espresso.core)
 
-    implementation("org.java-websocket:Java-WebSocket:1.5.2")
+    implementation("org.java-websocket:Java-WebSocket:1.5.7")
     implementation(libs.androidx.palette)
     implementation(libs.play.services.location)
     implementation(libs.ccp)
@@ -81,5 +94,13 @@ dependencies {
     // Android 13 and below.
     implementation(libs.androidx.credentials.play.services.auth)
     implementation(libs.googleid)
+    implementation("com.github.yukuku:ambilwarna:2.0.1")
+    implementation(libs.integrity)
 
+    implementation(libs.play.services.auth.v2120)
+    implementation(libs.androidx.core.splashscreen)
+    implementation("androidx.biometric:biometric:1.2.0-alpha05")
+
+    implementation("com.squareup.picasso:picasso:2.71828")
+    implementation("com.google.android.play:app-update:2.1.0")
 }

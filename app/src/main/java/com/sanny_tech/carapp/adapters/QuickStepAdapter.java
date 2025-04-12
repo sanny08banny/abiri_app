@@ -2,15 +2,13 @@ package com.sanny_tech.carapp.adapters;
 
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.drawable.Drawable;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.util.Pair;
 import androidx.databinding.DataBindingUtil;
@@ -19,8 +17,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.request.RequestOptions;
-import com.bumptech.glide.request.target.CustomTarget;
-import com.bumptech.glide.request.transition.Transition;
 import com.sanny_tech.carapp.R;
 import com.sanny_tech.carapp.activities.AboutCarActivity;
 import com.sanny_tech.carapp.activities.BookedActivity;
@@ -37,7 +33,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
-public class QuickStepAdapter extends RecyclerView.Adapter<QuickStepAdapter.ViewHolder>{
+public class QuickStepAdapter extends RecyclerView.Adapter<QuickStepAdapter.ViewHolder> {
 
     private Context context;
     private List<Quickstep> quicksteps;
@@ -49,12 +45,13 @@ public class QuickStepAdapter extends RecyclerView.Adapter<QuickStepAdapter.View
         this.quicksteps = quicksteps;
         this.baseUrl = IpAddressManager.getIpAddress(context);
     }
+
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         LayoutInflater layoutInflater = LayoutInflater.from(parent.getContext());
         QuickstepBinding quickstepBinding = DataBindingUtil.inflate(layoutInflater,
-                R.layout.quickstep,parent,false);
+                R.layout.quickstep, parent, false);
         return new ViewHolder(quickstepBinding);
     }
 
@@ -70,11 +67,12 @@ public class QuickStepAdapter extends RecyclerView.Adapter<QuickStepAdapter.View
         return quicksteps.size();
     }
 
-    public void setItems( List<Quickstep> newsteps) {
+    public void setItems(List<Quickstep> newsteps) {
         quicksteps.clear();
         quicksteps.addAll(newsteps);
         notifyDataSetChanged();
     }
+
     public interface OnItemClickListener {
         void onItemClick(Quickstep item);
     }
@@ -90,7 +88,19 @@ public class QuickStepAdapter extends RecyclerView.Adapter<QuickStepAdapter.View
             super(quickstepBinding.getRoot());
             this.quickstepBinding = quickstepBinding;
         }
-        void bind(Quickstep quickstep){
+
+        void bind(Quickstep quickstep) {
+            if (quickstep.getTitle() != null) {
+                quickstepBinding.title.setText(quickstep.getTitle());
+                quickstepBinding.title2.setText(quickstep.getTitle2());
+                quickstepBinding.title3.setText(quickstep.getTitle3());
+            } else {
+                quickstepBinding.title.setText("Ad");
+                quickstepBinding.subtext.setVisibility(View.GONE);
+                quickstepBinding.subscript.setVisibility(View.GONE);
+                quickstepBinding.title3.setVisibility(View.GONE);
+                quickstepBinding.title2.setVisibility(View.GONE);
+            }
             quickstepBinding.getRoot().setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -103,45 +113,39 @@ public class QuickStepAdapter extends RecyclerView.Adapter<QuickStepAdapter.View
                     listener.onItemClick(quickstep);
                 }
             });
-            quickstepBinding.desc.setText(quickstep.getDesc());
+            quickstepBinding.subtext.setText(quickstep.getSubtext());
 
-            if (quickstep.getImage() != null) {
-                glideImage(quickstep, quickstepBinding.imageView);
-            }
+            glideImage(quickstep, quickstepBinding.imageView);
 
         }
-        private void glideImage(Quickstep car, ImageView imageView) {
-            if (car != null) {
-                String endPoint = car.getImage();
-                Glide.with(context).asBitmap().load(endPoint)
-                        .apply(new RequestOptions()
-                                .placeholder(R.drawable.baseline_downloading_350) // Placeholder image while loading
-                                .error(R.drawable.baseline_downloading_350)      // Error image if loading fails
-                                .diskCacheStrategy(DiskCacheStrategy.ALL))
-                        .override(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-                        .into(new CustomTarget<Bitmap>() {
-                            @Override
-                            public void onResourceReady(@NonNull Bitmap resource, @Nullable Transition<? super Bitmap> transition) {
-                                // Set the loaded bitmap to the ImageView
-                                imageView.setImageBitmap(resource);
 
-                                // Retain the original aspect ratio of the image
-                                float aspectRatio = (float) resource.getWidth() / resource.getHeight();
+        private void glideImage(Quickstep quickstep, ImageView imageView) {
+            if (quickstep != null) {
+                if (quickstep.getImage() != null) {
+                    String endPoint = quickstep.getImage();
+                    Glide.with(context).asBitmap().load(endPoint)
+                            .apply(new RequestOptions()
+                                    .placeholder(R.drawable.baseline_downloading_350) // Placeholder image while loading
+                                    .error(R.drawable.baseline_downloading_350)      // Error image if loading fails
+                                    .diskCacheStrategy(DiskCacheStrategy.ALL))
+                            .override(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+                            .into(imageView);
+                } else {
+                    if (quickstep.getId().equals("rental_ad")) {
+                        glideImage1(R.drawable.ad_car_rental_service, imageView);
+                    } else if (quickstep.getId().equals("admin_ad")) {
+                        glideImage1(R.drawable.admin_computer, imageView);
+                    }else if (quickstep.getId().equals("rental_ad_1")) {
+                        Log.e("Ad","Shown");
+                        glideImage1(R.drawable.lease_ad, imageView);
+                    }
+                }
+            }
+        }
 
-                                // Calculate the desired height based on the original aspect ratio
-                                int desiredHeight = (int) (imageView.getWidth() / aspectRatio);
-
-                                // Resize the ImageView to the desired height while keeping the width MATCH_PARENT
-                                ViewGroup.LayoutParams layoutParams = imageView.getLayoutParams();
-                                layoutParams.height = desiredHeight;
-                                imageView.setLayoutParams(layoutParams);
-                            }
-
-                            @Override
-                            public void onLoadCleared(@Nullable Drawable placeholder) {
-                                // Clear any previous loaded resources if needed
-                            }
-                        });
+        private void glideImage1(int url, ImageView imageView) {
+            if (url != 0) {
+                quickstepBinding.imageView.setImageResource(url);
             }
         }
 
@@ -149,15 +153,15 @@ public class QuickStepAdapter extends RecyclerView.Adapter<QuickStepAdapter.View
 
     private void openAboutCar(Car car) {
         Intent intent = new Intent(context, AboutCarActivity.class);
-        intent.putExtra("selectedCar",car);
-        intent.putExtra("instruction","local");
+        intent.putExtra("selectedCar", car);
+        intent.putExtra("instruction", "local");
         context.startActivity(intent);
     }
 
     private void bookCar(Car car, String duration) {
         Intent intent = new Intent(context, BookedActivity.class);
         intent.setAction("book car");
-        intent.putExtra("car",car);
+        intent.putExtra("car", car);
         intent.putExtra("duration", duration);
         context.startActivity(intent);
     }
@@ -211,6 +215,7 @@ public class QuickStepAdapter extends RecyclerView.Adapter<QuickStepAdapter.View
             }
         });
     }
+
     private int calculateDuration(MaterialTimePicker fromTimePicker, MaterialTimePicker toTimePicker) {
         int fromHour = fromTimePicker.getHour();
         int fromMinute = fromTimePicker.getMinute();
@@ -222,6 +227,7 @@ public class QuickStepAdapter extends RecyclerView.Adapter<QuickStepAdapter.View
 
         return durationInMinutes;
     }
+
     private void showDatePickerDialog(Context context, Car car) {
         // Create a MaterialDatePicker for selecting a date range
         MaterialDatePicker<Pair<Long, Long>> picker = MaterialDatePicker.Builder.dateRangePicker()

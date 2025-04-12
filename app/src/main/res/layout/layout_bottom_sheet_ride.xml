@@ -5,121 +5,160 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@drawable/top_corners_shape"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:orientation="vertical">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <View
+                android:layout_width="36dp"
+                android:layout_height="6dp"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/custom_progress_bar" />
+
+            <ImageButton
+                android:id="@+id/close"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:layout_margin="8dp"
+                android:layout_marginHorizontal="16dp"
+                android:background="@android:color/transparent"
+                android:contentDescription="@string/close"
+                android:src="@drawable/baseline_close_48"
+                app:tint="@color/black" />
+        </RelativeLayout>
 
         <TextView
+            android:id="@+id/title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Driver has accepted your request .Please wait for driver to arrive at the pick-up point"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginTop="6dp"
+            android:text="Your Driver will arrive soon"
             android:textSize="18sp"
             android:textStyle="bold" />
 
-        <RelativeLayout
+        <TextView
+            android:id="@+id/distance_from_pick_up"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="8dp"
+            android:inAnimation="@android:anim/fade_in"
+            android:outAnimation="@android:anim/fade_out"
+            android:textSize="16sp" />
+
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="bottom"
-            android:layout_marginTop="8dp"
-            android:orientation="horizontal"
-            app:layout_behavior="com.google.android.material.behavior.HideBottomViewOnScrollBehavior">
+            android:layout_marginTop="4dp"
+            android:orientation="horizontal">
 
-            <ImageButton
-                android:id="@+id/call_driver"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/taxi_image"
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:layout_gravity="center_vertical"
                 android:layout_marginStart="16dp"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="8dp"
-                android:background="@drawable/make_call_bg"
-                android:padding="10dp"
-                android:src="@drawable/baseline_call_32" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/call_button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentEnd="true"
-                android:layout_marginStart="8dp"
-                android:layout_marginTop="8dp"
-                android:layout_marginEnd="16dp"
-                android:layout_marginBottom="8dp"
-                android:layout_toEndOf="@id/call_driver"
-                android:backgroundTint="@color/blue"
-                android:text="CALL DRIVER"
-                app:cornerRadius="8dp" />
-        </RelativeLayout>
-
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom"
-            android:layout_marginTop="8dp"
-            android:orientation="horizontal"
-            app:layout_behavior="com.google.android.material.behavior.HideBottomViewOnScrollBehavior">
-
-            <TextView
-                android:id="@+id/distance_from_pick_up"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:layout_marginTop="8dp"
-                android:inAnimation="@android:anim/fade_in"
-                android:outAnimation="@android:anim/fade_out"
-                android:padding="10dp"
-                android:textSize="18sp" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/view_driver_loc_button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentEnd="true"
-                android:layout_marginStart="8dp"
-                android:layout_marginTop="8dp"
-                android:layout_marginEnd="16dp"
-                android:layout_toEndOf="@id/distance_from_pick_up"
-                android:backgroundTint="@color/blue"
-                android:text="SHOW DRIVER,S LOCATION"
-                app:cornerRadius="8dp"/>
+                android:layout_marginEnd="8dp"
+                android:padding="4dp"
+                android:scaleType="fitXY"
+                android:src="@drawable/local_taxi_fill"
+                app:shapeAppearanceOverlay="@style/MiniRoundedImageView" />
 
             <LinearLayout
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_below="@id/view_driver_loc_button"
-                android:layout_toEndOf="@id/distance_from_pick_up"
-                android:orientation="horizontal">
-                <ImageButton
-                    android:id="@+id/icon"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="0"
-                    android:layout_marginStart="10dp"
-                    android:layout_marginVertical="4dp"
-                    android:background="@android:color/transparent"
-                    android:src="@drawable/driver"/>
+                android:layout_gravity="center_vertical"
+                android:layout_marginVertical="8dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
 
                 <TextView
+                    android:id="@+id/plate"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Allows you to track the driver's live location on the map."
-                    android:textSize="12sp"
-                    android:layout_marginHorizontal="8dp"
-                    android:layout_gravity="center_vertical"
-                    android:layout_weight="1"
+                    android:layout_gravity="end"
+                    android:layout_marginHorizontal="16dp"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/desc"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="end"
+                    android:layout_marginHorizontal="16dp"
+                    android:layout_marginTop="8dp"
+                    android:textAlignment="viewEnd"
                     android:textStyle="bold" />
             </LinearLayout>
-        </RelativeLayout>
-        <!--        <com.google.android.material.button.MaterialButton-->
-        <!--            android:id="@+id/change_pick_up"-->
-        <!--            android:layout_width="match_parent"-->
-        <!--            android:layout_height="wrap_content"-->
-        <!--            android:layout_marginHorizontal="8dp"-->
-        <!--            android:layout_marginTop="8dp"-->
-        <!--            android:layout_marginEnd="16dp"-->
-        <!--            android:layout_marginBottom="8dp"-->
-        <!--            android:background="@drawable/make_call_bg"-->
-        <!--            android:text="CHANGE PICK-UP"-->
-        <!--            android:textColor="?attr/imageButtonStyle"-->
-        <!--            app:cornerRadius="8dp" />-->
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/taxi_not_arrived_lt"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                android:layout_marginTop="8dp"
+                android:orientation="horizontal"
+                app:layout_behavior="com.google.android.material.behavior.HideBottomViewOnScrollBehavior">
+
+                <ImageButton
+                    android:id="@+id/call_driver"
+                    android:layout_width="80dp"
+                    android:layout_height="48dp"
+                    android:layout_centerVertical="true"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="8dp"
+                    android:layout_toStartOf="@id/view_driver_loc_button"
+                    android:background="@drawable/make_call_bg_dark"
+                    android:contentDescription="call"
+                    android:padding="10dp"
+                    android:src="@drawable/phone_enabled"
+                    app:tint="@color/white" />
+
+                <ImageButton
+                    android:id="@+id/view_driver_loc_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginEnd="16dp"
+                    android:layout_marginBottom="8dp"
+                    android:background="@drawable/make_call_bg"
+                    android:contentDescription="@string/location_button"
+                    android:padding="10dp"
+                    android:src="@drawable/baseline_assistant_navigation_32" />
+            </RelativeLayout>
+        </LinearLayout>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/driver_arrived"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            android:backgroundTint="@color/black"
+            android:text="Confirm driver's arrival"
+            android:textColor="@color/white"
+            android:visibility="gone"
+            app:cornerRadius="8dp" />
 
     </LinearLayout>
 </layout>

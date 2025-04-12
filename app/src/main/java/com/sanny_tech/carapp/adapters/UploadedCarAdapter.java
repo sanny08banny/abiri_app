@@ -52,17 +52,6 @@ HireStatusChecker.OnHireChangedListener{
         this.carList = carList;
         this.baseUrl = IpAddressManager.getIpAddress(context);
     }
-    private void loadHiredStatus(){
-        if (carList != null) {
-            List<String> carIds = new ArrayList<>();
-            for (Car car : carList) {
-                carIds.add(car.getCar_id());
-            }
-            HireStatusChecker hireStatusChecker = new HireStatusChecker(context,carIds);
-            hireStatusChecker.startRideUpdates(this);
-        }
-    }
-
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -109,7 +98,6 @@ HireStatusChecker.OnHireChangedListener{
             if (car.getCar_images() != null) {
                 glideImage(car, uploadedCarBinding.imageView);
             }
-
             if (hiredCars.size() > 0){
                 if (hiredCars.contains(car.getCar_id())){
                     uploadedCarBinding.hiredStatus.setVisibility(View.VISIBLE);
@@ -127,7 +115,8 @@ HireStatusChecker.OnHireChangedListener{
         }
         private void glideImage(Car car, ImageView imageView) {
             if (car != null) {
-                String endPoint = car.getCar_images().get(0);
+                String endPoint = baseUrl + "/car/image/" + car.getOwner_id() + "/"
+                        + car.getCar_id() + "/" + car.getCar_images().get(0);
                 Glide.with(context).asBitmap().load(endPoint)
                         .apply(new RequestOptions()
                                 .placeholder(R.drawable.baseline_downloading_350) // Placeholder image while loading
@@ -169,100 +158,5 @@ HireStatusChecker.OnHireChangedListener{
         context.startActivity(intent);
     }
 
-    private void bookCar(Car car, String duration) {
-        Intent intent = new Intent(context, BookedActivity.class);
-        intent.setAction("book car");
-        intent.putExtra("car",car);
-        intent.putExtra("duration", duration);
-        context.startActivity(intent);
-    }
-
-    private void showTimePickerDialog(Context context, Car car) {
-        // Create two MaterialTimePicker instances for selecting "fromTime" and "toTime"
-        MaterialTimePicker fromTimePicker = new MaterialTimePicker.Builder()
-                .setTimeFormat(TimeFormat.CLOCK_24H)
-                .setTitleText("Select From Time")
-                .build();
-
-        MaterialTimePicker toTimePicker = new MaterialTimePicker.Builder()
-                .setTimeFormat(TimeFormat.CLOCK_24H)
-                .setTitleText("Select To Time")
-                .build();
-
-        fromTimePicker.addOnPositiveButtonClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                int fromHour = fromTimePicker.getHour();
-                int fromMinute = fromTimePicker.getMinute();
-
-                // Handle the selected "fromTime"
-                // You can now proceed to the next step in the booking process
-            }
-        });
-
-        toTimePicker.addOnPositiveButtonClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                int toHour = toTimePicker.getHour();
-                int toMinute = toTimePicker.getMinute();
-
-                // Handle the selected "toTime"
-                // You can now proceed to the next step in the booking process
-                // Calculate the duration based on "fromTime" and "toTime"
-                int durationInMinutes = calculateDuration(fromTimePicker, toTimePicker);
-
-                // Call the 'bookCar' method with the car and the calculated duration
-                bookCar(car, String.valueOf(durationInMinutes) + " minutes");
-            }
-        });
-
-        fromTimePicker.show(((AppCompatActivity) context).getSupportFragmentManager(), fromTimePicker.toString());
-
-        // Show the "toTime" picker when the user selects the "fromTime."
-        fromTimePicker.addOnPositiveButtonClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                toTimePicker.show(((AppCompatActivity) context).getSupportFragmentManager(), toTimePicker.toString());
-            }
-        });
-    }
-    private int calculateDuration(MaterialTimePicker fromTimePicker, MaterialTimePicker toTimePicker) {
-        int fromHour = fromTimePicker.getHour();
-        int fromMinute = fromTimePicker.getMinute();
-        int toHour = toTimePicker.getHour();
-        int toMinute = toTimePicker.getMinute();
-
-        // Calculate the duration in minutes
-        int durationInMinutes = (toHour - fromHour) * 60 + (toMinute - fromMinute);
-
-        return durationInMinutes;
-    }
-    private void showDatePickerDialog(Context context, Car car) {
-        // Create a MaterialDatePicker for selecting a date range
-        MaterialDatePicker<Pair<Long, Long>> picker = MaterialDatePicker.Builder.dateRangePicker()
-                .setTitleText("Select Date Range")
-                .setSelection(Pair.create(System.currentTimeMillis(), System.currentTimeMillis())) // Initial selection (today)
-                .build();
-
-        picker.addOnPositiveButtonClickListener(new MaterialPickerOnPositiveButtonClickListener<Pair<Long, Long>>() {
-            @Override
-            public void onPositiveButtonClick(Pair<Long, Long> selection) {
-                long fromDateMillis = selection.first;
-                long toDateMillis = selection.second;
-
-                // Convert milliseconds to a duration string
-                long durationMillis = toDateMillis - fromDateMillis;
-                long days = TimeUnit.MILLISECONDS.toDays(durationMillis);
-                long hours = TimeUnit.MILLISECONDS.toHours(durationMillis) - TimeUnit.DAYS.toHours(days);
-                String duration = String.format(Locale.US, "%d days", days);
-
-                // Call the bookCar method with the car and duration
-                bookCar(car, duration);
-            }
-        });
-
-
-        picker.show(((AppCompatActivity) context).getSupportFragmentManager(), picker.toString());
-    }
 }
 

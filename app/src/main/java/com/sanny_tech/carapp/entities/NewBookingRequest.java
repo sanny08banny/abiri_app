@@ -6,23 +6,40 @@ import android.os.Parcelable;
 import androidx.annotation.NonNull;
 
 public class NewBookingRequest implements Parcelable {
-    private String client_id;
-    private String recepient_id;
+    private String user_id;
     private String car_id;
+    private String owner_id;
+    private String description;
 
-    public NewBookingRequest() {
+    public NewBookingRequest(String description) {
+        this.description = description;
     }
 
-    public NewBookingRequest(String client_id, String recepient_id, String carId) {
-        this.client_id = client_id;
-        this.recepient_id = recepient_id;
-        car_id = carId;
+    public NewBookingRequest(String user_id, String car_id, String owner_id, String description) {
+        this.user_id = user_id;
+        this.car_id = car_id;
+        this.owner_id = owner_id;
+        this.description = description;
     }
 
     protected NewBookingRequest(Parcel in) {
-        client_id = in.readString();
-        recepient_id = in.readString();
+        user_id = in.readString();
+        owner_id = in.readString();
         car_id = in.readString();
+        description = in.readString();
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(user_id);
+        dest.writeString(owner_id);
+        dest.writeString(car_id);
+        dest.writeString(description);
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
     }
 
     public static final Creator<NewBookingRequest> CREATOR = new Creator<NewBookingRequest>() {
@@ -37,20 +54,12 @@ public class NewBookingRequest implements Parcelable {
         }
     };
 
-    public String getClient_id() {
-        return client_id;
+    public String getDescription() {
+        return description;
     }
 
-    public void setClient_id(String client_id) {
-        this.client_id = client_id;
-    }
-
-    public String getRecepient_id() {
-        return recepient_id;
-    }
-
-    public void setRecepient_id(String recepient_id) {
-        this.recepient_id = recepient_id;
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public String getCar_id() {
@@ -61,15 +70,19 @@ public class NewBookingRequest implements Parcelable {
         this.car_id = car_id;
     }
 
-    @Override
-    public int describeContents() {
-        return 0;
+    public String getUser_id() {
+        return user_id;
     }
 
-    @Override
-    public void writeToParcel(@NonNull Parcel dest, int flags) {
-        dest.writeString(client_id);
-        dest.writeString(recepient_id);
-        dest.writeString(car_id);
+    public void setUser_id(String user_id) {
+        this.user_id = user_id;
+    }
+
+    public String getOwner_id() {
+        return owner_id;
+    }
+
+    public void setOwner_id(String owner_id) {
+        this.owner_id = owner_id;
     }
 }

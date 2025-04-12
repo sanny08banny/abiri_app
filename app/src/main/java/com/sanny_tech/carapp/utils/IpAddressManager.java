@@ -18,7 +18,7 @@ public class IpAddressManager {
     }
 
     public static void setIpAddress(Context context, String newIpAddress) {
-        String newBaseUrl = "http://" + newIpAddress + ":4000";
+        String newBaseUrl = "https://" + newIpAddress + "/v1";
         SharedPreferences.Editor editor = getSharedPreferences(context).edit();
         editor.putString(KEY_IP_ADDRESS, newBaseUrl);
         editor.apply();
@@ -26,7 +26,7 @@ public class IpAddressManager {
 
     private static String getDefaultIpAddress() {
         // Set your default IP address here
-        return "http://44.211.254.153:4000";
+        return "https://abiriapp.com/v1";
     }
 }
 

@@ -13,6 +13,8 @@ import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 
 public class LocationHelper {
 
@@ -35,23 +37,21 @@ public class LocationHelper {
             return;
         }
 
-        LocationRequest locationRequest = LocationRequest.create();
-        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        locationRequest.setInterval(5000); // Update interval in milliseconds
-
-        fusedLocationProviderClient.requestLocationUpdates(locationRequest, new LocationCallback() {
+        fusedLocationProviderClient.getLastLocation().addOnSuccessListener(new OnSuccessListener<Location>() {
             @Override
-            public void onLocationResult(LocationResult locationResult) {
-                if (locationResult != null) {
-                    Location location = locationResult.getLastLocation();
-                    if (location != null) {
-                        locationResultListener.onLocationResult(location);
-                        // Stop location updates after receiving the location
-                        fusedLocationProviderClient.removeLocationUpdates(this);
-                    }
+            public void onSuccess(Location location) {
+                if (location != null) {
+                    locationResultListener.onLocationResult(location);
+                } else {
+                    // Handle case where location is null, e.g., location is turned off
                 }
             }
-        }, Looper.getMainLooper());
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(Exception e) {
+                // Handle failure in getting location
+            }
+        });
     }
 }
 

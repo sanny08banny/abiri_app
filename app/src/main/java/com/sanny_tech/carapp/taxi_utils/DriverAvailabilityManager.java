@@ -2,21 +2,26 @@ package com.sanny_tech.carapp.taxi_utils;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.util.Log;
+
+import com.google.gson.Gson;
 
 public class DriverAvailabilityManager {
 
     private static final String PREF_NAME = "AvailabilityPrefs";
     private static final String KEY_STATUS = "availabilityStatus";
-    private static final String KEY_SEAT_COUNT = "seatCount";
+    private static final String KEY_TAXI_DETAILS = "taxiDetails";
+    private static final String TAG = "TaxiPreferencesManager";
+
 
     private SharedPreferences sharedPreferences;
     private SharedPreferences.Editor editor;
-    private Context context;
+    private Gson gson;
 
     public DriverAvailabilityManager(Context context) {
-        this.context = context;
-        sharedPreferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
-        editor = sharedPreferences.edit();
+        this.gson = new Gson();
+        this.sharedPreferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        this.editor = sharedPreferences.edit();
     }
 
     // Save availability status
@@ -29,17 +34,38 @@ public class DriverAvailabilityManager {
     public boolean getAvailabilityStatus() {
         return sharedPreferences.getBoolean(KEY_STATUS, false);
     }
-
-    // Save seat count
-    public void saveSeatCount(int seatCount) {
-        editor.putInt(KEY_SEAT_COUNT, seatCount);
-        editor.apply();
+    public void saveTaxiInit(TaxiInit taxiInit) {
+        String taxiDetailsJson = gson.toJson(taxiInit);
+        editor.putString(KEY_TAXI_DETAILS, taxiDetailsJson);
+        boolean success = editor.commit();
+        if (success) {
+            Log.d(TAG, "TaxiInit details saved successfully");
+        } else {
+            Log.d(TAG, "Failed to save TaxiInit details");
+        }
     }
 
-    // Get seat count
-    public int getSeatCount() {
-        return sharedPreferences.getInt(KEY_SEAT_COUNT, 0);
+    // Save taxi details
+    public void deleteTaxiInit() {
+        editor.remove(KEY_TAXI_DETAILS);
+        boolean success = editor.commit();
+        if (success) {
+            Log.d(TAG, "TaxiInit details removed successfully");
+        } else {
+            Log.d(TAG, "Failed to remove TaxiInit details");
+        }
+    }
+
+
+    // Get taxi details
+    public TaxiInit getTaxiInit() {
+        String taxiDetailsJson = sharedPreferences.getString(KEY_TAXI_DETAILS, null);
+        if (taxiDetailsJson == null) {
+            return null; // or you could return a new TaxiDetailsDTO() with default values
+        }
+        return gson.fromJson(taxiDetailsJson, TaxiInit.class);
     }
 }
+
 
 

@@ -4,11 +4,13 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Bundle;
 import android.text.SpannableString;
 import android.text.Spanned;
 import android.text.method.LinkMovementMethod;
 import android.text.style.ClickableSpan;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
@@ -17,6 +19,9 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.PickVisualMediaRequest;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AlertDialog;
@@ -26,12 +31,16 @@ import androidx.databinding.DataBindingUtil;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.request.RequestOptions;
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.snackbar.Snackbar;
 import com.sanny_tech.carapp.R;
 import com.sanny_tech.carapp.databasehelpers.DatabaseHelper;
 import com.sanny_tech.carapp.databasehelpers.UploadedCarsHelper;
 import com.sanny_tech.carapp.databinding.ActivityManageProfilesBinding;
 import com.sanny_tech.carapp.entities.Car;
 import com.sanny_tech.carapp.entities.User;
+import com.sanny_tech.carapp.taxi_utils.DriverAvailabilityManager;
+import com.sanny_tech.carapp.utils.RequestManager;
 import com.sanny_tech.carapp.utils.SimCardManager;
 import com.sanny_tech.carapp.utils.TaxiModeManager;
 import com.google.android.material.appbar.MaterialToolbar;
@@ -47,12 +56,13 @@ public class ManageProfiles extends AppCompatActivity {
     private ImageView profileImage;
     private TextView dateJoined;
     private EditText userNameEditText;
-    private ImageButton changeUsernameButton;
+    private MaterialButton changeUsernameButton;
     private ActivityManageProfilesBinding manageProfilesBinding;
     private ArrayList<String> selectedImagePaths;
     private String selectedImagePath;
     private DatabaseHelper databaseHelper;
     private DatabaseHelper dataBaseHelper;
+    private ActivityResultLauncher<PickVisualMediaRequest> pickSingleMedia;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,10 +84,28 @@ public class ManageProfiles extends AppCompatActivity {
                 showFirstTimePrompt();
             }
         }
+        pickSingleMedia = registerForActivityResult(new ActivityResultContracts.PickVisualMedia(), uri -> {
+            // Callback is invoked after the user selects a media item or closes the
+            // photo picker.
+            if (uri != null) {
+                selectedImagePaths.clear();
+                selectedImagePaths.add(uri.toString());
+            } else {
+                Log.d("PhotoPicker", "No media selected");
+            }
+
+        });
+
         manageProfilesBinding.profileImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                chooseWallPaper();
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    pickSingleMedia.launch(new PickVisualMediaRequest.Builder()
+                            .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE)
+                            .build());
+                }else {
+                    chooseWallPaper();
+                }
             }
         });
         User user = getIntent().getParcelableExtra("profile");
@@ -177,41 +205,60 @@ public class ManageProfiles extends AppCompatActivity {
         dataBaseHelper = new DatabaseHelper(this);
         User user = dataBaseHelper.getUserById(getCurrentAccountId());
         if (user != null) {
-            databaseHelper.deleteUser(Long.parseLong(user.getUserId()));
-            UploadedCarsHelper uploadedCarsHelper = new UploadedCarsHelper(this);
-            List<Car> myCars = uploadedCarsHelper.getAllCars();
-            if (!myCars.isEmpty()){
-                for (Car car : myCars){
-                    uploadedCarsHelper.deleteCar(car.getCar_id()
-                    );
+            boolean delete = databaseHelper.deleteUser(user.getUserId());
+            if (delete) {
+                UploadedCarsHelper uploadedCarsHelper = new UploadedCarsHelper(this);
+                List<Car> myCars = uploadedCarsHelper.getAllCars();
+                if (myCars != null && !myCars.isEmpty()) {
+                    for (Car car : myCars) {
+                        uploadedCarsHelper.deleteCar(car.getCar_id()
+                        );
+                    }
                 }
+                setCurrentProfile();
+                Toast.makeText(this, "Success", Toast.LENGTH_SHORT).show();
+            }else {
+                Toast.makeText(this, "Failed", Toast.LENGTH_SHORT).show();
             }
-            setCurrentProfile();
-            Toast.makeText(this, "Success", Toast.LENGTH_SHORT).show();
         }else {
             if (getCurrentAccountId() != null) {
                 setCurrentProfile();
                 Toast.makeText(this, "No account", Toast.LENGTH_SHORT).show();
             }
         }
-        onBackPressed();
+        restartApp();
+    }
+    private void restartApp() {
+        Intent intent = new Intent(this, SplashActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        Runtime.getRuntime().exit(0);
     }
     private void setCurrentProfile() {
         SharedPreferences sharedPreferences = getSharedPreferences("AccountPrefs", MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString("currentUserId", "");
-        editor.putString("currentAccountType", "");
-        editor.putString("currentUserEmail", "");
-        editor.putString("currentUserName", "");
-        editor.putString("currentDateJoined", "");
-        editor.putString("currentUserPassword", "");
-        editor.putString("currentProfileImage", "");
+        editor.remove("currentUserId");
+        editor.remove("currentAccountType");
+        editor.remove("currentUserEmail");
+        editor.remove("currentUserName");
+        editor.remove("currentDateJoined");
+        editor.remove("currentUserPassword");
+        editor.remove("currentProfileImage");
         editor.apply();
 
         if (!SimCardManager.getPhoneNumber(this).equals("")){
             SimCardManager.setPhoneNumber(this,"");
         }
         TaxiModeManager.setTaxiMode(this,false);
+        RequestManager requestManager = new RequestManager(this);
+        if (requestManager.loadRequest() != null){
+            requestManager.clearRequest();
+        }
+        DriverAvailabilityManager availabilityManager = new DriverAvailabilityManager(this);
+        if (availabilityManager.getTaxiInit() != null){
+            availabilityManager.deleteTaxiInit();
+            availabilityManager.saveAvailabilityStatus(false);
+        }
     }
 
     private void changeUserName() {
@@ -225,6 +272,11 @@ public class ManageProfiles extends AppCompatActivity {
             user.setUsername(newUsername);
             databaseHelper.updateUser(user);
             userNameEditText.setText(newUsername);
+            SharedPreferences sharedPreferences = getSharedPreferences("AccountPrefs", MODE_PRIVATE);
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putString("currentUserName", newUsername);
+            editor.apply();
+            Toast.makeText(this, "Name set successfully", Toast.LENGTH_SHORT).show();
         }else {
             Toast.makeText(this, "You must have an account to modify username", Toast.LENGTH_SHORT).show();
         }
@@ -317,5 +369,12 @@ public class ManageProfiles extends AppCompatActivity {
                 .load(selectedImage)
                 .override(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT) // Set thedesired width and height for resizing
                 .into(manageProfilesBinding.profileImage);
+    }
+    private void showSnackbar(boolean accountCreatedSuccessfully) {
+        View view = manageProfilesBinding.getRoot(); // Get the root view of the fragment
+        if (view != null) {
+            String message = accountCreatedSuccessfully ? "Name set successfully!" : "Failed to save.";
+            Snackbar.make(view, message, Snackbar.LENGTH_LONG).show();
+        }
     }
 }

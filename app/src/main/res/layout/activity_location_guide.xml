@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context=".guides.LocationGuideActivity">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:orientation="vertical"
+        android:layout_height="match_parent">
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+            <ImageButton
+                android:id="@+id/current"
+                android:layout_width="98dp"
+                android:layout_height="98dp"
+                app:tint="@color/black"
+                android:layout_alignParentTop="true"
+                android:layout_above="@id/bottom_lt"
+                android:layout_centerHorizontal="true"
+                android:layout_gravity="center_horizontal"
+                android:background="@android:color/transparent"
+                android:contentDescription="current location"
+                android:src="@drawable/vector" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/bottom_lt"
+                android:layout_alignParentBottom="true"
+                android:layout_marginBottom="150dp"
+                android:orientation="vertical">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="28sp"
+                    android:layout_marginHorizontal="16dp"
+                    android:text="Receive Updated and Reliable Services "
+                    android:layout_gravity="center_vertical"
+                    android:textStyle="bold" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="20sp"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginHorizontal="16dp"
+                    android:text="Allow Abiri to access your location so as to access services and get recommendation.  "
+                    android:layout_gravity="center_vertical"
+                    android:textStyle="bold" />
+            </LinearLayout>
+        </RelativeLayout>
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="0"
+            android:layout_margin="6dp"
+            android:orientation="horizontal">
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/next_button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_marginHorizontal="8dp"
+                android:layout_marginVertical="8dp"
+                android:padding="4dp"
+                app:cornerRadius="8dp"
+                android:textStyle="bold"
+                android:textSize="16sp"
+                app:icon="@drawable/baseline_arrow_forward_ios_32"
+                android:text="Get started"
+                app:iconGravity="textEnd"
+                app:tint="@color/white"/>
+        </RelativeLayout>
+    </LinearLayout>
+</layout>

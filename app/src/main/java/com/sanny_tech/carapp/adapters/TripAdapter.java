@@ -74,31 +74,22 @@ public class TripAdapter extends RecyclerView.Adapter<TripAdapter.TripViewHolder
             this.tripLtBinding = tripLtBinding;
         }
         public void bind(Trip trip) {
-            tripLtBinding.destination.setText(trip.getDest());
+            tripLtBinding.destination.setText(trip.getDestination());
             String formattedTime = formatTime(trip.getStart_time());
             tripLtBinding.date.setText(formattedTime);
 
             tripLtBinding.getRoot().setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    listener.onItemClick(trip);
+                    if (listener != null){
+                        listener.onItemClick(trip);
+                    }
                 }
             });
         }
         private String formatTime(String timestamp) {
             SimpleDateFormat sdf = new SimpleDateFormat("dd MMM, HH:mm", Locale.getDefault());
-            return sdf.format(new Date(timestamp));
+            return sdf.format(new Date(Long.parseLong(timestamp)));
         }
-    }
-
-    private String calculatePrice(double travelDistance) {
-        double price = travelDistance * 50;
-
-        Locale kenyanLocale = new Locale("sw", "KE");
-        Currency kenyanShilling = Currency.getInstance("KES");
-        NumberFormat numberFormat = NumberFormat.getCurrencyInstance(kenyanLocale);
-        numberFormat.setCurrency(kenyanShilling);
-        String formattedAmount = numberFormat.format(price);
-        return formattedAmount;
     }
 }

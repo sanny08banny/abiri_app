@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/linear_lt_bg"
+        android:padding="8dp">
+
+        <!-- Start Icon -->
+        <ImageView
+            android:id="@+id/startIcon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
+            android:contentDescription="@string/decoration_icon"
+            android:padding="8dp"
+            android:src="@drawable/baseline_search_32" />  <!-- Replace with your start icon -->
+
+        <!-- EditText -->
+        <EditText
+            android:id="@+id/destinationEditText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_marginStart="4dp"
+            android:layout_marginEnd="4dp"
+            android:layout_toStartOf="@id/endIcon"
+            android:layout_toEndOf="@id/startIcon"
+            android:autofillHints="postalAddress"
+            android:background="@drawable/edit_text_no_line"
+            android:hint="Enter destination"
+            android:inputType="textPostalAddress"
+            android:padding="8dp" />
+
+        <!-- End Icon -->
+        <ImageView
+            android:id="@+id/endIcon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:clickable="true"
+            android:contentDescription="@string/navigation_icon"
+            android:focusable="true"
+            android:padding="8dp"
+            android:src="@drawable/pin" />
+
+    </RelativeLayout>
+
+</layout>

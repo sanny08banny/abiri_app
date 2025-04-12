@@ -2,137 +2,176 @@
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
-<RelativeLayout
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    tools:context=".activities.AddPhoneNumberActivity">
-    <com.google.android.material.appbar.AppBarLayout
-        android:layout_width="match_parent"
-        android:id="@+id/app_bar_layout"
-        android:layout_height="wrap_content">
-
-        <com.google.android.material.appbar.MaterialToolbar
-            android:id="@+id/toolbar"
-            android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            android:background="#00000000"
-            app:contentInsetStartWithNavigation="0dp"
-            app:layout_scrollFlags="enterAlways">
-
-            <ImageButton
-                android:id="@+id/options_button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="end"
-                android:layout_marginEnd="16dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="Options"
-                android:src="@drawable/baseline_scatter_plot_24" />
-
-        </com.google.android.material.appbar.MaterialToolbar>
-    </com.google.android.material.appbar.AppBarLayout>
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/login_title"
-        android:textStyle="bold"
-        android:layout_marginTop="80dp"
-        android:layout_below="@id/app_bar_layout"
-        android:text="Connect Phone"
-        android:layout_centerHorizontal="true"
-        android:textSize="40sp"
-        android:fontFamily="@font/barrio"
-        android:padding="10dp"/>
 
     <RelativeLayout
         android:layout_width="match_parent"
-        android:id="@+id/set_up_payment_method"
-        android:layout_below="@id/login_title"
-        android:layout_marginTop="32dp"
-        android:layout_height="wrap_content">
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:id="@+id/set_up_payment_method_lt1"
-            android:layout_height="wrap_content">
-            <TextView
-                android:id="@+id/radioButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Abiri pay powered by M-PESA"
-                android:layout_marginStart="16dp"
-                android:layout_centerVertical="true"
-                android:layout_marginTop="8dp"/>
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        tools:context=".activities.AddPhoneNumberActivity">
 
-            <ImageButton
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:id="@+id/logo_holder"
-                android:layout_marginEnd="16dp"
-                android:layout_centerVertical="true"
-                android:layout_alignParentEnd="true"
-                android:background="@drawable/searchview_black_bg"
-                android:src="@mipmap/ic_abiri"/>
-        </RelativeLayout>
         <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
-            android:layout_marginTop="8dp"
-            android:id="@+id/set_up_payment_method_lt2"
-            android:layout_below="@id/set_up_payment_method_lt1">
-            <com.hbb20.CountryCodePicker
+            android:id="@+id/main_lt"
+            android:layout_height="match_parent">
+
+            <TextView
+                android:id="@+id/login_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                app:ccp_showNameCode="true"
-                app:ccp_defaultNameCode="KE"
-                android:layout_centerVertical="true"
                 android:layout_marginStart="8dp"
-                android:id="@+id/set_up_payment_country_code_spinner">
-            </com.hbb20.CountryCodePicker>
-            <com.google.android.material.textfield.TextInputLayout
+                android:layout_marginTop="8dp"
+                android:padding="10dp"
+                android:text="Register an Account with us"
+                android:textSize="22sp"
+                android:textStyle="bold" />
+
+            <RelativeLayout
+                android:id="@+id/set_up_payment_method"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Enter phone number (7xxxxxxxx)"
-                android:layout_marginStart="8dp"
-                android:layout_marginEnd="8dp"
-                android:layout_alignParentEnd="true"
-                style="@style/ThemeOverlay.Material3.TextInputEditText.OutlinedBox"
-                android:layout_toEndOf="@id/set_up_payment_country_code_spinner">
-                <com.google.android.material.textfield.TextInputEditText
+                android:layout_below="@id/login_title"
+                android:layout_marginTop="16dp">
+
+                <RelativeLayout
+                    android:id="@+id/set_up_payment_method_lt1"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <TextView
+                        android:id="@+id/radioButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_centerVertical="true"
+                        android:layout_marginStart="16dp"
+                        android:layout_marginTop="8dp"
+                        android:text="Enter Your Phone Number"
+                        android:textSize="16sp" />
+                </RelativeLayout>
+
+                <RelativeLayout
+                    android:id="@+id/set_up_payment_method_lt2"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:id="@+id/add_phone_number_edittext"/>
-            </com.google.android.material.textfield.TextInputLayout>
+                    android:layout_below="@id/set_up_payment_method_lt1"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="8dp">
+
+                    <com.hbb20.CountryCodePicker
+                        android:id="@+id/set_up_payment_country_code_spinner"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_centerVertical="true"
+                        android:layout_marginStart="8dp"
+                        app:ccp_defaultNameCode="KE"
+                        app:ccp_showNameCode="true"></com.hbb20.CountryCodePicker>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/ThemeOverlay.Material3.TextInputEditText.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentEnd="true"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginEnd="8dp"
+                        android:layout_toEndOf="@id/set_up_payment_country_code_spinner"
+                        android:hint="Enter phone number, format(7xxxxxxxx)">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/add_phone_number_edittext"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                </RelativeLayout>
+            </RelativeLayout>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/continue_button"
+                android:layout_width="300dp"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/set_up_payment_method"
+                android:layout_centerHorizontal="true"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="16dp"
+                android:layout_marginEnd="16dp"
+                app:icon="@drawable/baseline_arrow_forward_ios_32"
+                android:layout_marginBottom="16dp"
+                app:iconTint="@color/white"
+                app:iconGravity="end"
+                android:text="Continue"
+                app:cornerRadius="8dp" />
+            <com.google.android.gms.common.SignInButton
+                android:id="@+id/google_sigin"
+                android:layout_width="300dp"
+                android:layout_height="60dp"
+                android:layout_below="@id/continue_button"
+                android:layout_gravity="center_horizontal"
+                android:layout_centerHorizontal="true"
+                android:layout_marginVertical="8dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:layout_centerHorizontal="true"
+                android:layout_marginVertical="16dp"
+                android:fontFamily="@font/jost_light"
+                android:text="SANNY"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
 
         </RelativeLayout>
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/verify_lt"
+            android:visibility="gone"
+            android:padding="16dp">
+
+            <TextView
+                android:id="@+id/otp_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Enter the OTP"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:layout_centerHorizontal="true" />
+
+            <TextView
+                android:id="@+id/otp_message"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Please enter the OTP sent to your phone number."
+                android:layout_below="@id/otp_title"
+                android:layout_marginTop="8dp"
+                android:textSize="16sp"
+                android:layout_centerHorizontal="true" />
+
+            <EditText
+                android:id="@+id/otp_edit_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Enter OTP"
+                android:background="@drawable/custom_edittext_background2"
+                android:inputType="number"
+                android:padding="16dp"
+                android:layout_marginTop="24dp"
+                android:layout_below="@id/otp_message"
+                android:layout_centerHorizontal="true" />
+
+            <Button
+                android:id="@+id/verify_button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Verify OTP"
+                android:layout_marginTop="24dp"
+                android:layout_below="@id/otp_edit_text"
+                android:layout_centerHorizontal="true"
+                android:background="?attr/colorPrimary"
+                android:textColor="#FFFFFF" />
+
+        </RelativeLayout>
+
     </RelativeLayout>
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/continue_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/set_up_payment_method"
-        android:layout_centerHorizontal="true"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginBottom="16dp"
-        android:text="Continue"
-        app:cornerRadius="8dp" />
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="SANNY"
-        android:layout_alignParentBottom="true"
-        android:layout_marginVertical="16dp"
-        android:layout_centerHorizontal="true"
-        android:fontFamily="@font/jost_light"
-        android:textSize="18sp"
-        android:textStyle="bold"/>
-
-
-</RelativeLayout>
 </layout>

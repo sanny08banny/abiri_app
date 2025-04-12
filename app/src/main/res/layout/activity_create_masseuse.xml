@@ -7,7 +7,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        tools:context=".activities.AddHouseActivity">
+        tools:context=".activities.CreateMasseuseActivity">
 
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/tool_bar"
@@ -39,6 +39,47 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:orientation="vertical">
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/name_edittext_layout"
+                    style="@style/ThemeOverlay.Material3.TextInputEditText.OutlinedBox"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="16dp"
+                    android:layout_marginVertical="8dp"
+                    android:hint="Enter fullname e.g Ann Njeri">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/name_edittext"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center" />
+                </com.google.android.material.textfield.TextInputLayout>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="8dp"
+                    android:text="Phone number . (Confidential)"
+                    android:textColor="?attr/imageButtonStyle"
+                    android:textStyle="bold" />
+
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/model_edittext_layout"
+                    style="@style/ThemeOverlay.Material3.TextInputEditText.OutlinedBox"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="16dp"
+                    android:layout_marginVertical="8dp"
+                    android:hint="Enter phone number. Format (7xxxxxxxx)">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/number_edittext"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="phone"
+                        android:layout_gravity="center" />
+                </com.google.android.material.textfield.TextInputLayout>
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -69,63 +110,22 @@
                             android:layout_gravity="center" />
                     </com.google.android.material.textfield.TextInputLayout>
 
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/daily_down_payment_price_edittext_layout"
-                        style="@style/ThemeOverlay.Material3.TextInputEditText.OutlinedBox"
-                        android:layout_width="150dp"
+                    <Spinner
+                        android:id="@+id/transaction_types_spinner"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginHorizontal="16dp"
-                        android:layout_marginVertical="16dp"
+                        android:layout_marginTop="10dp"
                         android:layout_weight="0"
-                        android:hint="@string/downpayment">
-
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/daily_down_payment_edittext"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_gravity="center" />
-                    </com.google.android.material.textfield.TextInputLayout>
+                        android:dropDownVerticalOffset="40dp"
+                        android:gravity="center_vertical"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp"
+                        android:popupBackground="@drawable/custom_spinner_background"
+                        android:prompt="@array/account_types"
+                        android:spinnerMode="dropdown"
+                        android:textSize="16sp" />
                 </LinearLayout>
-                <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/name_edittext_layout"
-                    style="@style/ThemeOverlay.Material3.TextInputEditText.OutlinedBox"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="16dp"
-                    android:layout_marginVertical="8dp"
-                    android:hint="Enter fullname e.g Ann Njeri">
-
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/name_edittext"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center" />
-                </com.google.android.material.textfield.TextInputLayout>
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginTop="8dp"
-                    android:text="Model"
-                    android:textColor="?attr/imageButtonStyle"
-                    android:textStyle="bold" />
-
-
-                <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/model_edittext_layout"
-                    style="@style/ThemeOverlay.Material3.TextInputEditText.OutlinedBox"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="16dp"
-                    android:layout_marginVertical="8dp"
-                    android:hint="Enter car model eg. CX">
-
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/model_edittext"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center" />
-                </com.google.android.material.textfield.TextInputLayout>
 
                 <TextView
                     android:layout_width="wrap_content"

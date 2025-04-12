@@ -1,107 +1,258 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
     tools:context=".activities.SelectLocationActivity">
-    <com.google.android.material.appbar.MaterialToolbar
-        android:id="@+id/new_stori_toolbar"
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
-        android:background="#00000000"
-        app:contentInsetStartWithNavigation="0dp"
-        app:layout_scrollFlags="scroll|enterAlways">
-    </com.google.android.material.appbar.MaterialToolbar>
-
-    <TextView
-        android:id="@+id/current_location_text"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/new_stori_toolbar"
-        android:layout_marginHorizontal="16dp"
-        android:layout_marginTop="8dp"
-        android:gravity="center_horizontal"
-        android:hint="Enter location"
-        android:textStyle="bold" />
-    <!-- New components for selecting multiple locations -->
+        android:layout_height="wrap_content">
     <LinearLayout
-        android:id="@+id/selected_locations_lt"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/current_location_text"
-        android:layout_alignParentEnd="true"
-        android:layout_margin="8dp"
-        android:background="@drawable/linear_lt_bg"
+        android:id="@+id/main_lt"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="4dp"
+                android:layout_marginTop="12dp"
+                android:id="@+id/progress_lt"
+                android:orientation="horizontal"
+                android:weightSum="3">
+
+                <ProgressBar
+                    android:id="@+id/progressBar1"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="5dp"
+                    android:layout_marginHorizontal="4dp"
+                    android:layout_weight="1"
+                    android:max="100"
+                    android:progress="100"
+                    android:progressDrawable="@drawable/custom_progress_bar" />
+
+                <ProgressBar
+                    android:id="@+id/progressBar2"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="0dp"
+                    android:layout_height="5dp"
+                    android:layout_marginHorizontal="4dp"
+                    android:layout_weight="1"
+                    android:max="100"
+                    android:progress="28"
+                    android:progressDrawable="@drawable/custom_progress_bar" />
+
+                <ProgressBar
+                    android:id="@+id/progressBar3"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="0dp"
+                    android:layout_height="5dp"
+                    android:layout_marginHorizontal="4dp"
+                    android:layout_weight="1"
+                    android:max="0"
+                    android:progress="30"
+                    android:progressDrawable="@drawable/custom_progress_bar" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/title3"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginHorizontal="16dp"
+                    android:layout_marginTop="8dp"
+                    android:text="Where are you located?"
+                    android:textSize="22sp"
+                    android:textStyle="bold" />
+                <TextView
+                    android:id="@+id/current_location_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="16dp"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center_horizontal"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/title4"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginHorizontal="16dp"
+                    android:layout_marginTop="16dp"
+                    android:text="This will help us match your business with clients near your facility"
+                    android:textSize="16sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <androidx.coordinatorlayout.widget.CoordinatorLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1">
+
+            <LinearLayout
+                android:id="@+id/search_btn"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignBottom="@id/collapsible_image"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="16dp"
+                android:background="@drawable/search_background"
+                android:drawablePadding="8dp"
+                android:elevation="16dp"
+                android:padding="16dp"
+                android:shadowColor="#808080"
+                android:shadowDx="0"
+                android:shadowDy="2"
+                android:shadowRadius="8">
+
+                <TextView
+                    android:id="@+id/search_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginStart="12dp"
+                    android:text="Search..."
+                    android:textColor="@android:color/darker_gray" />
+            </LinearLayout>
+
+            <fragment
+                android:id="@+id/map"
+                android:name="com.google.android.gms.maps.SupportMapFragment"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+        </androidx.coordinatorlayout.widget.CoordinatorLayout>
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="6dp"
+            android:layout_weight="0"
+            android:orientation="horizontal">
+
+            <ImageButton
+                android:id="@+id/previous_button"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_gravity="center_vertical"
+                android:layout_marginHorizontal="10dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="8dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/back_button"
+                android:padding="4dp"
+                android:src="@drawable/arrow_back_24"
+                app:tint="?attr/imageButtonStyle" />
+
+            <View
+                android:layout_width="wrap_content"
+                android:layout_height="1dp"
+                android:layout_toStartOf="@id/next_button"
+                android:layout_toEndOf="@id/previous_button" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/next_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_marginHorizontal="8dp"
+                android:layout_marginVertical="8dp"
+                android:padding="4dp"
+                android:text="@string/next"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                app:cornerRadius="8dp"
+                app:tint="?attr/imageButtonStyle" />
+        </RelativeLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/dest_lt"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/top_corners_shape"
         android:orientation="vertical"
         android:visibility="gone">
 
-        <TextView
+        <RelativeLayout
+            android:id="@+id/top_lt"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <ImageButton
+                android:id="@+id/back"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_centerVertical="true"
+                android:layout_marginStart="16dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/notifications"
+                android:src="@drawable/baseline_arrow_back_24" />
+
+            <TextView
+                android:id="@+id/greeting_text_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_marginVertical="4dp"
+                android:layout_marginStart="16dp"
+                android:layout_toEndOf="@id/back"
+                android:text="Enter address"
+                android:textColor="@android:color/black"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+        </RelativeLayout>
+
+        <androidx.appcompat.widget.SearchView
+            android:id="@+id/search_view"
+            style="@style/ShapeAppearanceOverlay.Material3.SearchBar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="16dp"
-            android:layout_marginTop="8dp"
-            android:gravity="center_horizontal"
-            android:hint="Selected Locations"
-            android:textStyle="bold" />
-
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="2dp"
-            android:layout_marginVertical="4dp"
-            android:background="?attr/imageButtonStyle" />
+            android:layout_marginTop="4dp"
+            android:background="@drawable/search_background"
+            android:inputType="textPostalAddress"
+            app:iconifiedByDefault="false"
+            app:queryHint="Enter a location eg, Kiambu"
+            app:searchIcon="@drawable/baseline_search_24" />
 
         <ListView
-            android:id="@+id/selected_locations_recycler_view"
+            android:id="@+id/locations_list"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="8dp"
+            android:layout_below="@id/search_view"
             android:scrollbars="vertical" />
 
-        <com.google.android.material.button.MaterialButton
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:id="@+id/location_pick_proceed"
-            android:layout_marginHorizontal="32dp"
-            app:cornerRadius="8dp"
-            android:layout_marginVertical="8dp"
-            android:text="Proceed" />
+        <ProgressBar
+            android:id="@+id/locations_progress_bar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/error_message"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:textColor="@color/blue"
+            android:textSize="16sp"
+            android:visibility="gone" />
     </LinearLayout>
-
-    <androidx.appcompat.widget.SearchView
-        android:id="@+id/search_view"
-        style="@style/ShapeAppearanceOverlay.Material3.SearchBar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/selected_locations_lt"
-        android:layout_marginHorizontal="16dp"
-        android:layout_marginTop="4dp"
-        app:iconifiedByDefault="false"
-        android:background="@drawable/searchview_black_bg"
-        android:inputType="textPostalAddress"
-        app:queryHint="Enter a location eg, Kiambu"
-        app:searchIcon="@drawable/baseline_search_24" />
-
-    <ListView
-        android:id="@+id/locations_list"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/search_view"
-        android:scrollbars="vertical" />
-
-    <ProgressBar
-        android:id="@+id/locations_progress_bar"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:visibility="gone" />
-
-    <TextView
-        android:id="@+id/error_message"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:textColor="@color/blue"
-        android:textSize="16sp"
-        android:visibility="gone" />
-</RelativeLayout>
+    </RelativeLayout>
+</layout>

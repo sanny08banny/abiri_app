@@ -8,28 +8,29 @@ import androidx.databinding.DataBindingUtil;
 import androidx.loader.app.LoaderManager;
 import androidx.loader.content.Loader;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.viewpager2.widget.ViewPager2;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.sanny_tech.carapp.R;
 import com.sanny_tech.carapp.adapters.CommentAdapter;
-import com.sanny_tech.carapp.asynctasks.BookCarLoader;
+import com.sanny_tech.carapp.asynctasks.CarUploadLoader;
 import com.sanny_tech.carapp.asynctasks.ReviewLoader;
-import com.sanny_tech.carapp.databasehelpers.BookedCarsDatabaseHelper;
+import com.sanny_tech.carapp.databasehelpers.UploadedCarsHelper;
 import com.sanny_tech.carapp.databinding.ActivityAboutCarBinding;
 import com.sanny_tech.carapp.dialogs.ProgressDialogFragment;
-import com.sanny_tech.carapp.entities.BookedCar;
 import com.sanny_tech.carapp.entities.Car;
-import com.sanny_tech.carapp.enums.ActionType;
+import com.sanny_tech.carapp.enums.CarActions;
 import com.sanny_tech.carapp.enums.ReviewAction;
 import com.sanny_tech.carapp.hire_utils.Hire;
+import com.sanny_tech.carapp.hire_utils.HireActivity;
 import com.sanny_tech.carapp.hire_utils.HireManager;
 import com.sanny_tech.carapp.review.CarReviewResponse;
 import com.sanny_tech.carapp.utils.ImagePagerAdapter;
@@ -49,25 +50,22 @@ import java.util.Currency;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
-public class AboutCarActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Object>,
-HireManager.OnHireChangedListener{
+public class AboutCarActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Object>{
     private ActivityAboutCarBinding aboutCarBinding;
     private Car car;
     private ProgressDialogFragment progressDialogFragment;
-    private BookedCarsDatabaseHelper databaseHelper;
     private String duration;
     private HireManager hireManager;
     private DatabaseReference reference;
     private FirebaseDatabase database;
+    private ImagePagerAdapter adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         aboutCarBinding = DataBindingUtil.setContentView(this, R.layout.activity_about_car);
-        setSupportActionBar(aboutCarBinding.toolBar);
         car = getIntent().getParcelableExtra("selectedCar");
-        databaseHelper = new BookedCarsDatabaseHelper(this);
-        hireManager = new HireManager(this);
+        hireManager = new HireManager(this,car.getCar_id());
         database = FirebaseDatabase.getInstance();
         reference = database.getReference("hires");
         aboutCarBinding.close.setOnClickListener(new View.OnClickListener() {
@@ -81,7 +79,7 @@ HireManager.OnHireChangedListener{
             aboutCarBinding.description.setText(car.getDescription());
             aboutCarBinding.model.setText(car.getModel());
             aboutCarBinding.location.setText(car.getLocation());
-            double amount = car.getAmount();
+            double amount = car.getDaily_amount();
             Locale kenyanLocale = new Locale("sw", "KE");
             Currency kenyanShilling = Currency.getInstance("KES");
             NumberFormat numberFormat = NumberFormat.getCurrencyInstance(kenyanLocale);
@@ -92,22 +90,37 @@ HireManager.OnHireChangedListener{
         }
         ArrayList<String> images = new ArrayList<>();
         String instruction = getIntent().getStringExtra("instruction");
-        if (instruction != null && instruction.equals("local")){
+        if (instruction != null && instruction.equals("local")) {
             images.addAll(car.getCar_images());
-        }else {
+            aboutCarBinding.deleteLi.setVisibility(View.VISIBLE);
+            aboutCarBinding.deleteCarButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+
+                }
+            });
+        } else {
             for (String filePath : car.getCar_images()) {
                 String baseUrl = IpAddressManager.getIpAddress(this);
-                String endPoint = baseUrl + "/car/" + car.getOwner_id() + "/"
+                String endPoint = baseUrl + "/car/image/" + car.getOwner_id() + "/"
                         + car.getCar_id() + "/" + filePath;
                 images.add(endPoint);
             }
         }
 
-        ImagePagerAdapter adapter = new ImagePagerAdapter(this, images);
+        adapter = new ImagePagerAdapter(this, images);
         aboutCarBinding.houseImagesViewPager.setAdapter(adapter);
-        removeDots();
-        createDotsIndicator(car, car.getCar_images());
-        checkBookStatus();
+        aboutCarBinding.houseImagesViewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
+            @Override
+            public void onPageSelected(int position) {
+                super.onPageSelected(position);
+                updatePageIndicator(position);
+            }
+        });
+
+        // Initialize the indicator text
+        updatePageIndicator(0);
+        loadHire();
 
         aboutCarBinding.findCarButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -115,41 +128,22 @@ HireManager.OnHireChangedListener{
                 showDatePickerDialog(AboutCarActivity.this, car);
             }
         });
+        aboutCarBinding.deleteCarButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showDeleteConfirmationDialog();
+            }
+        });
         loadRating();
     }
+
     private void loadRating() {
         LoaderManager.getInstance(this).initLoader(1, null, this);
     }
 
-    private void checkBookStatus() {
-        BookedCar bookedCar = databaseHelper.getBookedCarByCarId(car.getCar_id());
-        if (bookedCar != null){
-            aboutCarBinding.toolBar.setTitle(bookedCar.getDuration());
-            Log.e("Duration", bookedCar.getDuration());
-        }else {
-            aboutCarBinding.toolBar.setTitle("");
-        }
-    }
-
-    private void createDotsIndicator(Car car, ArrayList<String> imageResources) {
-        ImageView[] dots = new ImageView[imageResources.size()];
-        for (int i = 0; i < dots.length; i++) {
-            dots[i] = new ImageView(this);
-            dots[i].setImageResource(R.drawable.ic_dot_unselected); // Use your unselected dot drawable
-            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.WRAP_CONTENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
-            );
-            params.setMargins(8, 0, 8, 0); // Adjust margin as needed
-            aboutCarBinding.dotsIndicator.addView(dots[i], params);
-        }
-    }
-
-    private void updateDotsIndicator(int position) {
-        for (int i = 0; i < aboutCarBinding.dotsIndicator.getChildCount(); i++) {
-            ImageView dot = (ImageView) aboutCarBinding.dotsIndicator.getChildAt(i);
-            dot.setImageResource(i == position ? R.drawable.ic_dot_selected : R.drawable.ic_dot_unselected);
-        }
+    private void updatePageIndicator(int position) {
+        int total = adapter.getItemCount();
+        aboutCarBinding.count.setText((position + 1) + "/" + total);
     }
 
     public void removeDots() {
@@ -188,7 +182,7 @@ HireManager.OnHireChangedListener{
                 duration = String.format(Locale.US, "%d days", days);
 
                 // Call the bookCar method with the car and duration
-                bookCar(car);
+                bookCar(car,fromDateMillis,toDateMillis);
             }
         });
 
@@ -196,21 +190,13 @@ HireManager.OnHireChangedListener{
         picker.show(((AppCompatActivity) context).getSupportFragmentManager(), picker.toString());
     }
 
-    private void bookCar(Car car) {
-        BookCarLoader bookCarLoader = new BookCarLoader(this, car.getOwner_id(), ActionType.BOOK, car);
-        showProgreeBar();
-        bookCarLoader.forceLoad();
-        bookCarLoader.registerListener(7, new Loader.OnLoadCompleteListener<String>() {
-            @Override
-            public void onLoadComplete(@NonNull Loader<String> loader, @Nullable String data) {
-                if (data!= null){
-                    hireManager.startRideUpdates(AboutCarActivity.this);
-                } else {
-                    hideProgreeBar();
-                    Toast.makeText(AboutCarActivity.this, "Unsuccessful booking", Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
+    private void bookCar(Car car, long fromDateMillis, long toDateMillis) {
+        Intent intent = new Intent(this, HireActivity.class);
+        intent.setAction("book car");
+        intent.putExtra("car", car);
+        intent.putExtra("from", fromDateMillis);
+        intent.putExtra("to", toDateMillis);
+        startActivity(intent);
     }
 
     private void showProgreeBar() {
@@ -225,16 +211,17 @@ HireManager.OnHireChangedListener{
     @NonNull
     @Override
     public Loader<Object> onCreateLoader(int id, @Nullable Bundle args) {
-        return new ReviewLoader(this,car,null, ReviewAction.GET);
+        return new ReviewLoader(this, car, null, ReviewAction.GET);
     }
 
     @Override
     public void onLoadFinished(@NonNull Loader<Object> loader, Object data) {
-        if (data instanceof CarReviewResponse){
+        if (data instanceof CarReviewResponse) {
             CarReviewResponse carReviewResponse = (CarReviewResponse) data;
+            aboutCarBinding.ratingLt.setVisibility(View.VISIBLE);
             aboutCarBinding.carRatingBar.setRating((float) carReviewResponse.getAverageRating());
             aboutCarBinding.carRatingText.setText(String.valueOf(carReviewResponse.getAverageRating()));
-            if (carReviewResponse.getComments() != null){
+            if (carReviewResponse.getComments() != null) {
                 CommentAdapter commentAdapter = new CommentAdapter(carReviewResponse.getComments(),
                         AboutCarActivity.this);
                 aboutCarBinding.commentsRecycler.setAdapter(commentAdapter);
@@ -248,29 +235,7 @@ HireManager.OnHireChangedListener{
 
     }
 
-    @Override
-    public void onHireChanged(Hire hire) {
-        hideProgreeBar();
-            Toast.makeText(AboutCarActivity.this, "Successful booking", Toast.LENGTH_SHORT).show();
-
-            BookedCar bookedCar = new BookedCar();
-            bookedCar.setCar_id(car.getCar_id());
-            bookedCar.setOwner_id(car.getOwner_id());
-            bookedCar.setDuration(duration);
-            bookedCar.setImage(car.getCar_images().get(0));
-            bookedCar.setPricing(String.valueOf(car.getAmount()));
-
-            boolean isSaved = databaseHelper.insertBookedCar(bookedCar);
-            if (isSaved) {
-                Toast.makeText(AboutCarActivity.this, "Successful save",
-                        Toast.LENGTH_SHORT).show();
-                aboutCarBinding.toolBar.setTitle(duration);
-                loadHire(bookedCar);
-            } else {
-                Toast.makeText(AboutCarActivity.this, "Unsuccessful save", Toast.LENGTH_SHORT).show();
-            }
-    }
-    private void loadHire(BookedCar bookedCar) {
+    private void loadHire() {
         reference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -278,10 +243,10 @@ HireManager.OnHireChangedListener{
 
                 for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                     hire = snapshot.getValue(Hire.class);
-                    if (hire != null && hire.getClient_id().equals(getCurrentAccountId())) {
-                        hire.setCarId(bookedCar.getCar_id());
-                        hire.setCharges(Float.parseFloat(bookedCar.getPricing()));
-                        reference.child(hire.getOwner_id()).setValue(hire);
+                    if (hire != null && hire.getClient_id().equals(getCurrentAccountId()) &&
+                            hire.getCarId().equals(car.getCar_id()) &&
+                                    !hire.getStatus().equals("complete")) {
+                        aboutCarBinding.hiredStatus.setVisibility(View.VISIBLE);
                     }
                 }
                 // You can pass this list to your UI or perform further operations
@@ -295,6 +260,7 @@ HireManager.OnHireChangedListener{
         });
 
     }
+
     public String getCurrentAccountId() {
         SharedPreferences sharedPreferences = getSharedPreferences("AccountPrefs",
                 MODE_PRIVATE);
@@ -304,6 +270,42 @@ HireManager.OnHireChangedListener{
     @Override
     public void onBackPressed() {
         super.onBackPressed();
-        overridePendingTransition(R.anim.scale_up,R.anim.scale_down);
+        overridePendingTransition(R.anim.scale_up, R.anim.scale_down);
+    }
+    private void showDeleteConfirmationDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Delete Account")
+                .setMessage("Are you sure you want to delete this car?")
+                .setPositiveButton("Delete", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        // Perform the deletion here
+                        deleteCar();
+                    }
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    private void deleteCar() {
+        CarUploadLoader carUploadLoader = new CarUploadLoader(this,car,null,
+                CarActions.DELETE,null);
+        carUploadLoader.forceLoad();
+
+        carUploadLoader.registerListener(8, new Loader.OnLoadCompleteListener<String>() {
+            @Override
+            public void onLoadComplete(@NonNull Loader<String> loader, @Nullable String data) {
+                if (data != null && data.equals("success")){
+                    UploadedCarsHelper uploadedCarsHelper = new UploadedCarsHelper(AboutCarActivity.this);
+                    uploadedCarsHelper.deleteCar(car.getCar_id());
+
+                    Toast.makeText(AboutCarActivity.this, "Car deleted successful", Toast.LENGTH_SHORT).show();
+                    finish();
+                }else {
+                    Toast.makeText(AboutCarActivity.this, "Action failed. Retry or try again later", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+
     }
 }

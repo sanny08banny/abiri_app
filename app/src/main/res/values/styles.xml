@@ -1,16 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
     <style name="PopupMenuStyle" parent="@style/Widget.AppCompat.PopupMenu">
         <item name="android:popupBackground">@drawable/custom_popup_background</item>
         <!-- Add other style attributes as needed -->
     </style>
+
     <style name="AdminNewProductAnimation">
         <item name="android:windowEnterAnimation">@anim/fade_in</item>
         <item name="android:windowExitAnimation">@anim/fade_out</item>
     </style>
+
     <style name="RoundedImageView">
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">50%</item>
+    </style>
+
+    <style name="MiniRoundedImageView">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">8dp</item>
     </style>
 
     <style name="MyFloatingActionButtonStyle" parent="Widget.MaterialComponents.FloatingActionButton">
@@ -27,4 +35,35 @@
         <item name="customColorValue">@color/transparent_white</item>
         <item name="android:fontFamily">@font/inter</item>
     </style>
+
+    <style name="DialogAnimationCustom">
+        <item name="android:windowEnterAnimation">@anim/slide_in_bottom</item>
+        <item name="android:windowExitAnimation">@anim/fade_out_videos</item>
+    </style>
+    <style name="TabLayoutStyle" parent="Widget.Design.TabLayout">
+        <item name="tabIndicatorHeight">0dp</item>
+        <item name="tabPaddingStart">8dp</item>
+        <item name="tabPaddingEnd">8dp</item>
+        <item name="tabPaddingTop">8dp</item>
+        <item name="tabPaddingBottom">8dp</item>
+        <item name="tabMinWidth">0dp</item>
+        <item name="tabRippleColor">@color/custom_gray</item>
+    </style>
+    <style name="TabTextAppearance" parent="TextAppearance.Design.Tab">
+        <item name="android:textColor">@color/black</item>
+        <item name="android:textStyle">normal</item>
+    </style>
+    <style name="SplashTheme2" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/white</item>
+
+        <!-- Use windowSplashScreenAnimatedIcon to add a drawable or an animated
+             drawable. One of these is required. -->
+        <item name="windowSplashScreenAnimatedIcon">@drawable/brand_logo</item>
+        <!-- Required for animated icons. -->
+        <item name="windowSplashScreenAnimationDuration">5000</item>
+
+        <!-- Set the theme of the Activity that directly follows your splash
+        screen. This is required. -->
+        <item name="postSplashScreenTheme">@style/Base.Theme.CarApp</item>    </style>
+
 </resources>

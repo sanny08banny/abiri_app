@@ -10,11 +10,11 @@ import androidx.loader.content.Loader;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.NavigationUI;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -22,21 +22,34 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
+import com.google.firebase.firestore.SetOptions;
 import com.sanny_tech.carapp.R;
+import com.sanny_tech.carapp.asynctasks.FunctionsLoader;
 import com.sanny_tech.carapp.asynctasks.TokenIdLoader;
 import com.sanny_tech.carapp.databasehelpers.DatabaseHelper;
 import com.sanny_tech.carapp.databinding.ActivityMainBinding;
 import com.sanny_tech.carapp.dialogs.BookingBottomSheet;
 import com.sanny_tech.carapp.entities.CarBookRequest;
 import com.sanny_tech.carapp.entities.Decline;
-import com.sanny_tech.carapp.entities.Ride;
 import com.sanny_tech.carapp.entities.TaxiLocation;
 import com.sanny_tech.carapp.entities.User;
+import com.sanny_tech.carapp.enums.CarActions;
 import com.sanny_tech.carapp.storage.RemoteMessageSaver;
 import com.sanny_tech.carapp.taxi_utils.ClientRequest;
+import com.sanny_tech.carapp.taxi_utils.DriverAvailabilityManager;
+import com.sanny_tech.carapp.taxi_utils.TaxiInit;
 import com.sanny_tech.carapp.utils.FCMTokenManager;
 import com.sanny_tech.carapp.utils.IpAddressManager;
+import com.sanny_tech.carapp.utils.RequestManager;
+import com.sanny_tech.carapp.utils.SimCardManager;
 import com.sanny_tech.carapp.utils.TaxiModeManager;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.snackbar.Snackbar;
@@ -69,46 +82,19 @@ public class MainActivity extends AppCompatActivity implements BookingBottomShee
         activityMainBinding = DataBindingUtil.setContentView(this, R.layout.activity_main);
         database = FirebaseDatabase.getInstance();
         reference = FirebaseDatabase.getInstance()
-                .getReference("ip_address");
+                .getReference("configurations");
         declineReference = database.getReference("declines");
-        if (getIntent().getExtras() != null) {
-            if (getIntent().hasExtra("ride_id")) {
-                // Type A: Contains ClientRequest details
-                for (String key : getIntent().getExtras().keySet()) {
-                    Object value = getIntent().getExtras().get(key);
-                    Log.d("NotificationData", "Key: " + key + " Value: " + value);
-                    // Handle or process the received data here
-                }
-                request = extractClientRequestFromIntent(getIntent());
-                openDriverMaps(request);
-                // Handle Type A notification with ClientRequest details
-            } else if (getIntent().hasExtra("booking_id")) {
-                for (String key : getIntent().getExtras().keySet()) {
-                    Object value = getIntent().getExtras().get(key);
-                    Log.d("NotificationData", "Key: " + key + " Value: " + value);
-                    // Handle or process the received data here
-                }
-                bookingRequest = extractBookingRequestFromIntent(getIntent());
-                showBookingWindow(bookingRequest);
-            } else if (getIntent().hasExtra("id")) {
-                messageId = getIntent().getLongExtra("id", 0);
-                Log.d("NotificationData", "MessageId: " + messageId);
-            } else {
-                // Type B: Another form of notification without ClientRequest details
-                String notificationMessage = getIntent().getStringExtra("message");
-                // Handle Type B notification without ClientRequest details
-            }
-        }
 
         // Retrieve the message extra from the intent
         if (getIntent() != null && getIntent().hasExtra("request")) {
             if (getIntent().hasExtra("id")) {
-                Log.e("id", "exists");
+                Log.d("id", "exists");
                 messageId = getIntent().getLongExtra("id", 0);
-                Log.e("NotificationData", "MessageId: " + messageId);
+                Log.d("NotificationDataSecondary", "MessageIdMA: " + messageId);
             }
             Object object = getIntent().getParcelableExtra("request");
             if (object instanceof ClientRequest) {
+                Log.e("NotificationData", "ClientExecuted");
                 request = (ClientRequest) object;
                 if (getIntent().getAction() != null) {
                     if (getIntent().getAction().equals("ACCEPT_ACTION")) {
@@ -116,7 +102,7 @@ public class MainActivity extends AppCompatActivity implements BookingBottomShee
                         openDriverMaps(request);
                     } else if (getIntent().getAction().equals("DECLINE_ACTION")) {
                         request.setStatus("Cancelled");
-                        Decline decline = new Decline(getCurrentAccountId(), request.getClient_id());
+                        Decline decline = new Decline(getCurrentAccountId(), request.getSender_id());
                         createDecline(decline);
                         showSnackbar(activityMainBinding.getRoot(),
                                 "Request decline. Click the button to change preference.");
@@ -124,10 +110,16 @@ public class MainActivity extends AppCompatActivity implements BookingBottomShee
                 } else {
                     Log.e("NotificationData", "Executed");
                     openDriverMaps(request);
+                    Log.d("NotificationData", "Opened from 3");
                 }
             } else if (object instanceof CarBookRequest) {
                 showBookingWindow((CarBookRequest) object);
+            } else {
+                Log.e("NotificationData", "UNExecuted");
             }
+        } else {
+            Log.d("NotificationDataSecondary", "MessageIdA: unfound");
+
         }
         fetchAndUpdateLocalData();
         boolean isLoggedIn = getIntent().getBooleanExtra("signIn", false);
@@ -148,8 +140,11 @@ public class MainActivity extends AppCompatActivity implements BookingBottomShee
                     Log.d("Token", token);
                     if (getCurrentAccountId() != null &&
                             !FCMTokenManager.getToken(MainActivity.this).isEmpty() &&
-                    FCMTokenManager.getToken(MainActivity.this).matches(token)) {
+                            FCMTokenManager.getToken(MainActivity.this).matches(token)) {
 //                    if (isLoggedIn) {
+                        DatabaseReference firebaseDatabase = FirebaseDatabase.getInstance().getReference("n_token");
+                        firebaseDatabase.child(getCurrentAccountUserName()).setValue(token);
+
                         TokenIdLoader tokenIdLoader = new TokenIdLoader(MainActivity.this, token);
                         tokenIdLoader.forceLoad();
                         tokenIdLoader.registerListener(7, new Loader.OnLoadCompleteListener<String>() {
@@ -171,36 +166,171 @@ public class MainActivity extends AppCompatActivity implements BookingBottomShee
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
                 if (item.getItemId() == R.id.home) {
+                    navController.popBackStack(R.id.mainFragment, false); // Clear back stack before navigating
                     navController.navigate(R.id.mainFragment, bundle);
                     return true;
-                } else if (item.getItemId() == R.id.drive) {
-                    navController.navigate(R.id.driverMainFragment, bundle);
+                } else if (item.getItemId() == R.id.admin) {
+                    Intent intent = new Intent(MainActivity.this, AdminActivity.class);
+                    startActivity(intent);
+                    overridePendingTransition(R.anim.slide_in_bottom, R.anim.fade_out);
                     return true;
                 } else if (item.getItemId() == R.id.extras) {
+                    navController.popBackStack(R.id.extrasFragment, false); // Clear back stack before navigating
                     navController.navigate(R.id.extrasFragment, bundle);
                     return true;
                 } else if (item.getItemId() == R.id.favourites) {
+                    navController.popBackStack(R.id.searchFragment, false); // Clear back stack before navigating
                     navController.navigate(R.id.searchFragment, bundle);
                     return true;
                 }
                 return false;
             }
         });
+
+        activityMainBinding.swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                recreate();
+                activityMainBinding.swipeRefreshLayout.setRefreshing(false);
+            }
+        });
+
         if (getCurrentAccountType() != null) {
-            toggleDriverMainFragment(TaxiModeManager.getTaxiMode(this));
+            Log.e("Account type", getCurrentAccountType());
+            if (getCurrentAccountType().equals("Admin")) {
+                toggleDriverMainFragment(true);
+                if (TaxiModeManager.getTaxiMode(this)) {
+                    checkActiveRide();
+                }
+            } else {
+                toggleDriverMainFragment(false);
+            }
         } else {
             toggleDriverMainFragment(false);
         }
         updateUser();
 
         checkAccountExistence();
+        fetchDriverDetails();
     }
-    private void changeStatusBarColor(int color){
+
+    private void checkActiveRide() {
+    }
+
+    private void fetchTaxiDetails(TaxiInit init) {
+        FunctionsLoader loader = new FunctionsLoader(this, CarActions.CAR_IMAGES,
+                getCurrentAccountId(), init);
+        loader.forceLoad();
+        loader.registerListener(738, new Loader.OnLoadCompleteListener<ArrayList<String>>() {
+            @Override
+            public void onLoadComplete(@NonNull Loader<ArrayList<String>> loader, @Nullable ArrayList<String> data) {
+                if (data != null) {
+                    Log.e("Images", "loaded" + data.size());
+                    init.setTaxi_images(data);
+                    saveDto(init);
+                    saveOrUpdateTaxiInit(init);
+                    if (getCurrentAccountType() != null &&
+                            !getCurrentAccountType().equals("Admin")) {
+                        changeUserType();
+                        restartApp();
+                    }
+                } else {
+                    Log.e("Images", "failed");
+                }
+            }
+        });
+    }
+
+    public void saveOrUpdateTaxiInit(TaxiInit taxiInit) {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+        if (taxiInit.getId() == null || taxiInit.getId().isEmpty()) {
+            DocumentReference documentReference = db.collection("taxi_inits").document();
+            String documentId = documentReference.getId();
+
+            // Set the document ID to the TaxiInit object
+            taxiInit.setId(documentId);
+
+            // Save the TaxiInit object to Firestore with the specified ID
+            documentReference.set(taxiInit)
+                    .addOnSuccessListener(aVoid -> {
+                        Log.d("Firestore", "DocumentSnapshot added with ID: " + documentId);
+                    })
+                    .addOnFailureListener(e -> {
+                        Log.w("Firestore", "Error adding document", e);
+                    });
+        } else {
+            // Update existing document
+            DocumentReference docRef = db.collection("taxi_inits")
+                    .document(taxiInit.getId());
+
+            docRef.set(taxiInit, SetOptions.merge())
+                    .addOnSuccessListener(aVoid -> {
+                        Log.d("Firestore", "DocumentSnapshot successfully updated!");
+                    })
+                    .addOnFailureListener(e -> {
+                        Log.d("Firestore", "Error updating document", e);
+                    });
+        }
+    }
+
+    private void fetchDriverDetails() {
+        List<TaxiInit> myInits = new ArrayList<>();
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.collection("taxi_inits")
+                .whereEqualTo("driver_id", getCurrentAccountId())
+                .get()
+                .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+                    @Override
+                    public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+                        if (!queryDocumentSnapshots.isEmpty()) {
+                            for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
+                                TaxiInit taxiInit = document.toObject(TaxiInit.class);
+                                myInits.add(taxiInit);
+                                // Handle each TaxiInit object
+                                Log.e("Firestore", "TaxiInit: " + taxiInit.toString());
+                            }
+                            if (myInits.get(0) != null) {
+                                fetchTaxiDetails(myInits.get(0));
+                            } else {
+                                deleteAvailabilityInit();
+                            }
+                        } else {
+                            Log.e("FireStorefetch", "Not found");
+                            deleteAvailabilityInit();
+                        }
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.e("Firestore", "Error getting documents.", e);
+                    }
+                });
+    }
+
+    private void deleteAvailabilityInit() {
+        DriverAvailabilityManager availabilityManager = new
+                DriverAvailabilityManager(MainActivity.this);
+        if (availabilityManager.getTaxiInit() != null) {
+            availabilityManager.deleteTaxiInit();
+            availabilityManager.saveAvailabilityStatus(false);
+        }
+    }
+
+    private void saveDto(TaxiInit init) {
+        DriverAvailabilityManager availabilityManager = new DriverAvailabilityManager(
+                MainActivity.this);
+        availabilityManager.saveTaxiInit(init);
+    }
+
+    private void changeStatusBarColor(int color) {
         Window window = getWindow();
         window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
         window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
         window.setStatusBarColor(color);
     }
+
     private void checkAccountExistence() {
         if (getCurrentAccountId() != null && !getCurrentAccountId().isEmpty()) {
             activityMainBinding.registeringBtns.setVisibility(View.GONE);
@@ -223,7 +353,8 @@ public class MainActivity extends AppCompatActivity implements BookingBottomShee
     }
 
     private void openCreateAccountActivity() {
-        Intent intent = new Intent(MainActivity.this, CreateAccountActivity.class);
+        Intent intent = new Intent(MainActivity.this, AddPhoneNumberActivity.class);
+        intent.putExtra("instruction", "sign-up");
         startActivity(intent);
     }
 
@@ -255,21 +386,24 @@ public class MainActivity extends AppCompatActivity implements BookingBottomShee
         reference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                List<Ride> rides = new ArrayList<>();
+                String ip = null;
 
                 for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                    ip = snapshot.getValue(String.class);
-                    if (ip != null) {
-                        String newBaseUrl = "http://" + ip + ":4000";
-                        if (!newBaseUrl.equals(IpAddressManager.getIpAddress(MainActivity.this))) {
-                            IpAddressManager.setIpAddress(MainActivity.this, ip);
-                        }
+                    String key = snapshot.getKey();
+                    if ("ip".equals(key)) {
+                        ip = snapshot.getValue(String.class);
+                    }
+                }
+
+                if (ip != null) {
+                    String newBaseUrl = "https://" + ip + "/api";
+                    if (!newBaseUrl.equals(IpAddressManager.getIpAddress(MainActivity.this))) {
+                        IpAddressManager.setIpAddress(MainActivity.this, ip);
                     }
                 }
                 if (ip == null) {
                     reference.child("ip").setValue(IpAddressManager.getIpAddress(MainActivity.this));
                 }
-                // You can pass this list to your UI or perform further operations
             }
 
             @Override
@@ -286,16 +420,66 @@ public class MainActivity extends AppCompatActivity implements BookingBottomShee
             }
         } catch (JSONException e) {
             Log.e("Main activity", String.valueOf(e));
-            throw new RuntimeException(e);
         }
-        Intent intent = new Intent(this, TaxiMapsActivity.class);
-        intent.putExtra("request", request);
-        startActivity(intent);
+        String accountId = request.getSender_id();
+        DatabaseReference requestRef = FirebaseDatabase.getInstance()
+                .getReference("verified_requests").child(accountId);
+
+// Check if the request already exists
+        requestRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists()) {
+                    Toast.makeText(MainActivity.this, "Loading", Toast.LENGTH_SHORT).show();
+                    loadApi(request);
+                } else {
+                    Toast.makeText(MainActivity.this, "Request is not available ", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                // Handle potential errors here
+            }
+        });
+    }
+
+    private void loadApi(ClientRequest request) {
+        DatabaseReference hireListener = FirebaseDatabase.getInstance().getReference("configurations");
+        hireListener.addValueEventListener(new ValueEventListener() {
+            // Inside onDataChange method of ValueEventListener
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists()) {
+
+                    String mapKey = "";
+                    for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                        String key = snapshot.getKey();
+                        if ("maps_key".equals(key)) {
+                            mapKey = snapshot.getValue(String.class);
+                        }
+                    }
+
+                    if (mapKey != null) {
+                        Intent intent = new Intent(MainActivity.this,
+                                TaxiMapsActivity.class);
+                        intent.putExtra("key", mapKey);
+                        intent.putExtra("request", request);
+                        startActivity(intent);
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                // Handle errors
+            }
+        });
     }
 
     private void toggleDriverMainFragment(boolean isInTaxiMode) {
         Menu menu = activityMainBinding.bottomNavView.getMenu();
-        MenuItem driverMainMenuItem = menu.findItem(R.id.drive);
+        MenuItem driverMainMenuItem = menu.findItem(R.id.admin);
 
         if (driverMainMenuItem != null) {
             driverMainMenuItem.setVisible(isInTaxiMode);
@@ -308,6 +492,8 @@ public class MainActivity extends AppCompatActivity implements BookingBottomShee
             User user = databaseHelper.getUserById(getCurrentAccountId());
             if (user != null) {
                 setCurrentProfile(user);
+            } else {
+                setCurrentProfile();
             }
         }
     }
@@ -350,6 +536,28 @@ public class MainActivity extends AppCompatActivity implements BookingBottomShee
         editor.apply();
     }
 
+    private void setCurrentProfile() {
+        SharedPreferences sharedPreferences = getSharedPreferences("AccountPrefs", MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.remove("currentUserId");
+        editor.remove("currentAccountType");
+        editor.remove("currentUserEmail");
+        editor.remove("currentUserName");
+        editor.remove("currentDateJoined");
+        editor.remove("currentUserPassword");
+        editor.remove("currentProfileImage");
+        editor.apply();
+
+        if (!SimCardManager.getPhoneNumber(this).equals("")) {
+            SimCardManager.setPhoneNumber(this, "");
+        }
+        TaxiModeManager.setTaxiMode(this, false);
+        RequestManager requestManager = new RequestManager(this);
+        if (requestManager.loadRequest() != null) {
+            requestManager.clearRequest();
+        }
+    }
+
     private void showSnackbar(View rootView, String message) {
         Snackbar snackbar = Snackbar.make(rootView, message, Snackbar.LENGTH_LONG);
         snackbar.setBackgroundTint(ContextCompat.getColor(this, R.color.blue));
@@ -365,7 +573,7 @@ public class MainActivity extends AppCompatActivity implements BookingBottomShee
     private void showTaxiConfirmationDialog(ClientRequest request) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Client request");
-        builder.setMessage("You have a new ");
+        builder.setMessage("You have a new request");
         builder.setPositiveButton("Delete", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
@@ -376,33 +584,6 @@ public class MainActivity extends AppCompatActivity implements BookingBottomShee
         builder.show();
     }
 
-    private ClientRequest extractClientRequestFromIntent(Intent intent) {
-        ClientRequest clientRequest = new ClientRequest();
-
-        clientRequest.setRide_id(intent.getStringExtra("ride_id"));
-        clientRequest.setClient_id(intent.getStringExtra("client_id"));
-        clientRequest.setUser_phone(intent.getStringExtra("user_phone"));
-        clientRequest.setUser_name(intent.getStringExtra("user_name"));
-        clientRequest.setDest_lat(Float.parseFloat(intent.getStringExtra("dest_lat")));
-        clientRequest.setDest_lon(Float.parseFloat(intent.getStringExtra("dest_lon")));
-        clientRequest.setCurrent_lat(Float.parseFloat(intent.getStringExtra("current_lat")));
-        clientRequest.setCurrent_lon(Float.parseFloat(intent.getStringExtra("current_lon")));
-
-        Log.e(MainActivity.class.getSimpleName(), String.valueOf(clientRequest.getDest_lat()));
-        return clientRequest;
-    }
-
-    private CarBookRequest extractBookingRequestFromIntent(Intent intent) {
-        CarBookRequest bookRequest = new CarBookRequest();
-
-        bookRequest.setBooking_id(intent.getStringExtra("booking_id"));
-        bookRequest.setClient_id(intent.getStringExtra("client_id"));
-        bookRequest.setCar_id(intent.getStringExtra("car_id"));
-        bookRequest.setUser_phone(intent.getStringExtra("user_phone"));
-        bookRequest.setUser_name(intent.getStringExtra("user_name"));
-        return bookRequest;
-    }
-
     @Override
     protected void onDestroy() {
         super.onDestroy();
@@ -411,5 +592,28 @@ public class MainActivity extends AppCompatActivity implements BookingBottomShee
     @Override
     public void onBookingResponse(boolean isSuccess, TaxiLocation item) {
 
+    }
+
+    private void restartApp() {
+        Intent intent = new Intent(this, SplashActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        Runtime.getRuntime().exit(0);
+    }
+
+    private void changeUserType() {
+        DatabaseHelper databaseHelper = new DatabaseHelper(this);
+        User user = databaseHelper.getUserById(getCurrentAccountId());
+        if (user != null) {
+            user.setAccountType("Admin");
+            databaseHelper.updateUser(user);
+            SharedPreferences sharedPreferences = getSharedPreferences("AccountPrefs", MODE_PRIVATE);
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putString("currentAccountType", "Admin");
+            editor.apply();
+            Toast.makeText(this, "User setup successfully", Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(this, "You must have an account to modify", Toast.LENGTH_SHORT).show();
+        }
     }
 }

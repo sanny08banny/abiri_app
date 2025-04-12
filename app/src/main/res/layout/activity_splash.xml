@@ -21,8 +21,7 @@
             android:textStyle="bold"
             android:textSize="24sp" />
 
-        <!-- Some nice text somewhere else -->
-        <com.sanny_tech.carapp.utils.TypewriterEffect
+        <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"

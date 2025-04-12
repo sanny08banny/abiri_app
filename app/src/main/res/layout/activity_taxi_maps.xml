@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:map="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
 
@@ -69,6 +70,7 @@
                     android:layout_marginVertical="8dp"
                     android:textSize="16sp" />
             </LinearLayout>
+
             <TextView
                 android:id="@+id/call_user"
                 android:layout_width="wrap_content"
@@ -79,104 +81,214 @@
                 android:fontFamily="@font/jost_semibold"
                 android:textSize="24sp"
                 android:textStyle="bold" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/start_stop_button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="Start Journey"
+                android:visibility="gone"
+                android:textSize="16sp" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/cancel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:layout_marginHorizontal="16dp"
+                android:text="Cancel request"
+                android:textSize="16sp" />
         </LinearLayout>
-
+        <androidx.coordinatorlayout.widget.CoordinatorLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_above="@id/confirmation_status"
+            android:layout_below="@id/request_lt">
         <fragment
             android:id="@+id/map"
             android:name="com.google.android.gms.maps.SupportMapFragment"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_above="@id/confirmation_status"
-            android:layout_below="@id/request_lt" />
+            android:layout_height="match_parent"/>
+            <ImageButton
+                android:id="@+id/close"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginTop="8dp"
+                android:scaleType="centerInside"
+                android:layout_gravity="end|top"
+                android:layout_margin="16dp"
+                android:padding="6dp"
+                android:background="@drawable/round_button_background"
+                android:contentDescription="@string/back_button"
+                android:src="@drawable/close_icon"
+                app:tint="@color/black" />
+        </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
         <LinearLayout
             android:id="@+id/confirmation_status"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
+            android:baselineAligned="false"
+            android:orientation="vertical"
             android:visibility="gone">
 
             <LinearLayout
-                android:id="@+id/accept_lt"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="0"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <ImageButton
-                    android:id="@+id/accept_button"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:background="@drawable/round_image_button"
-                    android:src="@drawable/baseline_check_24" />
-
-                <TextView
-                    android:id="@+id/accept_text"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_horizontal"
-                    android:layout_marginTop="8dp"
-                    android:layout_marginBottom="8dp"
-                    android:text="Accept"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
                 android:orientation="vertical">
-
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
                 <TextView
-                    android:id="@+id/selected_loc"
+                    android:id="@+id/price"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="8dp"
-                    android:layout_marginTop="16dp"
-                    android:textSize="20sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/user_phone"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_vertical"
-                    android:layout_marginHorizontal="16dp"
-                    android:autoLink="phone"
-                    android:fontFamily="@font/jost_semibold"
+                    android:layout_centerInParent="true"
+                    android:layout_marginVertical="10dp"
+                    android:text="Ksh "
                     android:textSize="24sp"
                     android:textStyle="bold" />
+                    <TextView
+                        android:id="@+id/countdownTextView"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginHorizontal="16dp"
+                        android:layout_marginVertical="16dp"
+                        android:textSize="16sp"
+                        android:text="0"
+                        android:layout_alignParentEnd="true"
+                        android:paddingHorizontal="10dp"
+                        android:paddingVertical="5dp"
+                        android:textColor="@color/white"
+                        android:background="@drawable/page_count_bg"
+                        android:textStyle="bold" />
+                </RelativeLayout>
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <ImageButton
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:layout_marginHorizontal="16dp"
+                        android:background="@android:color/transparent"
+                        android:src="@drawable/location"
+                        app:tint="?attr/imageButtonStyle" />
+
+                    <TextView
+                        android:id="@+id/selected_start_loc"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:layout_marginVertical="8dp"
+                        android:layout_marginStart="16dp"
+                        android:fontFamily="@font/actor"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <View
+                    android:layout_width="2dp"
+                    android:layout_height="40dp"
+                    android:layout_marginStart="26dp"
+                    android:background="@android:color/darker_gray" />
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <ImageButton
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:layout_marginHorizontal="16dp"
+                        android:background="@android:color/transparent"
+                        android:src="@drawable/icons8topsquared2"
+                        app:tint="?attr/imageButtonStyle" />
+
+                    <TextView
+                        android:id="@+id/selected_loc"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:layout_marginVertical="8dp"
+                        android:layout_marginStart="16dp"
+                        android:fontFamily="@font/actor"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
             </LinearLayout>
 
             <LinearLayout
-                android:id="@+id/decline_lt"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="0"
-                android:orientation="vertical"
-                android:padding="16dp">
+                android:orientation="horizontal">
 
-                <ImageButton
-                    android:id="@+id/decline_button"
+                <LinearLayout
+                    android:id="@+id/accept_lt"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:background="@drawable/round_image_button"
-                    android:src="@drawable/baseline_close_48" />
+                    android:layout_weight="0"
+                    android:orientation="vertical"
+                    android:padding="16dp">
 
-                <TextView
-                    android:id="@+id/decline_text"
+                    <ImageButton
+                        android:id="@+id/accept_button"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:background="@drawable/round_image_button"
+                        android:contentDescription="accept"
+                        android:src="@drawable/baseline_check_24" />
+
+                    <TextView
+                        android:id="@+id/accept_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_marginTop="8dp"
+                        android:layout_marginBottom="8dp"
+                        android:text="Accept"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <View
+                    android:layout_width="wrap_content"
+                    android:layout_height="1dp"
+                    android:layout_weight="1" />
+
+                <LinearLayout
+                    android:id="@+id/decline_lt"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center_horizontal"
-                    android:layout_marginTop="8dp"
-                    android:layout_marginBottom="8dp"
-                    android:text="Decline"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
+                    android:layout_weight="0"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <ImageButton
+                        android:id="@+id/decline_button"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:background="@drawable/round_image_button"
+                        android:src="@drawable/baseline_close_48" />
+
+                    <TextView
+                        android:id="@+id/decline_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_marginTop="8dp"
+                        android:layout_marginBottom="8dp"
+                        android:text="Decline"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
             </LinearLayout>
         </LinearLayout>
 

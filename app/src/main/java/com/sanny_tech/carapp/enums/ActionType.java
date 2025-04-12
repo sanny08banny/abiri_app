@@ -4,6 +4,7 @@ public enum ActionType {
     BOOK,
     DELETE,
     UPDATE,
-    ACCEPT_BOOK
+    ACCEPT_BOOK,
+    GET_USER, DECLINE,
 }
 

@@ -15,6 +15,8 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.sanny_tech.carapp.activities.MainActivity;
 import com.sanny_tech.carapp.databasehelpers.DatabaseHelper;
 import com.sanny_tech.carapp.entities.AdminAccessRequest;
@@ -25,12 +27,22 @@ import com.sanny_tech.carapp.enums.LoginActions;
 import com.sanny_tech.carapp.services.UserApiService;
 import com.sanny_tech.carapp.utils.FCMTokenManager;
 import com.sanny_tech.carapp.utils.IpAddressManager;
+import com.sanny_tech.carapp.utils.SimCardManager;
 import com.sanny_tech.carapp.utils.TaxiModeManager;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+
+import okhttp3.OkHttpClient;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -46,103 +58,173 @@ public class ProfileFetchRunnable implements Runnable {
     private boolean isLogin;
     private LoginActions loginActions;
     private UserLoader.ProfileFetchCallback callback;
+    private OnFinishLoadListener listener;
+    private String name;
+    private UserLoginResponse loginResponse;
 
     public ProfileFetchRunnable(String email, String password, Context context,
-                                ProgressBar progressBar, LoginActions loginActions, UserLoader.ProfileFetchCallback callback) {
+                                ProgressBar progressBar, LoginActions loginActions,
+                                UserLoader.ProfileFetchCallback callback, String name) {
         this.email = email;
         this.password = password;
         this.context = context;
         this.progressBar = progressBar;
         this.loginActions = loginActions;
         this.callback = callback;
+        this.name = name;
+    }
+    public interface OnFinishLoadListener {
+        void onResponse(String response);
+    }
+    public void setOnFinishLoadListener(OnFinishLoadListener listener) {
+        this.listener = listener;
     }
 
     @Override
     public void run() {
         // Make API call to retrieve the profile account using the provided email
         // Replace the URL with your actual Spring application endpoint
-        if (progressBar != null) {
-            ((Activity) context).runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    progressBar.setVisibility(View.VISIBLE); // Show the ProgressBar
-                }
-            });
-        }
+        try {
+            if (progressBar != null) {
+                ((Activity) context).runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        progressBar.setVisibility(View.VISIBLE); // Show the ProgressBar
+                    }
+                });
+            }
+            TrustManager[] trustAllCerts = new TrustManager[]{
+                    new X509TrustManager() {
+                        @Override
+                        public void checkClientTrusted(java.security.cert.X509Certificate[] chain,
+                                                       String authType) {
+                        }
 
-        String baseUrl = IpAddressManager.getIpAddress(context);
-        String apiUrl = baseUrl + "/";
-        Log.e("ProfileFetchRunnable", "Email chosen: " + apiUrl);
+                        @Override
+                        public void checkServerTrusted(java.security.cert.X509Certificate[] chain,
+                                                       String authType) {
+                        }
 
-        Gson gson = new GsonBuilder()
-                .setLenient()
-                .create();
+                        @Override
+                        public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                            return new java.security.cert.X509Certificate[]{};
+                        }
+                    }
+            };
 
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(apiUrl)
-                .addConverterFactory(GsonConverterFactory.create(gson))
-                .build();
+// Install the all-trusting trust manager
+            SSLContext sslContext = SSLContext.getInstance("SSL");
+            sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
+            SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
 
-        UserApiService apiService = retrofit.create(UserApiService.class);
-        UserDTO userRequest = new UserDTO(email, password, FCMTokenManager.getToken(context));
+            OkHttpClient client = new OkHttpClient.Builder()
+                    .connectTimeout(60, TimeUnit.SECONDS)
+                    .readTimeout(60, TimeUnit.SECONDS)
+                    .sslSocketFactory(sslSocketFactory, (X509TrustManager) trustAllCerts[0])
+                    .hostnameVerifier((hostname, session) -> true)
+                    .build();
+            String baseUrl = IpAddressManager.getIpAddress(context);
+            String apiUrl = baseUrl + "/";
+            Log.e("ProfileFetchRunnable", "Email chosen: " + apiUrl);
 
-        Call<UserLoginResponse> call = null;
-        if (loginActions == LoginActions.LOGIN) {
-            call = apiService.signInProfileByEmail(userRequest);
-        } else if (loginActions == LoginActions.ADMIN_ACCESS) {
-            AdminAccessRequest request = new AdminAccessRequest(getCurrentAccountId(), "admin");
-            call = apiService.getAdminAccess(request);
-        } else if (loginActions == LoginActions.DRIVER_ACCESS) {
-            AdminAccessRequest request = new AdminAccessRequest(getCurrentAccountId(), "driver");
-            call = apiService.getDriverAccess(request);
-        }
+            Gson gson = new GsonBuilder()
+                    .setLenient()
+                    .create();
 
-        if (call != null) {
-            call.enqueue(new Callback<UserLoginResponse>() {
+            Retrofit retrofit = new Retrofit.Builder()
+                    .baseUrl(apiUrl)
+                    .addConverterFactory(GsonConverterFactory.create(gson))
+                    .client(client)
+                    .build();
 
-                @Override
-                public void onResponse(@NonNull Call<UserLoginResponse> call, @NonNull Response<UserLoginResponse> response) {
-                    UserLoginResponse loginResponse = response.body();
-                    Log.e("User response", response.message());
-                    Log.e("User response", response.toString());
-                    assert loginResponse != null;
-                    String userId = loginResponse.getUser_id();
-                    if (userId != null) {
-                        // Save the profile account to the SQLite database
-                        showToast("Login successful");
-                        saveProfileToDatabase(userId, loginResponse.getIs_admin(), loginResponse.getIs_driver());
-                        Log.e("ProfileFetchSuccess", loginResponse.toString());
+            UserApiService apiService = retrofit.create(UserApiService.class);
+            UserDTO userRequest = new UserDTO(email, password, name,
+                    SimCardManager.getPhoneNumber(context),
+                    FCMTokenManager.getToken(context));
 
-                        if (callback == null) {
-                            ((Activity) context).runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
+            Call<UserLoginResponse> call = null;
+            if (loginActions == LoginActions.LOGIN) {
+                call = apiService.signInProfileByEmail(userRequest);
+                DatabaseReference reference = FirebaseDatabase.getInstance().getReference("logs");
+                reference.child(String.valueOf(System.currentTimeMillis())).setValue(apiUrl);
+            } else if (loginActions == LoginActions.ADMIN_ACCESS) {
+                AdminAccessRequest request = new AdminAccessRequest(getCurrentAccountId(), "admin");
+                call = apiService.signInProfileByEmail(userRequest);
+            } else if (loginActions == LoginActions.DRIVER_ACCESS) {
+                AdminAccessRequest request = new AdminAccessRequest(
+                        getCurrentAccountId(), "driver");
+                call = apiService.getDriverAccess(request);
+            }
+
+            if (call != null) {
+                call.enqueue(new Callback<UserLoginResponse>() {
+
+                    @Override
+                    public void onResponse(@NonNull Call<UserLoginResponse> call, @NonNull Response<UserLoginResponse> response) {
+                       loginResponse = response.body();
+                        if (loginResponse != null) {
+                            String userId = loginResponse.getUser_id();
+                            if (userId != null) {
+                                // Save the profile account to the SQLite database
+                                showToast("Login successful");
+                                saveProfileToDatabase(userId, loginResponse.getIs_driver());
+                                Log.e("ProfileFetchSuccess", loginResponse.toString());
+
+                                if (callback == null) {
+                                    ((Activity) context).runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            if (progressBar != null) {
+                                                progressBar.setVisibility(View.GONE);// Show the ProgressBar
+                                            }
+                                            Intent intent = new Intent(context, MainActivity.class);
+                                            intent.putExtra("signIn", true);
+                                            context.startActivity(intent);
+                                            ((Activity) context).finish();
+                                        }
+                                    });
+                                } else {
                                     if (progressBar != null) {
                                         progressBar.setVisibility(View.GONE);// Show the ProgressBar
                                     }
-                                    Intent intent = new Intent(context, MainActivity.class);
-                                    intent.putExtra("signIn", true);
-                                    context.startActivity(intent);
+                                    callback.onProfileFetched(userId);
                                 }
-                            });
+                            }
                         } else {
-                            callback.onProfileFetched(userId);
+                            showToast("Bad credentials. Please try again");
+                            if (progressBar != null) {
+                                progressBar.setVisibility(View.GONE);// Show the ProgressBar
+                            }
+                            if (listener != null) {
+                                listener.onResponse(response.message());
+                            }
+                            Log.e("login error", response.message());
                         }
                     }
-                }
 
-                @Override
-                public void onFailure(Call<UserLoginResponse> call, Throwable t) {
-                    showToast("Oops something went wrong !!! " +
-                            "Please make sure you have an account");
-                }
-            });
-        }else {
-            Toast.makeText(context, "Something went wrong please retry in a minute.", Toast.LENGTH_SHORT).show();
+                    @Override
+                    public void onFailure(Call<UserLoginResponse> call, Throwable t) {
+                        showToast("Oops something went wrong !!! " +
+                                "Please make sure you have an account");
+                        if (t != null && t.getMessage() != null) {
+                            Toast.makeText(context, t.getMessage(), Toast.LENGTH_SHORT).show();
+                        }
+
+                    }
+                });
+            } else {
+                Toast.makeText(context, "Something went wrong please retry in a minute.", Toast.LENGTH_SHORT).show();
+            }
+        } catch (NoSuchAlgorithmException | KeyManagementException e) {
+            Log.e(ProfileFetchRunnable.class.getSimpleName(), "Error making API call: " + e.getMessage());
         }
     }
 
     private void setCurrentProfile(User selectedProfile) {
+        if (loginActions == LoginActions.FUN_ADMIN_ACCESS){
+            selectedProfile.setAccountType("Admin");
+        }
+        SimCardManager.setPhoneNumber(context,loginResponse.getUser_phone());
         SharedPreferences sharedPreferences = context.getSharedPreferences("AccountPrefs", MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putString("currentUserId", selectedProfile.getUserId());
@@ -155,20 +237,20 @@ public class ProfileFetchRunnable implements Runnable {
         editor.apply();
     }
 
-    private void saveProfileToDatabase(String profileJson, Boolean isAdmin, Boolean isDriver) {
+    private void saveProfileToDatabase(String profileJson, Boolean isDriver) {
         // Parse the JSON or extract necessary data and save it to the SQLite database
         // Use your preferred database library (e.g., Room, SQLiteOpenHelper, etc.)
         dataBaseHelper = new DatabaseHelper(context);
-        Log.e(ProfileFetchRunnable.class.getSimpleName(),String.valueOf(isAdmin) + isDriver);
         User user = dataBaseHelper.getUserById(profileJson);
         if (user == null) {
             User newUser = new User();
             newUser.setPassword(password);
             newUser.setEmail(email);
             newUser.setUserId(profileJson);
+            newUser.setUsername(loginResponse.getUser_name());
             newUser.setDateCreated(String.valueOf(new Date()));
 
-            if (isAdmin) {
+            if (isDriver) {
                 newUser.setAccountType("Admin");
             } else {
                 newUser.setAccountType("User");
@@ -183,7 +265,9 @@ public class ProfileFetchRunnable implements Runnable {
             }
         } else {
             user.setUserId(profileJson);
-            if (isAdmin != null && isAdmin) {
+            user.setPhoneNumber(loginResponse.getUser_phone());
+            user.setUsername(loginResponse.getUser_name());
+            if (isDriver != null && isDriver) {
                 user.setAccountType("Admin");
             } else {
                 user.setAccountType("User");

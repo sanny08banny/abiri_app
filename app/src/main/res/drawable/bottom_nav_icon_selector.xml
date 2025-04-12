@@ -3,8 +3,8 @@
 
     <!-- Selected state -->
     <item android:state_selected="true"
-        android:color = "@color/blue"/>
+        android:color = "@color/black"/>
     <item android:state_selected="false"
-        android:color = "?attr/imageButtonStyle"/>
+        android:color = "@android:color/darker_gray"/>
 
 </selector>

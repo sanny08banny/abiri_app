@@ -4,10 +4,16 @@
     <Preference
         android:key="about_account"
         app:iconSpaceReserved="false"
+        android:icon="@drawable/about_icon"
         android:title="About Your Account"/>
 
     <Preference
         android:key="add_new_account"
         android:icon="@drawable/twotone_switch_account_28"
         android:title="Add a New Account"/>
+
+    <Preference
+        android:key="my_spaces"
+        android:icon="@drawable/baseline_auto_awesome_mosaic_24"
+        android:title="My spaces"/>
 </PreferenceScreen>

@@ -45,7 +45,7 @@ import com.google.android.material.textfield.TextInputEditText;
 
 import java.util.ArrayList;
 
-public class ProfileActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<String> {
+public class ProfileActivity extends AppCompatActivity{
     private ActivityProfileBinding profileBinding;
     private static final int PICK_WALLPAPER = 9;
     private ArrayList<String> selectedImagePaths;
@@ -56,14 +56,14 @@ public class ProfileActivity extends AppCompatActivity implements LoaderManager.
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        profileBinding = DataBindingUtil.setContentView(this,R.layout.activity_profile);
+        profileBinding = DataBindingUtil.setContentView(this, R.layout.activity_profile);
         setSupportActionBar(profileBinding.aboutSchoolToolbar);
         profileBinding.aboutSchoolToolbar.setNavigationOnClickListener(v -> onBackPressed());
 
         tokenManager = new TokenManager(this);
 
         ActionBar actionBar = getSupportActionBar();
-        if (actionBar != null){
+        if (actionBar != null) {
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
 
@@ -102,23 +102,7 @@ public class ProfileActivity extends AppCompatActivity implements LoaderManager.
                 .beginTransaction()
                 .replace(R.id.settings_container, new AccountSettingsFragment())
                 .commit();
-        updateTokens();
 
-        profileBinding.options.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showOptionsMenu(profileBinding.options);
-            }
-        });
-    }
-
-    private void updateTokens() {
-        // Retrieve the token amount
-        double storedTokenAmount = tokenManager.getTokenAmount();
-        if (storedTokenAmount != 0.0){
-            profileBinding.tokenBalance.setText(String.valueOf(storedTokenAmount));
-        }
-        LoaderManager.getInstance(this).initLoader(4,null,this);
     }
 
     @Override
@@ -127,7 +111,7 @@ public class ProfileActivity extends AppCompatActivity implements LoaderManager.
 
         if (requestCode == PICK_WALLPAPER && resultCode == RESULT_OK && data != null) {
             selectedImagePaths = data.getStringArrayListExtra("selectedImagePaths");
-            if (selectedImagePaths != null){
+            if (selectedImagePaths != null) {
                 selectedImagePath = selectedImagePaths.get(0);
                 handleSelectedImage(selectedImagePath);
 
@@ -148,10 +132,12 @@ public class ProfileActivity extends AppCompatActivity implements LoaderManager.
                 .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE)
                 .build());
     }
+
     private void chooseWallPaper() {
         Intent intent = new Intent(ProfileActivity.this, MediaPickerActivity.class);
         startActivityForResult(intent, PICK_WALLPAPER);
     }
+
     private void setWallPaper(String selectedImagePath) {
         // Get a reference to SharedPreferences
         SharedPreferences sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
@@ -171,48 +157,30 @@ public class ProfileActivity extends AppCompatActivity implements LoaderManager.
         String savedChatWallpaper = sharedPreferences.getString("profilePic", "default_dp_path");
 
     }
+
     public String getCurrentAccountEmail() {
         SharedPreferences sharedPreferences = this.getSharedPreferences("AccountPrefs", MODE_PRIVATE);
         return sharedPreferences.getString("currentEmail", null);
     }
+
     public String getCurrentAccountId() {
         SharedPreferences sharedPreferences = this.getSharedPreferences("AccountPrefs", MODE_PRIVATE);
         return sharedPreferences.getString("currentUserId", null);
     }
+
     private String getWallPaper() {
         // Get a reference to SharedPreferences
         SharedPreferences sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
 
         return sharedPreferences.getString("profilePic", "default_dp_path");
     }
+
     private void updateProfileImage(String selectedImage) {
         Glide.with(this)
                 .load(selectedImage)
                 .override(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT) // Set thedesired width and height for resizing
                 .into(profileBinding.profileImage);
     }
-
-    @NonNull
-    @Override
-    public Loader<String> onCreateLoader(int id, @Nullable Bundle args) {
-        return new TokensLoader(this, null, TokenAction.GET);
-    }
-
-    @Override
-    public void onLoadFinished(@NonNull Loader<String> loader, String data) {
-        if (data != null){
-            double tokens = Double.parseDouble(data);
-            tokenManager.setTokenAmount(tokens);
-            profileBinding.tokenBalance.setText(data);
-            Toast.makeText(this, "updated :" + data , Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    @Override
-    public void onLoaderReset(@NonNull Loader<String> loader) {
-
-    }
-
     public static class AccountSettingsFragment extends PreferenceFragmentCompat {
 
         private static final int REQUEST_ADD_ACCOUNT = 75;
@@ -228,7 +196,7 @@ public class ProfileActivity extends AppCompatActivity implements LoaderManager.
                 @Override
                 public boolean onPreferenceClick(Preference preference) {
                     Intent intent = new Intent(requireContext(), CreateAccountActivity.class);
-                    intent.putExtra("secondaryCall",true);
+                    intent.putExtra("secondaryCall", true);
                     startActivityForResult(intent, REQUEST_ADD_ACCOUNT);
                     return true;
                 }
@@ -238,7 +206,17 @@ public class ProfileActivity extends AppCompatActivity implements LoaderManager.
             aboutAccountPreference.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                 @Override
                 public boolean onPreferenceClick(Preference preference) {
-                    Intent intent = new Intent(getActivity(),ManageProfiles.class);
+                    Intent intent = new Intent(getActivity(), ManageProfiles.class);
+                    startActivityForResult(intent, REQUEST_ABOUT_ACCOUNT);
+                    return true;
+                }
+            });
+            Preference mySpacesPreference = findPreference("my_spaces");
+            assert mySpacesPreference != null;
+            mySpacesPreference.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+                @Override
+                public boolean onPreferenceClick(Preference preference) {
+                    Intent intent = new Intent(getActivity(), MySpacesActivity.class);
                     startActivityForResult(intent, REQUEST_ABOUT_ACCOUNT);
                     return true;
                 }
@@ -266,6 +244,7 @@ public class ProfileActivity extends AppCompatActivity implements LoaderManager.
             }
         }
     }
+
     public void showChangeIpDialog() {
         AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
         LayoutInflater inflater = getLayoutInflater();
@@ -278,9 +257,9 @@ public class ProfileActivity extends AppCompatActivity implements LoaderManager.
         dialogBuilder.setPositiveButton("Save", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int whichButton) {
                 String newIp = newIpAddress.getText().toString();
-                if (newIp.length() != 0){
-                    IpAddressManager.setIpAddress(ProfileActivity.this,newIp);
-                }else {
+                if (newIp.length() != 0) {
+                    IpAddressManager.setIpAddress(ProfileActivity.this, newIp);
+                } else {
                     newIpAddress.setError("Cannot be empty");
                 }
                 // Show a toast message indicating successful creation
@@ -300,6 +279,7 @@ public class ProfileActivity extends AppCompatActivity implements LoaderManager.
 
         b.show();
     }
+
     private void showOptionsMenu(View view) {
         Context wrapper = new ContextThemeWrapper(this, R.style.PopupMenuStyle);
         PopupMenu popupMenu = new PopupMenu(wrapper, view);
@@ -315,7 +295,6 @@ public class ProfileActivity extends AppCompatActivity implements LoaderManager.
         });
         popupMenu.show();
     }
-
 
 
 }

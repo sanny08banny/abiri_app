@@ -10,7 +10,10 @@ import androidx.loader.app.LoaderManager;
 import androidx.loader.content.Loader;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
+import android.content.Context;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.RatingBar;
@@ -112,14 +115,16 @@ LoaderManager.LoaderCallbacks<List<Car>>{
         hideProgressBar();
         hideErrorLayout();
 
-        if (data != null && data.size() != 0) {
+        if (data != null && !data.isEmpty()) {
             carViewModel.setCarList(data);
             DataCache.saveData(this, data);
         } else {
-            if (DataCache.loadData(this) != null) {
-                carViewModel.setCarList(DataCache.loadData(this));
-            } else {
-                showErrorLayout();
+            if (!isNetworkConnected()) {
+                if (DataCache.loadData(this) != null) {
+                    carViewModel.setCarList(DataCache.loadData(this));
+                } else {
+                    showErrorLayout();
+                }
             }
         }
     }
@@ -128,7 +133,11 @@ LoaderManager.LoaderCallbacks<List<Car>>{
     public void onLoaderReset(@NonNull Loader<List<Car>> loader) {
 
     }
-
+    private boolean isNetworkConnected() {
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
+    }
     private void showErrorLayout() {
         rentingBinding.errorLayout.setVisibility(View.VISIBLE);
     }

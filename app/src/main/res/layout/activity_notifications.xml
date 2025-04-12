@@ -104,6 +104,7 @@
                         android:layout_gravity="center_horizontal"
                         android:background="@drawable/linear_lt_bg"
                         android:layout_marginVertical="8dp"
+                        android:contentDescription="@string/refresh"
                         app:tint="?attr/imageButtonStyle"
                         android:src="@drawable/baseline_refresh_32" />
                     <TextView

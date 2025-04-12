@@ -1,6 +1,7 @@
 package com.sanny_tech.carapp.entities;
 
 public class CarRequest {
+    private String category;
     private String admin_id;
     private String car_id;
     private String model;
@@ -10,8 +11,9 @@ public class CarRequest {
     private String daily_down_payment;
 
     // Constructor
-    public CarRequest(String admin_id, String car_id, String model, String location, String description,
+    public CarRequest(String category, String admin_id, String car_id, String model, String location, String description,
                       String daily_price, String daily_down_payment) {
+        this.category = category;
         this.admin_id = admin_id;
         this.car_id = car_id;
         this.model = model;
@@ -77,6 +79,14 @@ public class CarRequest {
 
     public void setDaily_down_payment(String daily_down_payment) {
         this.daily_down_payment = daily_down_payment;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
     }
 }
 

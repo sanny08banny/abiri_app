@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- res/drawable/border_circle.xml -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <solid android:color="@android:color/transparent" /> <!-- Transparent background -->
+    <stroke
+        android:width="8dp"
+        android:color="@color/transparent_black" /> <!-- Border width and color -->
+    <size
+        android:width="120dp"
+        android:height="120dp" /> <!-- Diameter of the circle -->
+</shape>
+

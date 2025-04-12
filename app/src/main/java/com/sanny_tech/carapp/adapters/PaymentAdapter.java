@@ -25,6 +25,8 @@ public class PaymentAdapter extends RecyclerView.Adapter<PaymentAdapter.PaymentV
     private Context context;
     private OnItemClickListener listener;
     private String baseUrl;
+    private OnItemLongClickListener long_listener;
+
     public PaymentAdapter(List<String> payments, Context context) {
         this.payments = payments;
         this.context = context;
@@ -64,7 +66,13 @@ public class PaymentAdapter extends RecyclerView.Adapter<PaymentAdapter.PaymentV
     public void setOnItemClickListener(OnItemClickListener listener) {
         this.listener = listener;
     }
+    public interface OnItemLongClickListener {
+        void onItemLongClick(String item);
+    }
 
+    public void setOnItemLongClickListener(OnItemLongClickListener long_listener) {
+        this.long_listener = long_listener;
+    }
     public class PaymentViewHolder extends RecyclerView.ViewHolder{
         private PaymentMethodBinding paymentMethodBinding;
 
@@ -75,11 +83,21 @@ public class PaymentAdapter extends RecyclerView.Adapter<PaymentAdapter.PaymentV
         public void bind(String payment) {
             if (payment.equals("Cash")){
                 paymentMethodBinding.paymentType.setText(payment + " (Default)");
+            }else {
+                paymentMethodBinding.paymentType.setText(payment);
+                paymentMethodBinding.image.setImageResource(R.drawable.mpesa_icon_01);
             }
             paymentMethodBinding.getRoot().setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     listener.onItemClick(payment);
+                }
+            });
+            paymentMethodBinding.getRoot().setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View v) {
+                    long_listener.onItemLongClick(payment);
+                    return false;
                 }
             });
         }

@@ -29,7 +29,6 @@ public class RideManager {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot.exists()) {
-
                     for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                         Ride ride = snapshot.getValue(Ride.class);
                         if (ride != null && ride.getUser_id().equals(getCurrentAccountId())) {

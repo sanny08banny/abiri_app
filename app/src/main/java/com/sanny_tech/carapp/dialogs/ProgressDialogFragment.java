@@ -12,11 +12,13 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
 
+import com.google.android.material.button.MaterialButton;
 import com.sanny_tech.carapp.R;
 
 public class ProgressDialogFragment extends DialogFragment {
 
     private TextView dotsTextView;
+    private MaterialButton dismissBtn;
     private Handler handler;
 
     @NonNull

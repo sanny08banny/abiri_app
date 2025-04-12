@@ -19,6 +19,7 @@ import com.google.android.libraries.places.api.model.PlaceLikelihood;
 import com.google.android.libraries.places.api.net.FindCurrentPlaceRequest;
 import com.google.android.libraries.places.api.net.FindCurrentPlaceResponse;
 import com.google.android.libraries.places.api.net.PlacesClient;
+import com.sanny_tech.carapp.BuildConfig;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -30,12 +31,14 @@ public class LocationSearcher {
     private Context context;
     private PlacesClient placesClient;
     private FusedLocationProviderClient fusedLocationProviderClient;
+    private String key;
 
-    public LocationSearcher(Context context) {
+    public LocationSearcher(Context context, String key) {
         this.context = context;
+        this.key = key;
         // Initialize PlacesClient
         if (!Places.isInitialized()) {
-            Places.initialize(context, "AIzaSyAlGhvKajzrEZiLaY0XfF-yoPzQnxuKtGM");
+            Places.initialize(context, key);
         }
         placesClient = Places.createClient(context);
         // Initialize FusedLocationProviderClient

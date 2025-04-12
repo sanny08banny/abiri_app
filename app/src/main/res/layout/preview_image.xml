@@ -15,6 +15,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:id="@+id/previewImage"
+                android:contentDescription="preview_image"
                 android:maxHeight="500dp"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"

@@ -1,20 +1,32 @@
 package com.sanny_tech.carapp.entities;
 
+import com.sanny_tech.carapp.taxi_utils.TaxiInit;
+import com.sanny_tech.carapp.taxi_utils.TaxisAvailable;
+
 public class TaxiLocation {
     private String driverId;
-    private double seats;
+    private int seats;
     private double longitude;
     private double latitude;
     private String status;
+    private float orientation;
+    private String category;
+    private PayLink payLink;
+    private TaxiInit taxiInit;
 
     public TaxiLocation() {
     }
-    public TaxiLocation(String driverId, double seats, double longitude, double latitude, String status) {
+    public TaxiLocation(String driverId, int seats, double longitude, double latitude,
+                        String status, float orientation, PayLink payLink,
+                        TaxiInit taxiInit) {
         this.driverId = driverId;
         this.seats = seats;
         this.longitude = longitude;
         this.latitude = latitude;
         this.status = status;
+        this.orientation = orientation;
+        this.payLink = payLink;
+        this.taxiInit = taxiInit;
     }
 
     public String getStatus() {
@@ -49,11 +61,48 @@ public class TaxiLocation {
         this.latitude = latitude;
     }
 
-    public double getSeats() {
+    public int getSeats() {
         return seats;
     }
 
-    public void setSeats(double seats) {
+    public void setSeats(int seats) {
         this.seats = seats;
+    }
+
+    public float getOrientation() {
+        return orientation;
+    }
+
+    public void setOrientation(float orientation) {
+        this.orientation = orientation;
+    }
+
+    public PayLink getPayLink() {
+        return payLink;
+    }
+
+    public void setPayLink(PayLink payLink) {
+        this.payLink = payLink;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    public TaxiInit getTaxiInit() {
+        return taxiInit;
+    }
+
+    public void setTaxiInit(TaxiInit taxiInit) {
+        this.taxiInit = taxiInit;
+    }
+
+    public TaxisAvailable createTaxiAvailble() {
+        return new TaxisAvailable(driverId,longitude,latitude,orientation,
+                TaxiCategory.getNumberOfSeats(taxiInit.getCategory()));
     }
 }

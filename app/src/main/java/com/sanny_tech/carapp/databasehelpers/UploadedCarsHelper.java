@@ -67,23 +67,27 @@ public class UploadedCarsHelper extends SQLiteOpenHelper {
 
     // Method to insert a car into the database
     public long insertCar(Car car) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues values = new ContentValues();
-        values.put(COLUMN_MODEL, car.getModel());
-        values.put(COLUMN_CAR_ID, car.getCar_id());
-        values.put(COLUMN_OWNER_ID, car.getOwner_id());
-        values.put(COLUMN_LOCATION, car.getLocation());
-        values.put(COLUMN_DESCRIPTION, car.getDescription());
-        values.put(COLUMN_AVAILABLE, car.getAvailable());
-        values.put(COLUMN_AMOUNT, car.getAmount());
-        values.put(COLUMN_DOWNPAYMENT, car.getDownpayment_amt());
-        values.put(COLUMN_IMAGES, TextUtils.join(",", car.getCar_images()));
+        if (getCarById(car.getCar_id()) == null) {
+            SQLiteDatabase db = this.getWritableDatabase();
+            ContentValues values = new ContentValues();
+            values.put(COLUMN_MODEL, car.getModel());
+            values.put(COLUMN_CAR_ID, car.getCar_id());
+            values.put(COLUMN_OWNER_ID, car.getOwner_id());
+            values.put(COLUMN_LOCATION, car.getLocation());
+            values.put(COLUMN_DESCRIPTION, car.getDescription());
+            values.put(COLUMN_AVAILABLE, car.getAvailable());
+            values.put(COLUMN_AMOUNT, car.getDaily_amount());
+            values.put(COLUMN_DOWNPAYMENT, car.getDaily_downpayment_amt());
+            values.put(COLUMN_IMAGES, TextUtils.join(",", car.getCar_images()));
 
-        long id = db.insert(TABLE_NAME, null, values);
-        db.close();
-        saveCarToFirestore(car);
+            long id = db.insert(TABLE_NAME, null, values);
+            db.close();
+            saveCarToFirestore(car);
 
-        return id;
+            return id;
+        }else {
+            return (long) updateCar(car);
+        }
     }
 
     // Method to retrieve all cars from the database
@@ -104,8 +108,8 @@ public class UploadedCarsHelper extends SQLiteOpenHelper {
                     car.setDescription(cursor.getString(5));
                     car.setAvailable(cursor.getString(6));
 
-                    car.setAmount(cursor.getDouble(7));
-                    car.setDownpayment_amt(cursor.getDouble(8));
+                    car.setDaily_amount(cursor.getDouble(7));
+                    car.setDaily_downpayment_amt(cursor.getDouble(8));
                     String imageString = cursor.getString(9);
                     String[] images = imageString.split(",");
                     car.setCar_images(new ArrayList<>(Arrays.asList(images)));
@@ -136,8 +140,8 @@ public class UploadedCarsHelper extends SQLiteOpenHelper {
                 car.setDescription(cursor.getString(5));
                 car.setAvailable(cursor.getString(6));
 
-                car.setAmount(cursor.getDouble(7));
-                car.setDownpayment_amt(cursor.getDouble(8));
+                car.setDaily_amount(cursor.getDouble(7));
+                car.setDaily_downpayment_amt(cursor.getDouble(8));
 
                 String imageString = cursor.getString(9);
                 String[] images = imageString.split(",");
@@ -158,8 +162,8 @@ public class UploadedCarsHelper extends SQLiteOpenHelper {
         values.put(COLUMN_LOCATION, car.getLocation());
         values.put(COLUMN_DESCRIPTION, car.getDescription());
         values.put(COLUMN_AVAILABLE, car.getAvailable());
-        values.put(COLUMN_AMOUNT, car.getAmount());
-        values.put(COLUMN_DOWNPAYMENT, car.getDownpayment_amt());
+        values.put(COLUMN_AMOUNT, car.getDaily_amount());
+        values.put(COLUMN_DOWNPAYMENT, car.getDaily_downpayment_amt());
         values.put(COLUMN_IMAGES, TextUtils.join(",", car.getCar_images()));
 
         int rowsUpdated = db.update(TABLE_NAME, values, COLUMN_CAR_ID + " = ?", new String[]{car.getCar_id()});
@@ -173,6 +177,7 @@ public class UploadedCarsHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
         db.delete(TABLE_NAME, COLUMN_CAR_ID + " = ?", new String[]{carId});
         db.close();
+        deleteCarFromFirestore(carId);
     }
     public void saveCarToFirestore(Car car) {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
@@ -183,14 +188,22 @@ public class UploadedCarsHelper extends SQLiteOpenHelper {
         carMap.put("location", car.getLocation());
         carMap.put("description", car.getDescription());
         carMap.put("available", car.getAvailable());
-        carMap.put("amount", car.getAmount());
-        carMap.put("downpayment", car.getDownpayment_amt());
+        carMap.put("amount", car.getDaily_amount());
+        carMap.put("downpayment", car.getDaily_downpayment_amt());
         carMap.put("car_images", car.getCar_images()); // Assuming getCar_images() returns a List<String>
 
         db.collection("uploaded_cars").document(car.getCar_id())
                 .set(carMap)
                 .addOnSuccessListener(aVoid -> Log.d("Firestore", "DocumentSnapshot successfully written!"))
                 .addOnFailureListener(e -> Log.w("Firestore", "Error writing document", e));
+    }
+    public void deleteCarFromFirestore(String carId) {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+        db.collection("uploaded_cars").document(carId)
+                .delete()
+                .addOnSuccessListener(aVoid -> Log.d("Firestore", "DocumentSnapshot successfully deleted!"))
+                .addOnFailureListener(e -> Log.w("Firestore", "Error deleting document", e));
     }
 
 }

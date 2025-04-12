@@ -7,9 +7,14 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
 import androidx.loader.app.LoaderManager;
 import androidx.loader.content.Loader;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import android.Manifest;
+import android.app.ActivityManager;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
@@ -18,22 +23,40 @@ import android.location.Geocoder;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.Handler;
+import android.provider.Settings;
+import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
+import com.google.android.gms.maps.model.BitmapDescriptor;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.sanny_tech.carapp.R;
 import com.sanny_tech.carapp.asynctasks.DirectionsLoader;
 import com.sanny_tech.carapp.asynctasks.DriverLoader;
+import com.sanny_tech.carapp.asynctasks.TaxiLoader;
+import com.sanny_tech.carapp.dialogs.DriverCancelTripDialog;
 import com.sanny_tech.carapp.dialogs.JourneyStatusDialog;
 import com.sanny_tech.carapp.entities.Decline;
+import com.sanny_tech.carapp.entities.LatLngCustom;
 import com.sanny_tech.carapp.entities.Ride;
 import com.sanny_tech.carapp.entities.TaxiLocation;
+import com.sanny_tech.carapp.enums.ActionType;
 import com.sanny_tech.carapp.enums.TaxiActions;
-import com.sanny_tech.carapp.services.LocationUpdateService;
 import com.sanny_tech.carapp.taxi_utils.ClientRequest;
+import com.sanny_tech.carapp.taxi_utils.DriverAvailabilityManager;
 import com.sanny_tech.carapp.taxi_utils.LocationSearcher;
+import com.sanny_tech.carapp.taxi_utils.OrientationManager;
+import com.sanny_tech.carapp.taxi_utils.RouteCalculator;
+import com.sanny_tech.carapp.taxi_utils.TaxiRequest;
+import com.sanny_tech.carapp.taxi_utils.TaxisAvailable;
+import com.sanny_tech.carapp.taxi_utils.TravelDetails;
 import com.sanny_tech.carapp.taxi_utils.Trip;
+import com.sanny_tech.carapp.services.FloatingOverlayService;
+import com.sanny_tech.carapp.taxi_utils.TripActivity;
+import com.sanny_tech.carapp.utils.JourneyStatusManager;
+import com.sanny_tech.carapp.utils.RequestManager;
 import com.sanny_tech.carapp.utils.SimCardManager;
 import com.getkeepsafe.taptargetview.TapTarget;
 import com.getkeepsafe.taptargetview.TapTargetView;
@@ -62,26 +85,30 @@ import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.io.IOException;
 import java.text.MessageFormat;
+import java.text.NumberFormat;
 import java.util.ArrayList;
-import java.util.Date;
+import java.util.Currency;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 
 public class TaxiMapsActivity extends FragmentActivity implements OnMapReadyCallback,
-        LoaderManager.LoaderCallbacks<List<LatLng>>,JourneyStatusDialog.JourneyStatusListener,
-LocationSearcher.LocationCallback{
+        LoaderManager.LoaderCallbacks<List<LatLng>>, JourneyStatusDialog.JourneyStatusListener,
+        LocationSearcher.LocationCallback, OrientationManager.OrientationListener,
+        JourneyStatusDialog.OnTripStartListener, JourneyStatusDialog.OnItemClickListener, DriverCancelTripDialog.CancelTripListener {
 
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 9;
     private static final int DIRECTIONS_LOADER_ID = 6;
     private static final int ADD_NEW_NUMBER = 39;
     private static final double LATITUDE_TOLERANCE = 0.0001;
+    private static final int OVERLAY_PERMISSION_REQUEST_CODE = 29;
     private GoogleMap mMap;
     private ActivityTaxiMapsBinding binding;
     private FusedLocationProviderClient fusedLocationProviderClient;
     private Location currentLocation;
     private ClientRequest request;
-    private LatLng currentLatLng, latLngDest;
+    private LatLng currentLatLng;
+    private LatLng latLngDest;
     private DatabaseReference reference,taxiReference,declineReference;
     private FirebaseDatabase database;
     private TapTargetView tapTargetView;
@@ -90,6 +117,33 @@ LocationSearcher.LocationCallback{
     private Handler handler = new Handler();
     private LocationSearcher locationSearcher;
     private String destinationName;
+    private float orientation = 0.0f;
+    private OrientationManager orientationManager;
+    private JourneyStatusDialog journeyStatusDialog;
+    private double charges;
+    private String key;
+    private Ride activeRide;
+    private BroadcastReceiver tripRadarReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String rideId = intent.getStringExtra("ride_id");
+            // Handle the received ride ID
+            // Load the ride information using the rideId
+        }
+    };
+    private RouteCalculator routeCalculator;
+    private LatLng latLngPickUp;
+    private String pick_up_name;
+    private int REQUEST_CODE = 86;
+    private CountDownTimer countDownTimer;
+    private RequestManager requestManager;
+    private Runnable updateCountdownRunnable;
+    private Handler activeRideHandler;
+    private boolean isCountdownRunning = false;
+    private TaxiRequest pricingDetails;
+    private DatabaseReference requestReference;
+    private DriverAvailabilityManager availabilityManager;
+    private JourneyStatusManager journeyStatusManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -97,23 +151,35 @@ LocationSearcher.LocationCallback{
 
         binding = ActivityTaxiMapsBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
+        LocalBroadcastManager.getInstance(this).registerReceiver(tripRadarReceiver,
+                new IntentFilter("TripRadarNotification"));
+        requestManager = new RequestManager(TaxiMapsActivity.this);
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+        key = getIntent().getStringExtra("key");
         // Initialize Places API
-        if (!Places.isInitialized()) {
-            Places.initialize(getApplicationContext(), "AIzaSyAlGhvKajzrEZiLaY0XfF-yoPzQnxuKtGM");
+        if (!Places.isInitialized() ) {
+            Places.initialize(getApplicationContext(),
+                    key);
         }
+        routeCalculator = new RouteCalculator(this);
+
         placesClient = Places.createClient(this);
+        orientationManager = new OrientationManager(this,this);
+        orientationManager.startListening();
+        availabilityManager = new DriverAvailabilityManager(TaxiMapsActivity.this);
+        journeyStatusManager = new JourneyStatusManager(this);
+
 
         database = FirebaseDatabase.getInstance();
         reference = database.getReference("taxi_rides");
         taxiReference = database.getReference("taxi_locations");
         declineReference = database.getReference("declines");
         firestore = FirebaseFirestore.getInstance();
-        locationSearcher = new LocationSearcher(this);
+        locationSearcher = new LocationSearcher(this,key);
 
         // Get last known location using Fused Location Provider API
         FusedLocationProviderClient fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
@@ -141,10 +207,40 @@ LocationSearcher.LocationCallback{
 
                             currentLatLng = new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude());
                             latLngDest = new LatLng(request.getDest_lat(), request.getDest_lon());
+                            latLngPickUp = new LatLng(request.getCurrent_lat(),request.getCurrent_lon());
+
 
                             fetchDirections(currentLatLng, latLngDest);
-
+                            destinationName = showAddress(latLngDest);
                             handleRequestStatus(request);
+                            getIntent().getExtras().clear();
+                        }else {
+                            activeRide = getIntent().getParcelableExtra("ride");
+                            if (activeRide != null){
+                                if (requestManager.loadRequest() != null) {
+                                    request = requestManager.loadRequest();
+                                }
+                                if (request != null) {
+                                    currentLatLng = new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude());
+                                    latLngDest = new LatLng(request.getDest_lat(), request.getDest_lon());
+                                    latLngPickUp = new LatLng(request.getCurrent_lat(), request.getCurrent_lon());
+
+                                    loadRide();
+
+                                    destinationName = showAddress(latLngDest);
+
+                                    fetchDirections(currentLatLng, latLngDest);
+                                    if (request != null) {
+                                        showRequestLayout();
+                                    }
+                                }else {
+                                    RequestManager requestManager = new RequestManager(this);
+                                    requestManager.clearRequest();
+                                }
+                            }else {
+                                finish();
+                            }
+
                         }
                     }
                 });
@@ -152,6 +248,7 @@ LocationSearcher.LocationCallback{
         binding.acceptLt.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                Toast.makeText(TaxiMapsActivity.this, "Please wait...", Toast.LENGTH_SHORT).show();
                 acceptRequest();
             }
         });
@@ -159,21 +256,67 @@ LocationSearcher.LocationCallback{
             @Override
             public void onClick(View v) {
                 acceptRequest();
+                binding.acceptButton.setVisibility(View.GONE);
             }
         });
         binding.declineButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                declineRequest();
+                fetchPricingDetails();
             }
         });
         binding.declineLt.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                declineRequest();
+                fetchPricingDetails();
+            }
+        });
+        binding.close.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                finish();
+            }
+        });
+        binding.cancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showDriverCancelTripDialog();
+            }
+        });
+        binding.startStopButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showStartJourney();
             }
         });
 
+    }
+
+    private void fetchPricingDetails() {
+        Toast.makeText(this, "declining", Toast.LENGTH_SHORT).show();
+        requestReference.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists()) {
+
+                    for (DataSnapshot dataSnapshot : snapshot.getChildren()) {
+                        TaxiRequest taxiRequest = dataSnapshot.getValue(TaxiRequest.class);
+                        if (taxiRequest != null &&
+                                taxiRequest.getPricing_details().getRider_id().equals(request.getSender_id())) {
+                            pricingDetails = taxiRequest;
+                        }
+                    }
+                }
+                if (pricingDetails != null){
+                    declineRequest();
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
     }
 
     private void showRequestLayout() {
@@ -189,18 +332,36 @@ LocationSearcher.LocationCallback{
         }
     }
     private void acceptRequest() {
+        if (countDownTimer != null) {
+            countDownTimer.cancel();
+        }
         request.setStatus("Accepted");
-        DriverLoader loader = new DriverLoader(this, request, TaxiActions.ACCEPT);
+        DriverLoader loader = new DriverLoader(this, request, TaxiActions.ACCEPT,null);
         loader.forceLoad();
         loader.registerListener(7, new Loader.OnLoadCompleteListener<String>() {
             @Override
             public void onLoadComplete(@NonNull Loader<String> loader, @Nullable String data) {
                 if (data != null) {
                     binding.confirmationStatus.setVisibility(View.GONE);
+                    if (!SimCardManager.getPhoneNumber(TaxiMapsActivity.this).isEmpty()) {
+                        LatLngCustom lngCustom = new LatLngCustom(latLngDest.latitude,latLngDest.longitude);
+                        Ride ride = new Ride(getCurrentAccountId(), request.getSender_id(),
+                                "",
+                                SimCardManager.getPhoneNumber(TaxiMapsActivity.this), "",
+                                lngCustom);
+                        ride.setStatus("initialised");
+                        requestManager.saveRequest(request);
+                        createNewRideToFirebase(ride);
+                    }else {
+                        openPhoneNumberActivity();
+                    }
                     showSnackbar(binding.getRoot(), "Successful connection. Click start to navigate.");
                     if (request != null){
                         showRequestLayout();
                     }
+                }else {
+                    Toast.makeText(TaxiMapsActivity.this, "Failed", Toast.LENGTH_SHORT).show();
+                    binding.acceptButton.setVisibility(View.VISIBLE);
                 }
             }
         });
@@ -209,17 +370,20 @@ LocationSearcher.LocationCallback{
 
     private void declineRequest() {
         request.setStatus("Cancelled");
-        DriverLoader loader = new DriverLoader(this, request, TaxiActions.ACCEPT);
-        loader.forceLoad();
-        loader.registerListener(7, new Loader.OnLoadCompleteListener<String>() {
+        Toast.makeText(this, "Declining request", Toast.LENGTH_SHORT).show();
+        TaxiLoader taxiLoader = new TaxiLoader(this,0.0,null, ActionType.DECLINE,
+                "",pricingDetails,pricingDetails.getTaxi_category());
+        taxiLoader.forceLoad();
+        taxiLoader.registerListener(4, new Loader.OnLoadCompleteListener<String>() {
             @Override
             public void onLoadComplete(@NonNull Loader<String> loader, @Nullable String data) {
+                boolean isSuccess = (data != null);
                 if (data != null) {
-                    binding.confirmationStatus.setVisibility(View.GONE);
-                    Decline decline = new Decline(getCurrentAccountId(),request.getClient_id());
-                    createDecline(decline);
-                    showSnackbar(binding.getRoot(), "Successful request declined.");
+                    Toast.makeText(TaxiMapsActivity.this,
+                            "Ride declined successfully", Toast.LENGTH_SHORT).show();
                     finish();
+                } else {
+                    Toast.makeText(TaxiMapsActivity.this, "Error", Toast.LENGTH_SHORT).show();
                 }
             }
         });
@@ -229,31 +393,28 @@ LocationSearcher.LocationCallback{
     }
 
     private void showSnackbar(View rootView, String message) {
-        Snackbar snackbar = Snackbar.make(rootView, message, Snackbar.LENGTH_INDEFINITE);
+        Snackbar snackbar = Snackbar.make(rootView, message, Snackbar.LENGTH_SHORT);
         snackbar.setBackgroundTint(ContextCompat.getColor(this, R.color.blue));
-        snackbar.setAction("Start", new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (!SimCardManager.getPhoneNumber(TaxiMapsActivity.this).equals("")) {
-                    Ride ride = new Ride(getCurrentAccountId(), request.getClient_id(),
-                            String.valueOf(new Date()), SimCardManager.getPhoneNumber(TaxiMapsActivity.this), "");
-
-                    createNewRideToFirebase(ride);
-                }else {
-                    openPhoneNumberActivity();
-                }
-            }
-        });
         snackbar.show();
     }
     private void openPhoneNumberActivity() {
         Intent intent = new Intent(TaxiMapsActivity.this,AddPhoneNumberActivity.class);
+        intent.putExtra("instruction","verification");
         startActivityForResult(intent,ADD_NEW_NUMBER);
     }
     private void createNewRideToFirebase(Ride ride) {
+        requestReference = database.getReference("verified_requests");
+        requestReference.child(request.getSender_id()).removeValue();
+        if (currentLocation != null) {
+            ride.setDriver_lon((float) currentLocation.getLongitude());
+            ride.setDriver_lat((float) currentLocation.getLatitude());
+        }
         reference.child(getCurrentAccountId()).setValue(ride);
         makeUnavailable();
+        createTripToFirebase();
         showToolTip();
+        binding.startStopButton.setVisibility(View.VISIBLE);
+        binding.startStopButton.setText("Navigate to pick-up");
     }
 
     private void showToolTip() {
@@ -263,7 +424,7 @@ LocationSearcher.LocationCallback{
                 TapTarget.forView(binding.acceptLt, "Navigate to Pickup Point", "Click here to start navigation to the pickup point using Google Maps.")
                         .transparentTarget(true)
                         .titleTextColor(R.color.white)
-                        .cancelable(false )
+                        .cancelable(true)
                         .tintTarget(true),
                 new TapTargetView.Listener() {
                     @Override
@@ -283,9 +444,21 @@ LocationSearcher.LocationCallback{
         Intent mapIntent = new Intent(Intent.ACTION_VIEW, gmmIntentUri);
         mapIntent.setPackage("com.google.android.apps.maps");
 
+        if (!Settings.canDrawOverlays(this)) {
+            // If permission is not granted, request it
+            Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                    Uri.parse("package:" + getPackageName()));
+            startActivityForResult(intent, OVERLAY_PERMISSION_REQUEST_CODE);
+        }else {
+            Intent overlayIntent = new Intent(this, FloatingOverlayService.class);
+            overlayIntent.putExtra("pickup_lat", latLngPickUp.latitude);
+            overlayIntent.putExtra("pickup_lng", latLngPickUp.longitude);
+            overlayIntent.putExtra("dest_lat", latLngDest.latitude);
+            overlayIntent.putExtra("dest_lng", latLngDest.longitude);
+            ContextCompat.startForegroundService(TaxiMapsActivity.this, overlayIntent);
+        }
         if (mapIntent.resolveActivity(getPackageManager()) != null) {
             tapTargetView.dismiss(true);
-            startLocationService();
             startActivity(mapIntent);
         }
     }
@@ -304,29 +477,65 @@ LocationSearcher.LocationCallback{
     }
 
     private void handleRequestStatus(ClientRequest request) {
+        pick_up_name = showAddress(latLngPickUp);
         if (request.getStatus() == null) {
             binding.confirmationStatus.setVisibility(View.VISIBLE);
-            binding.userPhone.setText(MessageFormat.format("Clients number: {0}",
-                    request.getUser_phone()));
-            showAddress(latLngDest);
+            routeCalculator.calculateTravelTimes(currentLatLng, latLngPickUp, latLngDest, new RouteCalculator.TravelDetailsCallback() {
+                @Override
+                public void onTravelDetailsCalculated(TravelDetails driverToPickupDetails,
+                                                      TravelDetails pickupToDestinationDetails) {
+                    // Handle the calculated travel details
+                    // Details include both time (in seconds) and distance (in meters)
+                    binding.selectedStartLoc.setText("( " + driverToPickupDetails.getReadableDuration() + " ) " +
+                            driverToPickupDetails.getReadableDistance() + " away\n" + pick_up_name);
+                    binding.selectedLoc.setText("( " + pickupToDestinationDetails.getReadableDuration() + " ) " +
+                            pickupToDestinationDetails.getReadableDistance() + " trip\n" + destinationName);
+                }
+
+                @Override
+                public void onError(Throwable throwable) {
+                    // Handle error
+                }
+            });
+            handleCharges();
+            startDriverSearchTimer();
         } else if (request.getStatus().equals("Accepted")) {
             binding.confirmationStatus.setVisibility(View.GONE);
             loadRide();
         }
     }
-    private void showAddress(LatLng latLngDest) {
+
+    private void handleCharges() {
+        float[] results = new float[1];
+        Location.distanceBetween(request.getCurrent_lat(), request.getCurrent_lon(),
+                request.getDest_lat(), request.getDest_lon(), results);
+
+        double distance = results[0] * 0.001;
+        DriverAvailabilityManager availabilityManager = new DriverAvailabilityManager(this);
+
+        charges = request.getPrice();
+        Locale kenyanLocale = new Locale("sw", "KE");
+        Currency kenyanShilling = Currency.getInstance("KES");
+        NumberFormat numberFormat = NumberFormat.getCurrencyInstance(kenyanLocale);
+        numberFormat.setCurrency(kenyanShilling);
+        String formattedAmount = numberFormat.format(charges);
+
+        binding.price.setText(formattedAmount);
+    }
+
+    private String showAddress(LatLng latLngDest) {
         Geocoder geocoder = new Geocoder(this, Locale.getDefault());
         try {
             List<Address> addresses = geocoder.getFromLocation(
                     latLngDest.latitude, latLngDest.longitude, 1);
             if (addresses != null && addresses.size() > 0) {
                 Address address = addresses.get(0);
-                destinationName = address.getFeatureName();
-                binding.selectedLoc.setText(destinationName);
+                return address.getFeatureName();
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
+        return null;
     }
 
     /**
@@ -379,7 +588,7 @@ LocationSearcher.LocationCallback{
         if (id == DIRECTIONS_LOADER_ID) {
             LatLng source = args.getParcelable("source");
             LatLng destination = args.getParcelable("destination");
-            return new DirectionsLoader(this, source, destination);
+            return new DirectionsLoader(this, source, destination, key);
         }
         return null;
     }
@@ -399,6 +608,7 @@ LocationSearcher.LocationCallback{
     }
 
     private void drawRouteOnMap(List<LatLng> routePoints) {
+        mMap.clear();
         PolylineOptions polylineOptions = new PolylineOptions();
         polylineOptions.addAll(routePoints);
         polylineOptions.width(10); // Set the width of the polyline
@@ -409,19 +619,23 @@ LocationSearcher.LocationCallback{
     }
 
     private void addMarkers() {
-        mMap.addMarker(new MarkerOptions().position(currentLatLng).title("Current Location"));
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 15));
+        BitmapDescriptor customMarker = BitmapDescriptorFactory.fromResource(R.drawable.current_location);
+        BitmapDescriptor customMarker1 = BitmapDescriptorFactory.fromResource(R.drawable.ic_pin);
 
-        mMap.addMarker(new MarkerOptions().position(latLngDest).title("Destination Location"));
+        mMap.addMarker(new MarkerOptions().position(currentLatLng).icon(customMarker).title("Current Location"));
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 14));
+
+        mMap.addMarker(new MarkerOptions().position(latLngDest).icon(customMarker1).title("Destination Location"));
     }
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == ADD_NEW_NUMBER && resultCode == RESULT_OK && data != null){
             String selectedNo = data.getStringExtra("selectedNo");
-
-            Ride ride = new Ride(getCurrentAccountId(), request.getClient_id(),
-                    String.valueOf(new Date()), selectedNo, "");
+            LatLngCustom lngCustom = new LatLngCustom(latLngDest.latitude,latLngDest.longitude);
+            Ride ride = new Ride(getCurrentAccountId(), request.getSender_id(), "",
+                    selectedNo, "",lngCustom);
+            ride.setStatus("initialised");
             createNewRideToFirebase(ride);
         }
     }
@@ -432,6 +646,7 @@ LocationSearcher.LocationCallback{
 //        super.onResume();
 //        updateCurrentLocation();
 //        loadRide();
+//        Log.e("On resume","resumed");
 //    }
 
     @Override
@@ -439,19 +654,15 @@ LocationSearcher.LocationCallback{
         super.onRestart();
         updateCurrentLocation();
         loadRide();
-    }
-
-    @Override
-    public void onAttachedToWindow() {
-        super.onAttachedToWindow();
+        Log.e("On restart","restart");
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        stopLocationService();
+        orientationManager.stopListening();
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(tripRadarReceiver);
     }
-
     private void loadRide() {
         reference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -465,11 +676,24 @@ LocationSearcher.LocationCallback{
                         ride.setDriver_lat((float) currentLocation.getLatitude());
                         ride.setDriver_lon((float) currentLocation.getLongitude());
                         if (areLatitudesEqual(ride.getDriver_lat() ,request.getCurrent_lat())){
-                            showStartJourney();
+                            if (!Settings.canDrawOverlays(TaxiMapsActivity.this)) {
+                                Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                                        Uri.parse("package:" + getPackageName()));
+                                startActivityForResult(intent, REQUEST_CODE);
+                            }
+                                showStartJourney();
                         }else {
-                            Toast.makeText(TaxiMapsActivity.this,
-                                    "You are yet to arrive pick-up point", Toast.LENGTH_SHORT).show();
-                            showToolTip();
+                            binding.startStopButton.setVisibility(View.VISIBLE);
+                            binding.startStopButton.setText("You are yet to arrive pick-up point");
+                            JourneyStatusManager statusManager = new JourneyStatusManager(TaxiMapsActivity.this);
+                            if (!statusManager.isJourneyStarted()) {
+                                Toast.makeText(TaxiMapsActivity.this,
+                                        "You are yet to arrive pick-up point", Toast.LENGTH_SHORT).show();
+                                showToolTip();
+                            }else {
+                                Toast.makeText(TaxiMapsActivity.this,
+                                        "Navigating to destination.", Toast.LENGTH_SHORT).show();
+                            }
                         }
                     }
                 }
@@ -486,12 +710,20 @@ LocationSearcher.LocationCallback{
     }
 
     private void showStartJourney() {
+        binding.startStopButton.setVisibility(View.VISIBLE);
         Toast.makeText(this, "Arrived Pick-up", Toast.LENGTH_SHORT).show();
         if (latLngDest != null){
-            JourneyStatusDialog journeyStatusDialog = new JourneyStatusDialog(
-                    this,destinationName);
-            journeyStatusDialog.setBookingListener(this);
-            journeyStatusDialog.show();
+            if (journeyStatusDialog == null) {
+                journeyStatusDialog = new JourneyStatusDialog(
+                        this, destinationName,binding.pickUp.getText().toString(),latLngDest,
+                        latLngPickUp);
+                journeyStatusDialog.setOnTripStartListener(this);
+                journeyStatusDialog.setBookingListener(this);
+                journeyStatusDialog.setOnItemClickListener(this);
+                journeyStatusDialog.show();
+            }else {
+                journeyStatusDialog.show();
+            }
         }
     }
 
@@ -521,43 +753,6 @@ LocationSearcher.LocationCallback{
                 });
     }
 
-    private void startLocationService() {
-        Intent serviceIntent = new Intent(this, LocationUpdateService.class);
-        startService(serviceIntent);
-    }
-    private void stopLocationService() {
-        // Stop the location tracking service
-        Intent intent = new Intent(this, LocationUpdateService.class);
-        stopService(intent);
-    }
-    private void cancelRide(String chargesText) {
-        reference.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                List<Ride> rides = new ArrayList<>();
-
-                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                    Ride ride = snapshot.getValue(Ride.class);
-                    if (ride != null && ride.getDriver_id().equals(getCurrentAccountId())) {
-                        reference.child(getCurrentAccountId()).removeValue();
-                        saveRideToFirestore(new Trip(generateID(),ride.getDriver_id(),ride.getUser_id(),ride.getStart_time(),
-                                chargesText, ride.getDriverNumber(),ride.getClientNumber(),binding.pickUp.getText().toString(),
-                                binding.destination.getText().toString()));
-                        makeAvailable();
-                    }
-                }
-                // You can pass this list to your UI or perform further operations
-
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-                // Handle errors if any
-            }
-        });
-
-    }
-
     private String generateID() {
         return UUID.randomUUID().toString();
     }
@@ -573,6 +768,10 @@ LocationSearcher.LocationCallback{
                     if (taxiLocation != null && taxiLocation.getDriverId().equals(getCurrentAccountId())) {
                         taxiLocation.setStatus("unavailable");
                         taxiReference.child(getCurrentAccountId()).setValue(taxiLocation);
+                        DatabaseReference availableRef = FirebaseDatabase.getInstance().getReference("taxis");
+                        availableRef.child("available")
+                                .child(taxiLocation.getTaxiInit().getCategory())
+                                .child(taxiLocation.getTaxiInit().getTaxi_id()).removeValue();
                     }
                 }
                 // You can pass this list to your UI or perform further operations
@@ -585,6 +784,7 @@ LocationSearcher.LocationCallback{
         });
     }
     private void makeAvailable() {
+        OrientationManager orientationManager = new OrientationManager(this,this);
         taxiReference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -592,14 +792,26 @@ LocationSearcher.LocationCallback{
 
                 for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                     TaxiLocation taxiLocation = snapshot.getValue(TaxiLocation.class);
-                    if (taxiLocation != null && taxiLocation.getDriverId().equals(getCurrentAccountId())) {
+                    if (taxiLocation != null &&
+                            taxiLocation.getDriverId().equals(getCurrentAccountId())) {
                         taxiLocation.setStatus("available");
+                        taxiLocation.setOrientation(orientation);
                         taxiReference.child(getCurrentAccountId()).setValue(taxiLocation);
+                        TaxisAvailable available = taxiLocation.createTaxiAvailble();
+                        String category = taxiLocation.getTaxiInit().getCategory();
+                        if (category.equals("Boda Boda")){
+                            category = "BodaBoda";
+                        }
+                        DatabaseReference availableRef = FirebaseDatabase.getInstance().getReference("taxis");
+                        availableRef.child(taxiLocation.getStatus())
+                                .child(category)
+                                .child(taxiLocation.getTaxiInit().getTaxi_id())
+                                .setValue(available);
+                            finish();
+
                     }
                 }
-                Intent intent = new Intent(TaxiMapsActivity.this, MapsActivity.class);
-                startActivity(intent);
-                // You can pass this list to your UI or perform further operations
+                finish();
             }
 
             @Override
@@ -610,12 +822,13 @@ LocationSearcher.LocationCallback{
     }
 
     @Override
-    public void onJourneyComplete(boolean isSuccess, String chargesText) {
-        if (isSuccess){
-            cancelRide(chargesText);
-        }
+    public void onJourneyComplete(boolean isSuccess) {
+//        if (isSuccess){
+//            stopServiceIfRunning(TaxiMapsActivity.this, FloatingOverlayService.class);
+//            cancelRide();
+//        }
     }
-    private void saveRideToFirestore(Trip ride) {
+    private void saveTripToFirestore(Trip ride) {
         firestore.collection("trips")
                 .document(ride.getId())
                 .set(ride)
@@ -627,14 +840,179 @@ LocationSearcher.LocationCallback{
                     // Failed to add the ride to Firestore
                     // Handle failure, if needed
                 });
+        DatabaseReference tripsRef = database.getReference("trips");
+        tripsRef.child(getCurrentAccountId()).setValue(ride);
     }
 
     @Override
     public void onLocationFound(Place place, boolean isPickup) {
-        if (isPickup){
-            binding.pickUp.setText(place.getName());
-        }else {
-            binding.destination.setText(place.getName());
+        if (place != null) {
+            if (isPickup) {
+                binding.pickUp.setText(place.getName());
+            } else {
+                binding.destination.setText(place.getName());
+            }
         }
+    }
+
+    @Override
+    public Void onOrientationChanged(float azimuth) {
+        orientation = azimuth;
+        return null;
+    }
+    private void startDriverSearchTimer() {
+        countDownTimer = new CountDownTimer(30000, 1000) { // 60 seconds timer with 1 second interval
+            @Override
+            public void onTick(long millisUntilFinished) {
+                long secondsRemaining = millisUntilFinished / 1000;
+                binding.countdownTextView.setText(String.valueOf(secondsRemaining));
+            }
+
+            @Override
+            public void onFinish() {
+               if (request != null && request.getStatus() != null && !request.getStatus().equals("Accepted")){
+                   finish();
+               } else if (request != null && request.getStatus() == null) {
+                   finish();
+               }
+            }
+        }.start(); // Start the countdown timer
+    }
+    private void createTripToFirebase() {
+        reference.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                List<Ride> rides = new ArrayList<>();
+
+                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                    Ride ride = snapshot.getValue(Ride.class);
+                    if (ride != null && ride.getDriver_id().equals(getCurrentAccountId())) {
+                        saveTripToFirestore(new Trip(generateID(),ride.getDriver_id(),
+                                ride.getUser_id(),String.valueOf(System.currentTimeMillis()),"",
+                                String.valueOf(charges), ride.getDriverNumber(),
+                                ride.getClientNumber(),pick_up_name,
+                                destinationName));
+                    }
+                }
+                // You can pass this list to your UI or perform further operations
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                // Handle errors if any
+            }
+        });
+
+    }
+    private void startTrip(boolean isStarted, String reason) {
+        DatabaseReference tripStartReference = FirebaseDatabase.getInstance().getReference("taxi_rides");
+        tripStartReference.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                List<Ride> rides = new ArrayList<>();
+
+                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                    Ride ride = snapshot.getValue(Ride.class);
+                    if (ride != null && ride.getDriver_id().equals(getCurrentAccountId())) {
+                        if (isStarted) {
+                            ride.setStatus("started");
+                            ride.setStart_time(String.valueOf(System.currentTimeMillis()));
+                        }else {
+                            ride.setStatus("canceled");
+                            ride.setClientNumber(reason);
+
+                        }
+                        availabilityManager.saveAvailabilityStatus(false);
+                        journeyStatusManager.setJourneyStarted(false);
+                        tripStartReference.child(getCurrentAccountId()).setValue(ride);
+                        requestManager.clearRequest();
+                        makeAvailable();
+                    }
+                }
+                // You can pass this list to your UI or perform further operations
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                // Handle errors if any
+            }
+        });
+
+    }
+    @Override
+    public void onTripStart(boolean isStarted) {
+
+    }
+
+
+    @Override
+    public void onItemClick(String item) {
+        activeRideHandler = new Handler();
+
+        // Initialize the countdown update runnable
+        updateCountdownRunnable = new Runnable() {
+            @Override
+            public void run() {
+                updateCountdown();
+                handler.postDelayed(this, 1000); // Update every second
+            }
+        };
+
+        startCountdown();
+
+    }
+    private void updateCountdown() {
+        JourneyStatusManager journeyStatusManager = new JourneyStatusManager(this);
+        if (journeyStatusManager.isJourneyStarted()) {
+            String formattedElapsedTime = journeyStatusManager.getFormattedElapsedTime();
+            binding.startStopButton.setText(formattedElapsedTime);
+        } else {
+            binding.startStopButton.setText("Journey not started");
+        }
+    }
+    private void startCountdown() {
+        if (!isCountdownRunning) {
+            handler.post(updateCountdownRunnable);
+            isCountdownRunning = true;
+        }
+    }
+
+    // Method to stop the countdown updates
+    private void stopCountdown() {
+        if (isCountdownRunning) {
+            handler.removeCallbacks(updateCountdownRunnable);
+            isCountdownRunning = false;
+        }
+    }
+    public boolean isServiceRunning(Context context, Class<?> serviceClass) {
+        ActivityManager manager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceClass.getName().equals(service.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public void stopServiceIfRunning(Context context, Class<?> serviceClass) {
+        if (isServiceRunning(context, serviceClass)) {
+            Intent stopIntent = new Intent(context, serviceClass);
+            context.stopService(stopIntent);
+        }
+    }
+    private void showDriverCancelTripDialog() {
+        DriverCancelTripDialog dialog = new DriverCancelTripDialog(this, this);
+        dialog.show();
+    }
+
+    @Override
+    public void onCancelTrip(String reason) {
+        Toast.makeText(this, "Trip cancelled: " + reason,
+                Toast.LENGTH_SHORT).show();
+        stopServiceIfRunning(this, FloatingOverlayService.class);
+        startTrip(false,reason);
+        finish();
     }
 }

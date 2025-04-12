@@ -15,9 +15,11 @@ public class HireManager {
     private DatabaseReference hireRef;
     private ValueEventListener hireListener;
     private Context context;
+    private String carId;
 
-    public HireManager(Context context) {
+    public HireManager(Context context, String carId) {
         this.context = context;
+        this.carId = carId;
         FirebaseDatabase database = FirebaseDatabase.getInstance();
         hireRef = database.getReference("hires"); // Replace with your Firebase location reference
     }
@@ -31,7 +33,8 @@ public class HireManager {
 
                     for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                         Hire hire = snapshot.getValue(Hire.class);
-                        if (hire != null && hire.getClient_id().equals(getCurrentAccountId())) {
+                        if (hire != null && hire.getClient_id().equals(getCurrentAccountId()) &&
+                        hire.getCarId().equals(carId)) {
                             // Notify listener about the updated location
                             listener.onHireChanged(hire);
                         }

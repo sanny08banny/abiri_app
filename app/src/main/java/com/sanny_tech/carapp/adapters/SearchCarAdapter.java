@@ -8,25 +8,19 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.databinding.DataBindingUtil;
-import androidx.loader.content.Loader;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.request.RequestOptions;
 import com.sanny_tech.carapp.R;
-import com.sanny_tech.carapp.asynctasks.BookCarLoader;
-import com.sanny_tech.carapp.databasehelpers.BookedCarsDatabaseHelper;
 import com.sanny_tech.carapp.databinding.SearchCarItemBinding;
-import com.sanny_tech.carapp.entities.BookedCar;
 import com.sanny_tech.carapp.entities.Car;
-import com.sanny_tech.carapp.enums.ActionType;
+import com.sanny_tech.carapp.hire_utils.Hire;
 import com.sanny_tech.carapp.utils.IpAddressManager;
 
 import java.text.NumberFormat;
@@ -39,13 +33,10 @@ public class SearchCarAdapter extends RecyclerView.Adapter<SearchCarAdapter.Sear
     private Context context;
     private OnItemClickListener listener;
     private String baseUrl;
-    private BookedCarsDatabaseHelper databaseHelper;
-
     public SearchCarAdapter(List<Car> cars, Context context) {
         this.cars = cars;
         this.context = context;
         this.baseUrl = IpAddressManager.getIpAddress(context);
-        this.databaseHelper = new BookedCarsDatabaseHelper(context);
     }
 
     public void setItems(List<Car> data) {
@@ -116,8 +107,8 @@ public class SearchCarAdapter extends RecyclerView.Adapter<SearchCarAdapter.Sear
 
             searchCarItemBinding.carDescription.setMovementMethod(LinkMovementMethod.getInstance());
 
-            if (car.getAmount() != 0) {
-                double amount = Double.parseDouble(String.valueOf(car.getAmount()));
+            if (car.getDaily_amount() != 0) {
+                double amount = Double.parseDouble(String.valueOf(car.getDaily_amount()));
                 Locale kenyanLocale = new Locale("sw", "KE");
                 Currency kenyanShilling = Currency.getInstance("KES");
                 NumberFormat numberFormat = NumberFormat.getCurrencyInstance(kenyanLocale);
@@ -146,22 +137,22 @@ public class SearchCarAdapter extends RecyclerView.Adapter<SearchCarAdapter.Sear
                         .into(imageView);
             }
         }
-        private void deleteCar(BookedCar car) {
-            BookCarLoader bookCarLoader = new BookCarLoader(context, car.getCar_id(), ActionType.DELETE, null);
-            showLoadingState();
-            bookCarLoader.forceLoad();
-            bookCarLoader.registerListener(7, new Loader.OnLoadCompleteListener<String>() {
-                @Override
-                public void onLoadComplete(@NonNull Loader<String> loader, @Nullable String data) {
-                    hideLoadingState();
-                    if (data != null) {
-                        Toast.makeText(context, "Successful connect", Toast.LENGTH_SHORT).show();
-                        databaseHelper.deleteBookedCarByCarId(car.getCar_id());
-                        cars.remove(car);
-                        notifyDataSetChanged();
-                    }
-                }
-            });
+        private void deleteCar(Hire car) {
+//            BookCarLoader bookCarLoader = new BookCarLoader(context, car.getCar_id(), ActionType.DELETE, null);
+//            showLoadingState();
+//            bookCarLoader.forceLoad();
+//            bookCarLoader.registerListener(7, new Loader.OnLoadCompleteListener<String>() {
+//                @Override
+//                public void onLoadComplete(@NonNull Loader<String> loader, @Nullable String data) {
+//                    hideLoadingState();
+//                    if (data != null) {
+//                        Toast.makeText(context, "Successful connect", Toast.LENGTH_SHORT).show();
+//                        databaseHelper.deleteBookedCarByCarId(car.getCar_id());
+//                        cars.remove(car);
+//                        notifyDataSetChanged();
+//                    }
+//                }
+//            });
         }
 
         private void showLoadingState() {
@@ -172,7 +163,7 @@ public class SearchCarAdapter extends RecyclerView.Adapter<SearchCarAdapter.Sear
             searchCarItemBinding.deleteButton.setVisibility(View.VISIBLE);
         }
 
-        private void showDeleteConfirmationDialog(BookedCar car) {
+        private void showDeleteConfirmationDialog(Hire car) {
             AlertDialog.Builder builder = new AlertDialog.Builder(context);
             builder.setTitle("Delete Car");
             builder.setMessage("Are you sure you want to delete this car?");

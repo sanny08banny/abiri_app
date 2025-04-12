@@ -1,251 +1,334 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     tools:context=".fragments.DriverMainFragment">
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
+        android:id="@+id/root_lt"
+        android:visibility="gone"
         android:layout_height="match_parent">
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
-
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginHorizontal="8dp"
-            android:layout_marginVertical="16dp"
-            android:background="@drawable/searchview_black_bg">
-
-            <TextView
-                android:id="@+id/statusLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_centerHorizontal="true"
-                android:layout_marginTop="32dp"
-                android:fontFamily="@font/jost_semibold"
-                android:text="Set Availability Status"
-                android:textColor="@color/white"
-                android:textSize="24sp" />
-
-            <TextView
-                android:id="@+id/statusText"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_below="@id/statusLabel"
-                android:layout_centerHorizontal="true"
-                android:layout_marginTop="16dp"
-                android:text="Currently: Available"
-                android:textColor="@color/white"
-                android:textSize="18sp" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_below="@id/statusText"
-                android:layout_centerHorizontal="true"
-                android:orientation="horizontal">
-
-                <ImageButton
-                    android:layout_width="100dp"
-                    android:layout_height="100dp"
-                    android:layout_margin="16dp"
-                    android:layout_weight="0"
-                    app:tint="?attr/imageButtonStyle"
-                    android:src="@drawable/baseline_directions_car_24" />
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_gravity="center_vertical"
-                    android:orientation="vertical">
-                    <RelativeLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center_horizontal"
-                        android:layout_marginVertical="8dp"
-                        android:layout_marginHorizontal="8dp">
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="8dp"
-                            android:layout_marginTop="8dp"
-                            android:textSize="10sp"
-                            android:id="@+id/seat_count_text"
-                            android:textColor="@color/white"
-                            android:text="Seat count"/>
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_below="@id/seat_count_text"
-                        android:layout_height="wrap_content">
-
-                        <ImageButton
-                            android:id="@+id/minus_seats"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:background="@color/blue"
-                            app:tint="?attr/imageButtonStyle"
-                            android:src="@drawable/baseline_horizontal_rule_24" />
-
-                        <TextView
-                            android:id="@+id/seat_count"
-                            android:layout_width="100dp"
-                            android:layout_height="24dp"
-                            android:textColor="@color/white"
-                            android:gravity="center"
-                            android:text="1" />
-
-                        <ImageButton
-                            android:id="@+id/add_seats"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:background="@color/blue"
-                            app:tint="?attr/imageButtonStyle"
-                            android:src="@drawable/baseline_add_24" />
-                    </LinearLayout>
-                    </RelativeLayout>
-                <com.google.android.material.switchmaterial.SwitchMaterial
-                    android:id="@+id/statusSwitch"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_horizontal" />
-                </LinearLayout>
-            </LinearLayout>
-
-        </RelativeLayout>
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/view_active_request_button"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:layout_marginHorizontal="16dp"
-            android:layout_marginBottom="8dp"
-            android:visibility="gone"
-            android:backgroundTint="@color/blue"
-            app:cornerRadius="8dp" />
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
-            <TextView
-                android:id="@+id/dialogTitle"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="My Payment Methods"
-                android:textAppearance="@style/TextAppearance.AppCompat.Large"
-                android:layout_marginStart="16dp"/>
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/paymentMethodsList"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"/>
-            <com.google.android.material.floatingactionbutton.FloatingActionButton
-                android:id="@+id/fab_payment"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="bottom|end"
-                android:layout_margin="16dp"
-                app:srcCompat="@drawable/baseline_add_24"
-                style="@style/MyFloatingActionButtonStyle" />
-
-        </LinearLayout>
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:layout_marginTop="8dp"
-                android:layout_marginEnd="8dp"
-                android:layout_marginBottom="8dp"
-                android:fontFamily="@font/jost_semibold"
-                android:text="History"
-                android:textSize="24sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/timeText"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
-                android:layout_marginHorizontal="8dp"
-                android:layout_weight="1"
-                android:fontFamily="@font/jost_semibold"
-                android:gravity="end" />
-        </LinearLayout>
 
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent">
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/clients_recycler"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="16dp" />
-
-            <LinearLayout
-                android:id="@+id/progress_lt"
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/docs_button"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_centerInParent="true"
+                android:layout_alignParentEnd="true"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginTop="12dp"
+                android:text="My documents"
+                app:icon="@drawable/icon_document"
+                app:iconTint="@color/black"
+                app:iconGravity="end"
+                android:backgroundTint="@color/custom_gray"
+                android:textColor="@color/black"
+                app:cornerRadius="100dp" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/set_up_button"
+                android:layout_width="300dp"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:layout_centerVertical="true"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginTop="12dp"
+                android:layout_below="@id/docs_button"
+                android:layout_marginBottom="8dp"
+                android:text="In order to receive requests, click here to complete setting up your account"
+                android:textColor="@color/white"
+                android:visibility="gone"
+                app:cornerRadius="8dp" />
+            <LinearLayout
+                android:id="@+id/main_lt"
+                android:layout_width="match_parent"
+                android:layout_below="@id/docs_button"
+                android:layout_height="match_parent"
                 android:orientation="vertical">
 
-                <ProgressBar
-                    android:id="@+id/customProgressBar"
-                    style="?android:attr/progressBarStyleLarge"
-                    android:layout_width="wrap_content"
+                <RelativeLayout
+                    android:id="@+id/taxi_availability_lt"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center" />
+                    android:layout_marginHorizontal="8dp"
+                    android:layout_marginVertical="16dp"
+                    android:background="@drawable/searchview_black_bg">
 
-                <TextView
-                    android:id="@+id/loadingMessage"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:layout_marginTop="16dp"
-                    android:fontFamily="@font/jost_semibold"
-                    android:text="Loading..."
-                    android:textColor="@android:color/black" />
+                    <TextView
+                        android:id="@+id/statusLabel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_centerHorizontal="true"
+                        android:layout_marginTop="32dp"
+                        android:fontFamily="@font/jost_semibold"
+                        android:text="Set Availability Status"
+                        android:textColor="@color/white"
+                        android:textSize="24sp" />
 
-            </LinearLayout>
+                    <TextView
+                        android:id="@+id/statusText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@id/statusLabel"
+                        android:layout_centerHorizontal="true"
+                        android:layout_marginTop="16dp"
+                        android:text="Currently: Available"
+                        android:textColor="@color/white"
+                        android:textSize="18sp" />
 
-            <LinearLayout
-                android:id="@+id/error_layout"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_centerInParent="true"
-                android:layout_marginVertical="100dp"
-                android:orientation="vertical"
-                android:visibility="gone">
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@id/statusText"
+                        android:layout_centerHorizontal="true"
+                        android:orientation="vertical">
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Nothing to show"
-                    android:textColor="@color/blue"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
+                        <LinearLayout
+                            android:id="@+id/taxi_details"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginHorizontal="16dp"
+                            android:layout_marginTop="4dp"
+                            android:background="@drawable/item_background_selected"
+                            android:orientation="horizontal">
 
+                            <com.google.android.material.imageview.ShapeableImageView
+                                android:id="@+id/taxi_image"
+                                android:layout_width="100dp"
+                                android:layout_height="100dp"
+                                android:layout_gravity="center_vertical"
+                                android:layout_marginStart="16dp"
+                                android:layout_marginEnd="8dp"
+                                android:padding="4dp"
+                                android:scaleType="fitXY"
+                                android:src="@drawable/local_taxi_fill"
+                                app:shapeAppearanceOverlay="@style/MiniRoundedImageView" />
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center_vertical"
+                                android:layout_marginVertical="8dp"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    android:id="@+id/plate"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_gravity="end"
+                                    android:layout_marginHorizontal="16dp"
+                                    android:ellipsize="end"
+                                    android:maxLines="1"
+                                    android:textColor="@color/black"
+                                    android:textSize="18sp"
+                                    android:textStyle="bold" />
+
+                                <TextView
+                                    android:id="@+id/desc"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_gravity="end"
+                                    android:layout_marginHorizontal="16dp"
+                                    android:layout_marginTop="8dp"
+                                    android:textAlignment="viewEnd"
+                                    android:textColor="@color/black"
+                                    android:textStyle="bold" />
+                            </LinearLayout>
+                        </LinearLayout>
+
+                        <androidx.cardview.widget.CardView
+                            android:id="@+id/active_plan"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginHorizontal="16dp"
+                            android:layout_marginTop="8dp"
+                            android:backgroundTint="@color/black"
+                            app:cardCornerRadius="8dp">
+
+                            <TextView
+                                android:id="@+id/plan"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_margin="16dp"
+                                android:textColor="@color/white"
+                                android:textStyle="bold" />
+                        </androidx.cardview.widget.CardView>
+
+                        <com.google.android.material.switchmaterial.SwitchMaterial
+                            android:id="@+id/statusSwitch"
+                            style="@style/Widget.Material3.CompoundButton.MaterialSwitch"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center_horizontal" />
+                    </LinearLayout>
+
+                </RelativeLayout>
                 <com.google.android.material.button.MaterialButton
-                    android:id="@+id/retry_button"
-                    android:layout_width="wrap_content"
+                    android:id="@+id/view_active_request_button"
+                    android:layout_width="300dp"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_horizontal"
-                    android:layout_marginTop="16dp"
-                    android:background="@drawable/material_button_bg"
-                    android:text="Retry"
-                    android:textColor="?attr/imageButtonStyle" />
+                    android:layout_marginHorizontal="16dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="8dp"
+                    android:text="Pending trip"
+                    android:textColor="@color/white"
+                    android:visibility="gone"
+                    app:cornerRadius="8dp"
+                    app:icon="@drawable/baseline_arrow_forward_ios_32" />
 
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/dialogTitle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:text="My Payment Methods"
+                        android:textAppearance="@style/TextAppearance.AppCompat.Large" />
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/paymentMethodsList"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp" />
+
+                    <com.google.android.material.floatingactionbutton.FloatingActionButton
+                        android:id="@+id/fab_payment"
+                        style="@style/MyFloatingActionButtonStyle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="bottom|end"
+                        android:layout_margin="16dp"
+                        android:contentDescription="add pay-link"
+                        app:srcCompat="@drawable/baseline_add_24" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginTop="8dp"
+                        android:layout_marginEnd="8dp"
+                        android:layout_marginBottom="8dp"
+                        android:fontFamily="@font/jost_semibold"
+                        android:text="Today"
+                        android:textSize="24sp"
+                        android:textStyle="bold" />
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/all_trips_button"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginHorizontal="16dp"
+                        android:layout_marginTop="12dp"
+                        android:layout_weight="1"
+                        android:text="My trips"
+                        app:icon="@drawable/history_fill"
+                        app:iconTint="@color/black"
+                        app:iconGravity="end"
+                        android:backgroundTint="@color/custom_gray"
+                        android:textColor="@color/black"
+                        app:cornerRadius="100dp" />
+                    <TextView
+                        android:id="@+id/timeText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:layout_marginHorizontal="8dp"
+                        android:layout_weight="1"
+                        android:fontFamily="@font/jost_semibold"
+                        android:gravity="end" />
+                </LinearLayout>
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/clients_recycler"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:layout_marginBottom="16dp" />
+
+                    <LinearLayout
+                        android:id="@+id/progress_lt"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_centerInParent="true"
+                        android:orientation="vertical">
+
+                        <ProgressBar
+                            android:id="@+id/customProgressBar"
+                            style="?android:attr/progressBarStyleLarge"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center" />
+
+                        <TextView
+                            android:id="@+id/loadingMessage"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:layout_marginTop="16dp"
+                            android:fontFamily="@font/jost_semibold"
+                            android:text="Loading..."
+                            android:textColor="@android:color/black" />
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/error_layout"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_centerInParent="true"
+                        android:layout_marginVertical="100dp"
+                        android:orientation="vertical"
+                        android:visibility="gone">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Nothing to show"
+                            android:textColor="@color/blue"
+                            android:textSize="18sp"
+                            android:textStyle="bold" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/retry_button"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center_horizontal"
+                            android:layout_marginTop="16dp"
+                            android:background="@drawable/material_button_bg"
+                            android:text="Retry"
+                            android:textColor="?attr/imageButtonStyle" />
+
+                    </LinearLayout>
+                </RelativeLayout>
             </LinearLayout>
         </RelativeLayout>
-    </LinearLayout>
     </androidx.core.widget.NestedScrollView>
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="wrap_content"
+            android:theme="@style/Widget.Material3.CircularProgressIndicator"
+            android:layout_centerInParent="true"
+            android:layout_height="wrap_content" />
+    </RelativeLayout>
 </layout>

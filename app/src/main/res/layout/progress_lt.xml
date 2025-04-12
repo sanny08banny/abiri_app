@@ -1,54 +1,59 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:padding="16dp"
-    android:layout_margin="8dp"
-    android:background="@drawable/progress_lt_bg"
-    android:layout_height="wrap_content">
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <LinearLayout
-        android:id="@+id/loadingContainer"
-        android:layout_width="wrap_content"
+    <RelativeLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:layout_centerInParent="true">
+        android:background="@drawable/top_corners_outline">
+
         <LinearLayout
-            android:id="@+id/dotsContainer"
+            android:id="@+id/loadingContainer"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:orientation="horizontal">
+            android:layout_centerInParent="true"
+            android:orientation="vertical">
 
             <TextView
-                android:id="@+id/dot1"
-                android:layout_width="8dp"
-                android:layout_height="8dp"
-                android:background="@drawable/dot_background"
-                android:layout_marginRight="4dp" />
+                android:id="@+id/loadingText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="16dp"
+                android:text="@string/waiting_for_driver_s_response"
+                android:textSize="16sp" />
 
-            <TextView
-                android:id="@+id/dot2"
-                android:layout_width="8dp"
-                android:layout_height="8dp"
-                android:background="@drawable/dot_background"
-                android:layout_marginRight="4dp" />
+            <ProgressBar
+                android:id="@+id/customProgressBar"
+                style="?android:attr/progressBarStyleLarge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginVertical="64dp" />
 
-            <TextView
-                android:id="@+id/dot3"
-                android:layout_width="8dp"
-                android:layout_height="8dp"
-                android:background="@drawable/dot_background" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/cancel_ride"
+                android:layout_width="300dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginVertical="8dp"
+                android:text="Cancel ride"
+                android:textColor="@color/white"
+                android:textSize="18sp" />
+
         </LinearLayout>
         <TextView
-            android:id="@+id/loadingText"
+            android:id="@+id/countdownTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Waiting for driver's response"
-            android:textColor="?attr/backgroundColor"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginVertical="16dp"
             android:textSize="16sp"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="16dp" />
-
-    </LinearLayout>
-</RelativeLayout>
+            android:text="0"
+            android:layout_alignParentEnd="true"
+            android:paddingHorizontal="10dp"
+            android:paddingVertical="5dp"
+            android:textColor="@color/white"
+            android:background="@drawable/page_count_bg"
+            android:textStyle="bold" />
+    </RelativeLayout>
+</layout>

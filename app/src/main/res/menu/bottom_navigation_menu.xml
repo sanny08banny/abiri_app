@@ -1,19 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
         android:id="@+id/home"
         android:title="Home"
-        android:icon="@drawable/home_fill" />
+        android:icon="@drawable/home_icon_selector"
+        app:showAsAction="ifRoom"/>
     <item
-        android:id="@+id/drive"
-        android:icon="@drawable/local_taxi_fill"
-        android:title="Drive" />
+        android:id="@+id/admin"
+        android:icon="@drawable/outline_admin_panel_settings_24"
+        android:title="Admin"
+        app:showAsAction="ifRoom"/>
     <item
         android:id="@+id/favourites"
-        android:icon="@drawable/favorite_fill"
-        android:title="Favourites" />
+        android:title="Activity"
+        android:icon="@drawable/local_activity"
+        app:showAsAction="ifRoom"/>
     <item
         android:id="@+id/extras"
-        android:title="Extras"
-        android:icon="@drawable/browse_fill" />
+        android:title="Account"
+        android:icon="@drawable/account_icon_selector"
+        app:showAsAction="ifRoom"/>
 </menu>
+

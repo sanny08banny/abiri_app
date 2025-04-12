@@ -11,30 +11,48 @@ import androidx.databinding.DataBindingUtil;
 import androidx.loader.app.LoaderManager;
 import androidx.loader.content.Loader;
 import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.LinearSnapHelper;
-import androidx.recyclerview.widget.SnapHelper;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
+import android.provider.DocumentsContract;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.sanny_tech.carapp.R;
-import com.sanny_tech.carapp.adapters.PreviewImageAdapter;
+import com.sanny_tech.carapp.adapters.MiniPreviewImageAdapter;
 import com.sanny_tech.carapp.asynctasks.CarUploadLoader;
+import com.sanny_tech.carapp.asynctasks.CarsRetrieverLoader;
+import com.sanny_tech.carapp.asynctasks.FilesUploadLoader;
+import com.sanny_tech.carapp.databasehelpers.UploadedCarsHelper;
 import com.sanny_tech.carapp.databinding.ActivityAddCarBinding;
+import com.sanny_tech.carapp.entities.AddressItem;
 import com.sanny_tech.carapp.entities.Car;
 import com.google.android.material.snackbar.Snackbar;
+import com.sanny_tech.carapp.enums.CarActions;
+import com.sanny_tech.carapp.enums.UploadActions;
+import com.sanny_tech.carapp.guides.CarDetails2Activity;
+import com.sanny_tech.carapp.taxi_utils.ClientRequest;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-public class AddCarActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Boolean> {
+public class AddCarActivity extends AppCompatActivity implements
+        LoaderManager.LoaderCallbacks<String>, MiniPreviewImageAdapter.OnItemClickListener,
+        MiniPreviewImageAdapter.OnCancelClickListener {
 
     private static final int IMAGE_REQUEST = 8;
     private static final int SELECT_LOCATION_REQUEST_CODE = 9;
@@ -43,11 +61,13 @@ public class AddCarActivity extends AppCompatActivity implements LoaderManager.L
     private String hourlyPrice, hourlyDownPayment, dailyPrice, dailyDownPayment,
             carId, model, description;
     private ArrayList<String> carImages;
-    private ArrayList<String> selectedImagePaths;
+    private ArrayList<String> selectedImagePaths = new ArrayList<>();
     private List<File> selectedFiles = new ArrayList<>();
-    private PreviewImageAdapter previewImageAdapter;
+    private MiniPreviewImageAdapter previewImageAdapter;
     private List<String> selectedLocations;
     private ActivityResultLauncher<PickVisualMediaRequest> pickMultipleMedia;
+    private int page_count = 0;
+    private AddressItem addressItem;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,8 +87,11 @@ public class AddCarActivity extends AppCompatActivity implements LoaderManager.L
                         // Convert URIs to strings and add them to the selectedImages list
                         for (Uri uri : uris) {
                             selectedImages.add(uri.toString());
+                            selectedFiles.add(new File(getPathFromUri(uri)));
+                            selectedImagePaths.add(uri.toString());
                         }
                         updateImageRecycler(selectedImages);
+                        page_count++;
                         // Now, selectedImages contains the list of selected image URIs
                     } else {
                         Log.d("PhotoPicker", "No media selected");
@@ -80,14 +103,17 @@ public class AddCarActivity extends AppCompatActivity implements LoaderManager.L
                 onBackPressed();
             }
         });
-        addCarBinding.addImages.setOnClickListener(new View.OnClickListener() {
+        addCarBinding.uploadButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S_V2) {
-                    openPhotoPicker();
-                } else {
-                    openMediaPicker();
-                }
+                openMediaPicker();
+
+            }
+        });
+        addCarBinding.imagePlaceholder.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                openPhotoPicker();
             }
         });
         addCarBinding.ltLocationsAvailable.setOnClickListener(new View.OnClickListener() {
@@ -97,20 +123,40 @@ public class AddCarActivity extends AppCompatActivity implements LoaderManager.L
             }
         });
 
-        addCarBinding.submitHouse.setOnClickListener(new View.OnClickListener() {
+        addCarBinding.nextButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (selectedImagePaths == null) {
-                    showSnackbar(addCarBinding.getRoot(), "You must select at least one image");
-                } else {
-                    for (String image : selectedImagePaths) {
-                        File file = new File(image);
-                        selectedFiles.add(file);
-                    }
-                    uploadCar();
-                }
+                handlePages();
             }
         });
+    }
+
+    private void handlePages() {
+        if (page_count == 0) {
+            model = addCarBinding.modelEdittext.getText().toString();
+            carId = addCarBinding.carIdEdittext.getText().toString();
+            description = addCarBinding.descriptionEdittext.getText().toString();
+
+            dailyPrice = convertAmount(addCarBinding.dailyPriceEdittext.getText().toString());
+            dailyDownPayment = convertAmount(addCarBinding.dailyDownPaymentEdittext.getText().toString());
+            if (dailyPrice.length() == 0) {
+                Toast.makeText(this, "Price must be set", Toast.LENGTH_SHORT).show();
+            } else {
+                String location = (addressItem != null) ?
+                        addressItem.getAddress() : "";
+                newCar = new Car(null, model, carId, getCurrentAccountId(), location,
+                        description, Double.parseDouble(dailyPrice),
+                        Double.parseDouble(dailyDownPayment), "");
+                addCarBinding.carDetails.setVisibility(View.GONE);
+                addCarBinding.uploadLt.setVisibility(View.VISIBLE);
+            }
+        } else if (page_count == 1) {
+            if (selectedImagePaths == null) {
+                showSnackbar(addCarBinding.getRoot(), "You must select at least one image");
+            } else {
+                uploadNationalId();
+            }
+        }
     }
 
     private void openPhotoPicker() {
@@ -120,23 +166,47 @@ public class AddCarActivity extends AppCompatActivity implements LoaderManager.L
     }
 
     private void uploadCar() {
-        model = addCarBinding.modelEdittext.getText().toString();
-        carId = addCarBinding.carIdEdittext.getText().toString();
-        description = addCarBinding.descriptionEdittext.getText().toString();
-
-        dailyPrice = addCarBinding.dailyPriceEdittext.getText().toString();
-        dailyDownPayment = addCarBinding.dailyDownPaymentEdittext.getText().toString();
-        newCar = new Car(selectedImagePaths, model, carId, getCurrentAccountId(), selectedLocations.get(0),
-                description, Double.parseDouble(dailyPrice),
-                Double.parseDouble(dailyDownPayment), "");
+        newCar.setCar_images(selectedImagePaths);
         LoaderManager.getInstance(this).initLoader(36, null, this);
     }
 
+    private String convertAmount(String amount) {
+        // Remove commas from the input amount
+        return amount.replace(",", "");
+    }
+
     private void openSelectLocationActivity() {
-        Intent intent = new Intent(AddCarActivity.this, SelectLocationActivity.class);
-        // Set extra to indicate multiple selection mode if needed
-        intent.putExtra("isMultipleSelection", true);
-        startActivityForResult(intent, SELECT_LOCATION_REQUEST_CODE);
+        DatabaseReference hireListener = FirebaseDatabase.getInstance().getReference("configurations");
+        hireListener.addValueEventListener(new ValueEventListener() {
+            // Inside onDataChange method of ValueEventListener
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists()) {
+
+                    String mapKey = "";
+                    for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                        String key = snapshot.getKey();
+                        if ("maps_key".equals(key)) {
+                            mapKey = snapshot.getValue(String.class);
+                        }
+                    }
+
+                    if (mapKey != null) {
+                        Intent intent = new Intent(AddCarActivity.this, SelectLocationActivity.class);
+                        // Set extra to indicate multiple selection mode if needed
+                        intent.putExtra("isMultipleSelection", false);
+                        intent.putExtra("key", mapKey);
+                        intent.putExtra("activity","car_hire");
+                        startActivityForResult(intent, SELECT_LOCATION_REQUEST_CODE);
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                // Handle errors
+            }
+        });
     }
 
     private void updateSelectedLocationText() {
@@ -145,6 +215,9 @@ public class AddCarActivity extends AppCompatActivity implements LoaderManager.L
             addCarBinding.tvLocationsAvailable.setText(firstLocation);
         } else {
             addCarBinding.tvLocationsAvailable.setText("No location selected");
+        }
+        if (addressItem != null) {
+            addCarBinding.tvLocationsAvailable.setText(addressItem.getAddress());
         }
     }
 
@@ -168,54 +241,50 @@ public class AddCarActivity extends AppCompatActivity implements LoaderManager.L
                         selectedImagePaths.size(), Toast.LENGTH_SHORT).show();
 
                 updateImageRecycler(selectedImagePaths);
+                page_count++;
             }
         } else if (requestCode == SELECT_LOCATION_REQUEST_CODE && resultCode == RESULT_OK && data != null) {
             if (data.hasExtra("selectedLocations")) {
                 selectedLocations = data.getStringArrayListExtra("selectedLocations");
                 updateSelectedLocationText();
+            } else if (data.hasExtra("selectedAddress")) {
+                addressItem = data.getParcelableExtra("selectedAddress");
+                updateSelectedLocationText();
             }
         }
     }
 
-    private void updateImageRecycler(ArrayList<String> selectedImagePaths) {
-        previewImageAdapter = new PreviewImageAdapter(selectedImagePaths, this);
-        addCarBinding.imagesRecycler.setAdapter(previewImageAdapter);
-        addCarBinding.imagesRecycler.setLayoutManager(new LinearLayoutManager(
-                this, LinearLayoutManager.HORIZONTAL, false));
-
-        SnapHelper snapHelper = new LinearSnapHelper();
-        snapHelper.attachToRecyclerView(addCarBinding.imagesRecycler);
-    }
-
     @NonNull
     @Override
-    public Loader<Boolean> onCreateLoader(int id, @Nullable Bundle args) {
+    public Loader<String> onCreateLoader(int id, @Nullable Bundle args) {
         showProgressBar();
-        return new CarUploadLoader(this, newCar, selectedFiles);
+        return new CarUploadLoader(this, newCar, selectedFiles,
+                CarActions.UPLOAD, null);
     }
 
     private void showProgressBar() {
-        addCarBinding.progressBar.setVisibility(View.VISIBLE);
-        addCarBinding.submitHouse.setVisibility(View.GONE);
+        addCarBinding.progressLt.setVisibility(View.VISIBLE);
     }
 
     private void hideProgressBar() {
-        addCarBinding.progressBar.setVisibility(View.GONE);
-        addCarBinding.submitHouse.setVisibility(View.VISIBLE);
+        addCarBinding.progressLt.setVisibility(View.GONE);
+
     }
 
     @Override
-    public void onLoadFinished(@NonNull Loader<Boolean> loader, Boolean data) {
+    public void onLoadFinished(@NonNull Loader<String> loader, String data) {
         hideProgressBar();
-        if (data != null && data) {
-            showSnackbar(addCarBinding.getRoot(), "Successfully uploaded");
+        if (data != null && data.equals("success")) {
+            addCarBinding.carDetails.setVisibility(View.GONE);
+            addCarBinding.uploadLt.setVisibility(View.VISIBLE);
+            page_count++;
         } else {
             showSnackbar(addCarBinding.getRoot(), "Failed to upload");
         }
     }
 
     @Override
-    public void onLoaderReset(@NonNull Loader<Boolean> loader) {
+    public void onLoaderReset(@NonNull Loader<String> loader) {
 
     }
 
@@ -224,4 +293,138 @@ public class AddCarActivity extends AppCompatActivity implements LoaderManager.L
         snackbar.setBackgroundTint(ContextCompat.getColor(this, R.color.blue));
         snackbar.show();
     }
+
+    private void updateImageRecycler(List<String> selectedImagePaths) {
+        glideImage(selectedImagePaths.get(0));
+        previewImageAdapter = new MiniPreviewImageAdapter(selectedImagePaths, this);
+        previewImageAdapter.setOnItemClickListener(this);
+        previewImageAdapter.setOnCancelClickListener(this);
+        addCarBinding.selectedImages.setAdapter(previewImageAdapter);
+        addCarBinding.selectedImages.setLayoutManager(new LinearLayoutManager(
+                this, LinearLayoutManager.HORIZONTAL, false));
+    }
+    private void uploadNationalId() {
+        Toast.makeText(this, "Uploading images", Toast.LENGTH_SHORT).show();
+        addCarBinding.progressLt.setVisibility(View.VISIBLE);
+
+        CarUploadLoader filesUploadLoader = new CarUploadLoader(this, newCar,
+                selectedFiles, CarActions.UPLOAD, null);
+        filesUploadLoader.forceLoad();
+        filesUploadLoader.registerListener(7, new Loader.OnLoadCompleteListener<String>() {
+            @Override
+            public void onLoadComplete(@NonNull Loader<String> loader, @Nullable String data) {
+                if (data != null) {
+                    addCarBinding.progressLt.setVisibility(View.GONE);
+                    showSnackbar(addCarBinding.getRoot(), "Image Upload\n" +
+                            "Image has been uploaded successfully. Restart app to load changes");
+                    setUpCar();
+                } else {
+                    addCarBinding.progressLt.setVisibility(View.GONE);
+                    Toast.makeText(AddCarActivity.this, "Upload failed", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+    }
+
+    private void setUpCar() {
+        Toast.makeText(this, "Setting up...", Toast.LENGTH_SHORT).show();
+        CarsRetrieverLoader retrieverLoader = new CarsRetrieverLoader(AddCarActivity.this);
+        retrieverLoader.forceLoad();
+        retrieverLoader.registerListener(7876, new Loader.OnLoadCompleteListener<List<Car>>() {
+            @Override
+            public void onLoadComplete(@NonNull Loader<List<Car>> loader, @Nullable List<Car> data) {
+                if (data != null) {
+                    for (Car car : data) {
+                        if (car.getCar_id().equals(newCar.getCar_id())) {
+                            UploadedCarsHelper uploadedCarsHelper =
+                                    new UploadedCarsHelper(AddCarActivity.this);
+                            uploadedCarsHelper.insertCar(car);
+                            showSnackbar(addCarBinding.getRoot(), "Successfully uploaded");
+                            finish();
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    private void glideImage(String item) {
+        Glide.with(this)
+                .asBitmap()
+                .load(item)
+                .override(ViewGroup.LayoutParams.MATCH_PARENT, 200)
+                .into(addCarBinding.imagePlaceholder);
+    }
+
+    public String getPathFromUri(Uri uri) {
+        if (DocumentsContract.isDocumentUri(this, uri)) {
+            String documentId = DocumentsContract.getDocumentId(uri);
+            String[] split = documentId.split(":");
+            if (split.length < 2) {
+                Log.e("getPathFromUri", "Invalid document ID: " + documentId);
+                return null;
+            }
+            String type = split[0];
+            String id = split[1];
+            Log.d("getPathFromUri", "Document ID: " + documentId + ", Type: " + type + ", ID: " + id);
+
+            if ("image".equals(type)) {
+                Uri contentUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+                String selection = "_id=?";
+                String[] selectionArgs = new String[]{id};
+                return getDataColumn(contentUri, selection, selectionArgs);
+            } else if ("raw".equals(type)) {
+                // Directly use the ID as the path for `raw` type
+                return id;
+            } else {
+                Log.e("getPathFromUri", "Unsupported document type: " + type);
+                return null;
+            }
+        } else if ("content".equalsIgnoreCase(uri.getScheme())) {
+            // Handle content URIs from MediaStore and other providers
+            return getDataColumn(uri, null, null);
+        } else {
+            Log.e("getPathFromUri", "URI is not a document URI: " + uri.toString());
+        }
+        return null;
+    }
+
+
+    private String getDataColumn(Uri uri, String selection, String[] selectionArgs) {
+        Cursor cursor = null;
+        String column = "_data";
+        String[] projection = {column};
+
+        try {
+            cursor = getContentResolver().query(uri, projection, selection, selectionArgs, null);
+            if (cursor != null && cursor.moveToFirst()) {
+                int index = cursor.getColumnIndexOrThrow(column);
+                String path = cursor.getString(index);
+                Log.d("getDataColumn", "File path: " + path);
+                return path;
+            } else {
+                Log.e("getDataColumn", "Cursor is null or empty for URI: " + uri.toString());
+            }
+        } catch (Exception e) {
+            Log.e("getDataColumn", "Exception occurred while querying: " + e.getMessage(), e);
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+        return null;
+    }
+    @Override
+    public void onItemClick(String item) {
+        glideImage(item);
+    }
+
+    @Override
+    public void onCancelClick(String item) {
+        int position = selectedImagePaths.indexOf(item);
+        selectedImagePaths.remove(item);
+        selectedFiles.remove(position);
+        previewImageAdapter.removeItem(item);
+    }
+
 }

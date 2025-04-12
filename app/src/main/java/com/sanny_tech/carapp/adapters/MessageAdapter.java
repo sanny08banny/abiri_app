@@ -206,25 +206,21 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.TaxiView
     }
     private Object processData(Map<String, String> data) {
         if (data.containsKey("ride_id")) {
-            String ride_id = data.get("ride_id");
-            String user_name = data.get("user_name");
-            String user_phone = data.get("user_phone");
-            String client_id = data.get("client_id");
-            float dest_lat = Float.parseFloat(data.get("dest_lat"));
-            float dest_lon = Float.parseFloat(data.get("dest_lon"));
-            float current_lat = Float.parseFloat(data.get("current_lat"));
-            float current_lon = Float.parseFloat(data.get("current_lon"));
+            String rideId = data.get("ride_id");
+            String senderId = data.get("sender_id");
+            double price = Double.parseDouble(data.get("price"));
+            String userName = data.get("user_name");
+            double currentLat = Double.parseDouble(data.get("current_lat"));
+            double currentLon = Double.parseDouble(data.get("current_lon"));
+            double destLat = Double.parseDouble(data.get("dest_lat"));
+            double destLon = Double.parseDouble(data.get("dest_lon"));
+            String userPhone = data.get("user_phone");
+            String destName = data.get("dest_name");
 
-            ClientRequest request = new ClientRequest();
-            request.setRide_id(ride_id);
-            request.setClient_id(client_id);
-            request.setUser_name(user_name);
-            request.setUser_phone(user_phone);
-            request.setCurrent_lat(current_lat);
-            request.setCurrent_lon(current_lon);
-            request.setDest_lat(dest_lat);
-            request.setDest_lon(dest_lon);
-            return request;
+            ClientRequest clientRequest = new ClientRequest(senderId, price, userName, currentLat,
+                    currentLon, destLat, destLon, rideId, userPhone, destName);
+
+            return clientRequest;
         }else if (data.containsKey("booking_id")){
             String booking_id = data.get("booking_id");
             String user_name = data.get("user_name");

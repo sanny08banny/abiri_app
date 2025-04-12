@@ -13,8 +13,8 @@ public class Car implements Parcelable {
     private String owner_id;
     private String location;
     private String description;
-    private double amount;
-    private double downpayment_amt;
+    private double daily_amount;
+    private double daily_downpayment_amt;
     private String available;
 
     public Car() {
@@ -27,8 +27,8 @@ public class Car implements Parcelable {
         this.owner_id = owner_id;
         this.location = location;
         this.description = description;
-        this.amount = amount;
-        this.downpayment_amt = downpayment_amt;
+        this.daily_amount = amount;
+        this.daily_downpayment_amt = downpayment_amt;
         this.available = available;
     }
 
@@ -39,8 +39,8 @@ public class Car implements Parcelable {
         owner_id = in.readString();
         location = in.readString();
         description = in.readString();
-        amount = in.readDouble();
-        downpayment_amt = in.readDouble();
+        daily_amount = in.readDouble();
+        daily_downpayment_amt = in.readDouble();
         available = in.readString();
     }
 
@@ -52,8 +52,8 @@ public class Car implements Parcelable {
         dest.writeString(owner_id);
         dest.writeString(location);
         dest.writeString(description);
-        dest.writeDouble(amount);
-        dest.writeDouble(downpayment_amt);
+        dest.writeDouble(daily_amount);
+        dest.writeDouble(daily_downpayment_amt);
         dest.writeString(available);
     }
 
@@ -122,20 +122,20 @@ public class Car implements Parcelable {
         this.description = description;
     }
 
-    public double getAmount() {
-        return amount;
+    public double getDaily_amount() {
+        return daily_amount;
     }
 
-    public void setAmount(double amount) {
-        this.amount = amount;
+    public void setDaily_amount(double daily_amount) {
+        this.daily_amount = daily_amount;
     }
 
-    public double getDownpayment_amt() {
-        return downpayment_amt;
+    public double getDaily_downpayment_amt() {
+        return daily_downpayment_amt;
     }
 
-    public void setDownpayment_amt(double downpayment_amt) {
-        this.downpayment_amt = downpayment_amt;
+    public void setDaily_downpayment_amt(double daily_downpayment_amt) {
+        this.daily_downpayment_amt = daily_downpayment_amt;
     }
 
     public String getAvailable() {

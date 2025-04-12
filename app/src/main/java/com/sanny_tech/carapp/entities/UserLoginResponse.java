@@ -1,9 +1,10 @@
 package com.sanny_tech.carapp.entities;
 
 public class UserLoginResponse {
-    private String user_id;
-    private Boolean is_admin;
     private Boolean is_driver;
+    private String user_id;
+    private String user_name;
+    private String user_phone;
 
     public UserLoginResponse() {
     }
@@ -16,19 +17,27 @@ public class UserLoginResponse {
         this.user_id = user_id;
     }
 
-    public Boolean getIs_admin() {
-        return is_admin;
-    }
-
-    public void setIs_admin(Boolean is_admin) {
-        this.is_admin = is_admin;
-    }
-
     public Boolean getIs_driver() {
         return is_driver;
     }
 
     public void setIs_driver(Boolean is_driver) {
         this.is_driver = is_driver;
+    }
+
+    public String getUser_name() {
+        return user_name;
+    }
+
+    public void setUser_name(String user_name) {
+        this.user_name = user_name;
+    }
+
+    public String getUser_phone() {
+        return user_phone;
+    }
+
+    public void setUser_phone(String user_phone) {
+        this.user_phone = user_phone;
     }
 }

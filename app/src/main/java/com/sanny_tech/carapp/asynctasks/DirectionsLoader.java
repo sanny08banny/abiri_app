@@ -7,6 +7,7 @@ import android.util.Log;
 import androidx.annotation.Nullable;
 import androidx.loader.content.AsyncTaskLoader;
 
+import com.sanny_tech.carapp.BuildConfig;
 import com.sanny_tech.carapp.entities.DirectionsResponse;
 import com.sanny_tech.carapp.entities.Leg;
 import com.sanny_tech.carapp.entities.Polyline;
@@ -23,16 +24,17 @@ import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
-
 public class DirectionsLoader extends AsyncTaskLoader<List<LatLng>> {
     private static final String TAG = DirectionsLoader.class.getSimpleName();
     private LatLng source;
     private LatLng destination;
+    private String key;
 
-    public DirectionsLoader(Context context, LatLng source, LatLng destination) {
+    public DirectionsLoader(Context context, LatLng source, LatLng destination, String key) {
         super(context);
         this.source = source;
         this.destination = destination;
+        this.key = key;
     }
 
     @Override
@@ -53,13 +55,14 @@ public class DirectionsLoader extends AsyncTaskLoader<List<LatLng>> {
         Call<DirectionsResponse> call = service.getDirections(
                 source.latitude + "," + source.longitude,
                 destination.latitude + "," + destination.longitude,
-                "AIzaSyAlGhvKajzrEZiLaY0XfF-yoPzQnxuKtGM"
+                key
         );
 
         try {
             Response<DirectionsResponse> response = call.execute();
             if (response.isSuccessful()) {
                 DirectionsResponse directions = response.body();
+                Log.d("direction loader",String.valueOf(directions));
                 if (directions != null) {
                     return parseDirectionsResponse(directions);
                 }

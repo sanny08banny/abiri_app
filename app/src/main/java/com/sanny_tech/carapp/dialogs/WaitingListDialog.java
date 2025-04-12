@@ -6,6 +6,7 @@ import android.content.DialogInterface;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.style.StyleSpan;
+import android.widget.Toast;
 
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
@@ -27,7 +28,7 @@ public class WaitingListDialog {
         builder.setMessage(titleBuilder)
                 .setPositiveButton("Join", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
-                        addUserToWaitingList(serviceName,userId);
+                        addUserToWaitingList(serviceName,userId, context);
                     }
                 })
                 .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -39,10 +40,11 @@ public class WaitingListDialog {
         alertDialog.show();
     }
 
-    private static void addUserToWaitingList(String serviceName, String userId) {
+    private static void addUserToWaitingList(String serviceName, String userId, Context context) {
         DatabaseReference waitingListRef = FirebaseDatabase.getInstance().
                 getReference("waiting_list");
         waitingListRef.child(serviceName).child(userId).setValue(true);
+        Toast.makeText(context, "Joined successfully", Toast.LENGTH_SHORT).show();
     }
 
 }

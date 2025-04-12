@@ -2,15 +2,13 @@ package com.sanny_tech.carapp.taxi_utils;
 
 public class DriverResponse {
     private String client_id;
-    private String status;
     private String driver_id;
 
     public DriverResponse() {
     }
 
-    public DriverResponse(String client_id, String status, String driverId) {
+    public DriverResponse(String client_id, String driverId) {
         this.client_id = client_id;
-        this.status = status;
         driver_id = driverId;
     }
 
@@ -20,14 +18,6 @@ public class DriverResponse {
 
     public void setClient_id(String client_id) {
         this.client_id = client_id;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
     }
 
     public String getDriver_id() {

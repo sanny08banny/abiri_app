@@ -5,4 +5,7 @@
     <color name="transparent_white">#80FFFFFF</color>
     <color name="transparent_black">#80000000</color>
     <color name="blue">#1034a6</color>
+    <color name="green">#008000</color>
+    <color name="custom_gray">#EEEEEE</color>
+    <color name="red">#E33333</color>
 </resources>

@@ -2,8 +2,6 @@ package com.sanny_tech.carapp.entities;
 
 public class PayLink {
     private Long id;
-    private String title;
-    private String transactionType;
     private String recipientNumber;
     private String shortcode;
     private String paybillNumber;
@@ -20,22 +18,6 @@ public class PayLink {
 
     public void setId(Long id) {
         this.id = id;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    public String getTransactionType() {
-        return transactionType;
-    }
-
-    public void setTransactionType(String transactionType) {
-        this.transactionType = transactionType;
     }
 
     public String getRecipientNumber() {

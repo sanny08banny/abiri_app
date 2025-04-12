@@ -1,25 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android">
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_margin="6dp"
         android:orientation="vertical">
-
+    <androidx.cardview.widget.CardView
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:layout_marginHorizontal="8dp"
+        android:layout_marginVertical="8dp"
+        app:cardElevation="6dp"
+        android:background="@drawable/gradient_overlay_icon"
+        app:cardCornerRadius="32dp">
         <ImageView
             android:id="@+id/iconImageView"
-            android:layout_width="100dp"
-            android:layout_height="100dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:padding="8dp"
+            android:contentDescription="@string/icon"
             android:scaleType="fitCenter"
-            android:src="@drawable/rental_car_icon" />
-
-        <TextView
-            android:id="@+id/desc"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginVertical="4dp"
-            android:layout_gravity="center_horizontal"
-            android:textSize="16sp" />
+            android:layout_gravity="center"
+            android:src="@drawable/local_taxi_fill" />
+    </androidx.cardview.widget.CardView>
+    <TextView
+        android:id="@+id/desc"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="4dp"
+        android:layout_gravity="center_horizontal"
+        android:textSize="14sp" />
     </LinearLayout>
 </layout>

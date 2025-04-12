@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?><!-- dialog_journey_status.xml -->
-<layout xmlns:android="http://schemas.android.com/apk/res/android">
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -7,23 +8,92 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <TextView
-            android:id="@+id/destination_edit_text"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textSize="18sp"
-            android:textStyle="bold" />
-
-        <EditText
-            android:id="@+id/charges_edit_text"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Journey charges"
-            android:inputType="text"
-            android:visibility="gone"
-            android:padding="12dp"
-            android:textColor="@color/black"
-            android:textSize="16sp" />
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <ImageButton
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginHorizontal="16dp"
+                    android:background="@android:color/transparent"
+                    android:src="@drawable/icons8stopsquared"
+                    app:tint="?attr/imageButtonStyle" />
+
+                <TextView
+                    android:id="@+id/pick_up"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginVertical="8dp"
+                    android:layout_marginStart="16dp"
+                    android:fontFamily="@font/actor"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="2dp"
+                android:layout_height="100dp"
+                android:layout_marginStart="24dp"
+                android:background="@android:color/darker_gray" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <ImageButton
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginHorizontal="16dp"
+                    android:background="@android:color/transparent"
+                    android:src="@drawable/icons8topsquared2"
+                    app:tint="?attr/imageButtonStyle" />
+
+                <TextView
+                    android:id="@+id/destination"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginVertical="8dp"
+                    android:layout_marginStart="16dp"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_gravity="end"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+<!--        <ImageButton-->
+<!--            android:layout_width="32dp"-->
+<!--            android:layout_height="32dp"-->
+<!--            android:src="@drawable/baseline_alt_route_32"-->
+<!--            android:layout_gravity="end"-->
+<!--            android:id="@+id/map_route"-->
+<!--            android:background="?attr/selectableItemBackgroundBorderless"-->
+<!--            app:tint="?attr/imageButtonStyle"-->
+<!--            android:layout_marginHorizontal="16dp"/>-->
+        <ImageButton
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:src="@drawable/baseline_assistant_navigation_32"
+            android:layout_gravity="end"
+            android:id="@+id/navigate"
+            android:background="@android:color/transparent"
+            app:tint="?attr/imageButtonStyle"
+            android:layout_marginHorizontal="16dp"/>
+        </LinearLayout>
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/start_stop_button"
@@ -32,5 +102,14 @@
             android:layout_marginTop="16dp"
             android:text="Start Journey"
             android:textSize="16sp" />
+        <TextView
+            android:id="@+id/trip_duration"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginVertical="8dp"
+            android:fontFamily="@font/actor"
+            android:textSize="16sp"
+            android:textStyle="bold" />
     </LinearLayout>
 </layout>

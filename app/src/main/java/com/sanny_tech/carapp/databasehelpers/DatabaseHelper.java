@@ -6,12 +6,9 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
-
 import com.sanny_tech.carapp.entities.User;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.io.File;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "UserDB";
@@ -42,12 +39,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     // Insert a new user into the database
-    // Insert a new user into the database with a UUID
     public String addUser(User user) {
         SQLiteDatabase db = this.getWritableDatabase();
 
         ContentValues values = new ContentValues();
-        values.put("userId", user.getUserId()); // Convert UUID to String
+        values.put("userId", user.getUserId());
         values.put("username", user.getUsername());
         values.put("email", user.getEmail());
         values.put("password", user.getPassword());
@@ -65,55 +61,16 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
     }
 
-    // Retrieve a user by ID (UUID)
-    public User getUserByUUId(UUID userId) {
-        SQLiteDatabase db = this.getReadableDatabase();
-
-        Cursor cursor = db.query("users",
-                new String[]{"userId", "username","email","password", "phoneNumber", "accountType", "profilePic"},
-                "userId=?",
-                new String[]{userId.toString()}, // Convert UUID to String
-                null,
-                null,
-                null);
-
-        if (cursor != null) {
-            cursor.moveToFirst();
-            User user = cursorToUser(cursor);
-            cursor.close();
-            db.close();
-            return user;
-        } else {
-            db.close();
-            return null;
-        }
-    }
-
-    // Retrieve all users
-    public List<User> getAllUsers() {
-        List<User> userList = new ArrayList<>();
-        SQLiteDatabase db = this.getReadableDatabase();
-
-        Cursor cursor = db.query("users",
-                new String[]{"userId", "username", "phoneNumber", "accountType", "profilePic"},
-                null,
-                null,
-                null,
-                null,
-                null);
-
-        if (cursor != null) {
-            if (cursor.moveToFirst()) {
-                do {
-                    User user = cursorToUser(cursor);
-                    userList.add(user);
-                } while (cursor.moveToNext());
-            }
-            cursor.close();
-        }
-
-        db.close();
-        return userList;
+    private User cursorToUser(Cursor cursor) {
+        User user = new User();
+        user.setUserId((cursor.getString(0)));
+        user.setUsername(cursor.getString(1));
+        user.setEmail(cursor.getString(2));
+        user.setPassword(cursor.getString(3));
+        user.setPhoneNumber(cursor.getString(4));
+        user.setAccountType(cursor.getString(5));
+        user.setProfilePic(cursor.getString(6));
+        return user;
     }
 
     // Retrieve a user by ID
@@ -121,7 +78,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getReadableDatabase();
 
         Cursor cursor = db.query("users",
-                new String[]{"userId", "username","email","password", "phoneNumber", "accountType", "profilePic"},
+                new String[]{"userId", "username", "email", "password", "phoneNumber", "accountType", "profilePic"},
                 "userId=?",
                 new String[]{userId},
                 null,
@@ -162,23 +119,18 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     // Delete a user by ID
-    public void deleteUser(long userId) {
+    public boolean deleteUser(String userId) {
         SQLiteDatabase db = this.getWritableDatabase();
-        db.delete("users", "userId=?", new String[]{String.valueOf(userId)});
+
+        int deleteResult = db.delete("users", "userId = ?", new String[]{userId});
         db.close();
 
-    }
-
-    private User cursorToUser(Cursor cursor) {
-        User user = new User();
-        user.setUserId((cursor.getString(0)));
-        user.setUsername(cursor.getString(1));
-        user.setEmail(cursor.getString(2));
-        user.setPassword(cursor.getString(3));
-        user.setPhoneNumber(cursor.getString(4));
-        user.setAccountType(cursor.getString(5));
-        user.setProfilePic(cursor.getString(6));
-        return user;
+        if (deleteResult > 0) {
+            // Delete the database file
+            File dbFile = new File(db.getPath());
+            return dbFile.delete();
+        } else {
+            return false;
+        }
     }
 }
-

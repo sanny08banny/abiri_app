@@ -11,14 +11,24 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.util.Log;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.Map;
+
 public class RemoteMessageSaver {
 
     private static final String PREF_NAME = "RemoteMessages";
     private static final String MESSAGES_KEY = "messages";
 
     // Save a new message as unread
-    public static long saveRemoteMessage(Context context, RemoteMessage remoteMessage) throws JSONException {
-        if (remoteMessage != null && remoteMessage.getData().size() > 0) {
+    public static long saveRemoteMessage(Context context, Map<String, String> data) throws JSONException {
+        if (data != null && !data.isEmpty()) {
             SharedPreferences sharedPreferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
             String existingMessagesJson = sharedPreferences.getString(MESSAGES_KEY, "[]");
             JSONArray messagesArray = new JSONArray(existingMessagesJson);
@@ -26,7 +36,7 @@ public class RemoteMessageSaver {
             long id = System.currentTimeMillis();
             JSONObject messageObject = new JSONObject();
             messageObject.put("id", id); // Assuming unique ID generation via timestamp
-            messageObject.put("data", new JSONObject(remoteMessage.getData()));
+            messageObject.put("data", new JSONObject(data));
             messageObject.put("isRead", false);
 
             messagesArray.put(messageObject);
@@ -48,7 +58,6 @@ public class RemoteMessageSaver {
             JSONObject messageObject = messagesArray.getJSONObject(i);
             JSONObject storedMessageData = messageObject.getJSONObject("data");
 
-            // Assuming messageData is a JSONObject of the message's data to be marked as read
             if (storedMessageData.toString().equals(messageData.toString())) {
                 messageObject.put("isRead", true);
             }
@@ -63,9 +72,6 @@ public class RemoteMessageSaver {
         JSONObject messageData = new JSONObject(data);
         readMessage(context, messageData);
         Log.d("Remote messages", "message read");
-    }
-    public static void readMessageById(Context context, long id) throws JSONException {
-        updateMessageState(context,id, true);
     }
 
     // Delete a message
@@ -109,6 +115,13 @@ public class RemoteMessageSaver {
 
         sharedPreferences.edit().putString(MESSAGES_KEY, updatedMessagesArray.toString()).apply();
     }
+
+    // Method to mark a message as read by ID
+    public static void readMessageById(Context context, long id) throws JSONException {
+        updateMessageState(context, id, true);
+    }
+
+    // Check if there are unread messages
     public static boolean hasUnreadMessages(Context context) {
         SharedPreferences sharedPreferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
         String existingMessagesJson = sharedPreferences.getString(MESSAGES_KEY, "[]");
@@ -118,17 +131,13 @@ public class RemoteMessageSaver {
                 JSONObject messageObject = messagesArray.getJSONObject(i);
                 boolean isRead = messageObject.getBoolean("isRead");
                 if (!isRead) {
-                    // Found an unread message, return true
-                    return true;
+                    return true; // Found an unread message
                 }
             }
         } catch (JSONException e) {
             e.printStackTrace();
             // Handle the exception appropriately
         }
-        // No unread messages found, return false
-        return false;
+        return false; // No unread messages found
     }
 }
-
-

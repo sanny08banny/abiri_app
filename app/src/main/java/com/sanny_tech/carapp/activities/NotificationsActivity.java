@@ -10,7 +10,13 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.Toast;
 
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.sanny_tech.carapp.R;
 import com.sanny_tech.carapp.adapters.MessageAdapter;
 import com.sanny_tech.carapp.databinding.ActivityNotificationsBinding;
@@ -120,11 +126,60 @@ MessageAdapter.SelectionStateListener, BookingBottomSheet.TaxiBookingListener{
                 throw new RuntimeException(e);
             }
         }
-        Intent intent = new Intent(this, TaxiMapsActivity.class);
-        intent.putExtra("request", request);
-        startActivity(intent);
-    }
+        String accountId = request.getSender_id();
+        DatabaseReference reference = FirebaseDatabase.getInstance().getReference("verified_requests");
+        DatabaseReference requestRef = reference.child(accountId);
 
+// Check if the request already exists
+        requestRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists()) {
+
+                    loadApi(request);
+                } else {
+                    Toast.makeText(NotificationsActivity.this, "Request is not available ", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                // Handle potential errors here
+            }
+        });
+    }
+    private void loadApi(ClientRequest request) {
+        DatabaseReference hireListener = FirebaseDatabase.getInstance().getReference("configurations");
+        hireListener.addValueEventListener(new ValueEventListener() {
+            // Inside onDataChange method of ValueEventListener
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists()) {
+
+                    String mapKey = "";
+                    for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                        String key = snapshot.getKey();
+                        if ("maps_key".equals(key)) {
+                            mapKey = snapshot.getValue(String.class);
+                        }
+                    }
+
+                    if (mapKey != null) {
+                        Intent intent = new Intent(NotificationsActivity.this,
+                                TaxiMapsActivity.class);
+                        intent.putExtra("key", mapKey);
+                        intent.putExtra("request", request);
+                        startActivity(intent);
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                // Handle errors
+            }
+        });
+    }
     @Override
     public void onSelectionModeChanged(boolean isInSelectionMode) {
         notificationsBinding.buttonsLt.setVisibility(isInSelectionMode ? View.GONE : View.VISIBLE);
@@ -155,25 +210,21 @@ MessageAdapter.SelectionStateListener, BookingBottomSheet.TaxiBookingListener{
     }
     private Object processData(Map<String, String> data) {
         if (data.containsKey("ride_id")) {
-            String ride_id = data.get("ride_id");
-            String user_name = data.get("user_name");
-            String user_phone = data.get("user_phone");
-            String client_id = data.get("client_id");
-            float dest_lat = Float.parseFloat(data.get("dest_lat"));
-            float dest_lon = Float.parseFloat(data.get("dest_lon"));
-            float current_lat = Float.parseFloat(data.get("current_lat"));
-            float current_lon = Float.parseFloat(data.get("current_lon"));
+            String rideId = data.get("ride_id");
+            String senderId = data.get("sender_id");
+            double price = Double.parseDouble(data.get("price"));
+            String userName = data.get("user_name");
+            double currentLat = Double.parseDouble(data.get("current_lat"));
+            double currentLon = Double.parseDouble(data.get("current_lon"));
+            double destLat = Double.parseDouble(data.get("dest_lat"));
+            double destLon = Double.parseDouble(data.get("dest_lon"));
+            String userPhone = data.get("user_phone");
+            String destName = data.get("dest_name");
 
-            ClientRequest request = new ClientRequest();
-            request.setRide_id(ride_id);
-            request.setClient_id(client_id);
-            request.setUser_name(user_name);
-            request.setUser_phone(user_phone);
-            request.setCurrent_lat(current_lat);
-            request.setCurrent_lon(current_lon);
-            request.setDest_lat(dest_lat);
-            request.setDest_lon(dest_lon);
-            return request;
+            ClientRequest clientRequest = new ClientRequest(senderId, price, userName, currentLat,
+                    currentLon, destLat, destLon, rideId, userPhone, destName);
+
+            return clientRequest;
         }else if (data.containsKey("booking_id")){
             String booking_id = data.get("booking_id");
             String user_name = data.get("user_name");

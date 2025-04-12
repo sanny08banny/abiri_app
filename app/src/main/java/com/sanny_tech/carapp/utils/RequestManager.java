@@ -10,35 +10,60 @@ import com.google.gson.reflect.TypeToken;
 import java.lang.reflect.Type;
 import java.util.List;
 
+import android.content.Context;
+import android.content.SharedPreferences;
+import com.google.gson.Gson;
+
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.os.Parcel;
+import android.os.Parcelable;
+import android.util.Base64;
+
 public class RequestManager {
-    private static final String PREF_KEY = "cached_data";
 
-    public static void saveRequest(Context context, List<ClientRequest> data) {
-        SharedPreferences sharedPreferences = context.getSharedPreferences(PREF_KEY, Context.MODE_PRIVATE);
+    private static final String PREFS_NAME = "ClientRequestPrefs";
+    private static final String REQUEST_KEY = "ClientRequestKey";
+
+    private SharedPreferences sharedPreferences;
+
+    public RequestManager(Context context) {
+        sharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+    }
+
+    public void saveRequest(ClientRequest request) {
         SharedPreferences.Editor editor = sharedPreferences.edit();
-        Gson gson = new Gson();
+        Parcel parcel = Parcel.obtain();
+        request.writeToParcel(parcel, 0);
+        byte[] bytes = parcel.marshall();
+        parcel.recycle();
 
-        String jsonData = gson.toJson(data);
-        editor.putString("request", jsonData);
+        String serializedRequest = Base64.encodeToString(bytes, Base64.DEFAULT);
+        editor.putString(REQUEST_KEY, serializedRequest);
         editor.apply();
     }
-    public static void clearRequests(Context context) {
-        SharedPreferences sharedPreferences = context.getSharedPreferences(PREF_KEY, Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        Gson gson = new Gson();
 
-        editor.remove(PREF_KEY);
+    public ClientRequest loadRequest() {
+        String serializedRequest = sharedPreferences.getString(REQUEST_KEY, null);
+        if (serializedRequest != null) {
+            byte[] bytes = Base64.decode(serializedRequest, Base64.DEFAULT);
+            Parcel parcel = Parcel.obtain();
+            parcel.unmarshall(bytes, 0, bytes.length);
+            parcel.setDataPosition(0);
+            ClientRequest request = ClientRequest.CREATOR.createFromParcel(parcel);
+            parcel.recycle();
+            return request;
+        }
+        return null;
+    }
+
+    public void clearRequest() {
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.remove(REQUEST_KEY);
         editor.apply();
     }
-
-    public static List<ClientRequest> loadRequest(Context context) {
-        SharedPreferences sharedPreferences = context.getSharedPreferences(PREF_KEY, Context.MODE_PRIVATE);
-        Gson gson = new Gson();
-        String jsonData = sharedPreferences.getString("request", null);
-        Type type = new TypeToken<List<ClientRequest>>() {}.getType();
-        return gson.fromJson(jsonData, type);
-    }
-
 }
+
+
 
 

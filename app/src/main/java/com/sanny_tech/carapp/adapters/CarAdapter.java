@@ -33,6 +33,7 @@ import com.sanny_tech.carapp.activities.AboutCarActivity;
 import com.sanny_tech.carapp.activities.BookedActivity;
 import com.sanny_tech.carapp.databinding.CarItemBinding;
 import com.sanny_tech.carapp.entities.Car;
+import com.sanny_tech.carapp.hire_utils.HireActivity;
 import com.sanny_tech.carapp.utils.FavouritesManager;
 import com.sanny_tech.carapp.utils.IpAddressManager;
 import com.google.android.material.datepicker.MaterialDatePicker;
@@ -126,7 +127,7 @@ public class CarAdapter extends RecyclerView.Adapter<CarAdapter.ViewHolder> {
             }
 
             // Only daily pricing is available, show the daily booking button
-            carItemBinding.price.setText(MessageFormat.format("Book at {0}/day", car.getAmount()));
+            carItemBinding.price.setText(MessageFormat.format("Book at {0}/day", car.getDaily_amount()));
             carItemBinding.price.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -156,7 +157,7 @@ public class CarAdapter extends RecyclerView.Adapter<CarAdapter.ViewHolder> {
 
         private void glideImage(Car car, ImageView imageView, View gradientView) {
             if (car != null) {
-                String endPoint = baseUrl + "/car/" + car.getOwner_id() + "/"
+                String endPoint = baseUrl + "/car/image/" + car.getOwner_id() + "/"
                         + car.getCar_id() + "/" + car.getCar_images().get(0);
                 Glide.with(context).asBitmap().load(endPoint)
                         .apply(new RequestOptions()
@@ -203,6 +204,10 @@ public class CarAdapter extends RecyclerView.Adapter<CarAdapter.ViewHolder> {
                         });
             }
         }
+        private String convertText(String amount) {
+            // Remove commas from the input amount
+            return amount.replace(" ", "");
+        }
         private void showOptionsMenu(View view, Car car) {
             Context wrapper = new ContextThemeWrapper(context, R.style.PopupMenuStyle);
             PopupMenu popupMenu = new PopupMenu(wrapper, view);
@@ -237,7 +242,7 @@ public class CarAdapter extends RecyclerView.Adapter<CarAdapter.ViewHolder> {
     }
 
     private void bookCar(Car car, long fromDateMillis, long toDateMillis) {
-        Intent intent = new Intent(context, BookedActivity.class);
+        Intent intent = new Intent(context, HireActivity.class);
         intent.setAction("book car");
         intent.putExtra("car", car);
         intent.putExtra("from", fromDateMillis);

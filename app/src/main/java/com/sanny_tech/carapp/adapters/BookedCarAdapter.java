@@ -22,36 +22,39 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.request.RequestOptions;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.sanny_tech.carapp.R;
 import com.sanny_tech.carapp.asynctasks.BookCarLoader;
-import com.sanny_tech.carapp.databasehelpers.BookedCarsDatabaseHelper;
 import com.sanny_tech.carapp.databinding.BookedCarItemBinding;
-import com.sanny_tech.carapp.entities.BookedCar;
 import com.sanny_tech.carapp.enums.ActionType;
+import com.sanny_tech.carapp.hire_utils.Hire;
 import com.sanny_tech.carapp.utils.IpAddressManager;
 
+import java.text.MessageFormat;
 import java.text.NumberFormat;
+import java.text.SimpleDateFormat;
 import java.util.Currency;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 public class BookedCarAdapter extends RecyclerView.Adapter<BookedCarAdapter.BookedCarViewHolder> {
-    private List<BookedCar> cars;
+    private List<Hire> hires;
     private Context context;
     private OnItemClickListener listener;
     private String baseUrl;
-    private BookedCarsDatabaseHelper databaseHelper;
 
-    public BookedCarAdapter(List<BookedCar> cars, Context context) {
-        this.cars = cars;
+    public BookedCarAdapter(List<Hire> hires, Context context) {
+        this.hires = hires;
         this.context = context;
         this.baseUrl = IpAddressManager.getIpAddress(context);
-        this.databaseHelper = new BookedCarsDatabaseHelper(context);
     }
 
-    public void setItems(List<BookedCar> data) {
-        cars.clear();
-        cars.addAll(data);
+    public void setItems(List<Hire> data) {
+        hires.clear();
+        hires.addAll(data);
         notifyDataSetChanged();
     }
 
@@ -66,18 +69,18 @@ public class BookedCarAdapter extends RecyclerView.Adapter<BookedCarAdapter.Book
 
     @Override
     public void onBindViewHolder(@NonNull BookedCarViewHolder holder, int position) {
-        BookedCar bookedCar = cars.get(position);
+        Hire hire = hires.get(position);
 
-        holder.bind(bookedCar);
+        holder.bind(hire);
     }
 
     @Override
     public int getItemCount() {
-        return cars.size();
+        return hires.size();
     }
 
     public interface OnItemClickListener {
-        void onItemClick(String item);
+        void onItemClick(Hire item);
     }
 
     public void setOnItemClickListener(OnItemClickListener listener) {
@@ -109,26 +112,52 @@ public class BookedCarAdapter extends RecyclerView.Adapter<BookedCarAdapter.Book
 
         }
 
-        public void bind(BookedCar car) {
-            if (car.getImage() != null) {
-                String image = car.getImage();
-                String endPoint = baseUrl + "/car/" + car.getOwner_id() + "/"
-                        + car.getCar_id() + "/" + car.getImage();
+        public void bind(Hire hire) {
+            if (hire.getCar() != null && hire.getCar().getCar_images() != null) {
+                String image = hire.getCar().getCar_images().get(0);
+                String endPoint = baseUrl + "/car/image/" + hire.getOwner_id() + "/"
+                        + hire.getCar().getCar_id() + "/" + image;
                 Glide.with(context)
                         .asBitmap()
                         .load(endPoint)
                         .apply(new RequestOptions()
                                 .placeholder(R.drawable.baseline_downloading_350) // Placeholder image while loading
-                                .error(R.drawable.car_01)      // Error image if loading fails
+                                .error(R.drawable.loading)      // Error image if loading fails
                                 .diskCacheStrategy(DiskCacheStrategy.ALL))
                         .override(ViewGroup.LayoutParams.MATCH_PARENT, 500)
                         .into(bookedCarItemBinding.carImage);
             }
-            String rentalDuration = String.valueOf(car.getDuration());
+            if (hire.getStatus().equals("complete")){
+                bookedCarItemBinding.completeStatus.setVisibility(View.VISIBLE);
+            } else if (hire.getStatus().equals("initialised")) {
+                bookedCarItemBinding.completeStatus.setVisibility(View.VISIBLE);
+                bookedCarItemBinding.completeText.setText("Waiting verification");
+                bookedCarItemBinding.paymentsButton.setImageResource(R.drawable.loading);
+            }
+            bookedCarItemBinding.name.setText(hire.getOwner());
+            bookedCarItemBinding.phoneNumber.setText(hire.getOwner_contact());
+            bookedCarItemBinding.date.setText(MessageFormat.format("{0} - {1}",
+                    formatTime(Long.parseLong(hire.getStart_date())),
+                    formatTime(Long.parseLong(hire.getEnd_date()))));
+            if (Long.parseLong(hire.getEnd_date()) < System.currentTimeMillis()){
+                try {
+                    Long time = Long.parseLong(hire.getStatus());
+                    bookedCarItemBinding.penaltyAlert.setVisibility(View.VISIBLE);
+                    bookedCarItemBinding.mainLt.setBackgroundColor(context.getColor(
+                            R.color.red));
+                } catch (NumberFormatException ignored) {
+
+                }
+            }
+            long durationMillis = Long.parseLong(hire.getEnd_date()) -
+                    Long.parseLong(hire.getStart_date());
+            long days = TimeUnit.MILLISECONDS.toDays(durationMillis);
+            long hours = TimeUnit.MILLISECONDS.toHours(durationMillis) - TimeUnit.DAYS.toHours(days);
+            String duration = String.format(Locale.US, "%d days", days);
             String attendantName = "[CHANGE PREFERENCES]"; // Replace with the actual method to get the name
 
 // Create a SpannableString for the rental price
-            SpannableString rentalDurationSpannable = new SpannableString(rentalDuration);
+            SpannableString rentalDurationSpannable = new SpannableString(duration);
             ClickableSpan rentalPriceClickSpan = new ClickableSpan() {
                 @Override
                 public void onClick(View widget) {
@@ -136,7 +165,7 @@ public class BookedCarAdapter extends RecyclerView.Adapter<BookedCarAdapter.Book
                     // For example, you can open a dialog or perform some action
                 }
             };
-            rentalDurationSpannable.setSpan(rentalPriceClickSpan, 0, rentalDuration.length(),
+            rentalDurationSpannable.setSpan(rentalPriceClickSpan, 0, duration.length(),
                     SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
 
 // Create a SpannableString for the attendant name
@@ -162,27 +191,38 @@ public class BookedCarAdapter extends RecyclerView.Adapter<BookedCarAdapter.Book
 
             bookedCarItemBinding.carDescription.setMovementMethod(LinkMovementMethod.getInstance());
 
-            if (car.getPricing() != null) {
-                double amount = Double.parseDouble(car.getPricing());
-                Locale kenyanLocale = new Locale("sw", "KE");
-                Currency kenyanShilling = Currency.getInstance("KES");
-                NumberFormat numberFormat = NumberFormat.getCurrencyInstance(kenyanLocale);
-                numberFormat.setCurrency(kenyanShilling);
-                String formattedAmount = numberFormat.format(amount);
+            Locale kenyanLocale = new Locale("sw", "KE");
+            Currency kenyanShilling = Currency.getInstance("KES");
+            NumberFormat numberFormat = NumberFormat.getCurrencyInstance(kenyanLocale);
+            numberFormat.setCurrency(kenyanShilling);
+            String formattedAmount = numberFormat.format(hire.getCharges());
 
-                bookedCarItemBinding.price.setText(formattedAmount);
-            }
+            bookedCarItemBinding.price.setText(formattedAmount);
 
+            bookedCarItemBinding.configureButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    boolean isExpanded = bookedCarItemBinding.detailsLt.getVisibility() == View.VISIBLE;
+                    toggleExpansion(bookedCarItemBinding.detailsLt, isExpanded);
+                }
+            });
             bookedCarItemBinding.deleteButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    showDeleteConfirmationDialog(car);
+                    showDeleteConfirmationDialog(hire);
+                }
+            });
+            bookedCarItemBinding.getRoot().setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    listener.onItemClick(hire);
                 }
             });
         }
 
-        private void deleteCar(BookedCar car) {
-            BookCarLoader bookCarLoader = new BookCarLoader(context, car.getCar_id(), ActionType.DELETE, null);
+        private void deleteCar(Hire hire) {
+            BookCarLoader bookCarLoader = new BookCarLoader(context, hire.getOwner_id(),
+                    ActionType.DELETE, hire.getCar());
             showLoadingState();
             bookCarLoader.forceLoad();
             bookCarLoader.registerListener(7, new Loader.OnLoadCompleteListener<String>() {
@@ -191,8 +231,10 @@ public class BookedCarAdapter extends RecyclerView.Adapter<BookedCarAdapter.Book
                     hideLoadingState();
                     if (data != null) {
                         Toast.makeText(context, "Successful connect", Toast.LENGTH_SHORT).show();
-                        databaseHelper.deleteBookedCarByCarId(car.getCar_id());
-                        cars.remove(car);
+                        DatabaseReference reference = FirebaseDatabase.getInstance()
+                                .getReference("hires");
+                        reference.child(hire.getId()).removeValue();
+                        hires.remove(hire);
                         notifyDataSetChanged();
                     }
                 }
@@ -207,7 +249,7 @@ public class BookedCarAdapter extends RecyclerView.Adapter<BookedCarAdapter.Book
             bookedCarItemBinding.deleteButton.setVisibility(View.VISIBLE);
         }
 
-        private void showDeleteConfirmationDialog(BookedCar car) {
+        private void showDeleteConfirmationDialog(Hire car) {
             AlertDialog.Builder builder = new AlertDialog.Builder(context);
             builder.setTitle("Delete Car");
             builder.setMessage("Are you sure you want to delete this car?");
@@ -234,5 +276,9 @@ public class BookedCarAdapter extends RecyclerView.Adapter<BookedCarAdapter.Book
                     .setDuration(300)
                     .start();
         }
+    }
+    private String formatTime(long timestamp) {
+        SimpleDateFormat sdf = new SimpleDateFormat("dd MMM", Locale.getDefault());
+        return sdf.format(new Date(timestamp));
     }
 }

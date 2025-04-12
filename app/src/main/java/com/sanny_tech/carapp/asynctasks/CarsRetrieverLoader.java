@@ -32,7 +32,7 @@ public class CarsRetrieverLoader extends AsyncTaskLoader<List<Car>> {
 
     public CarsRetrieverLoader(Context context) {
         super(context);
-        this.baseUrl = this.baseUrl = IpAddressManager.getIpAddress(context) + "/";
+        this.baseUrl = IpAddressManager.getIpAddress(context) + "/";
     }
 
     @Override
@@ -65,6 +65,7 @@ public class CarsRetrieverLoader extends AsyncTaskLoader<List<Car>> {
             httpClient.addInterceptor(interceptor);
 
             String url = baseUrl;
+            Log.e("url",url);
 
             Retrofit retrofit = new Retrofit.Builder()
                     .baseUrl(url )

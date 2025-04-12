@@ -13,7 +13,7 @@ public class TripAnalyzer {
 
         for (Trip trip : trips) {
             String pickUp = trip.getPick_up();
-            String destination = trip.getDest();
+            String destination = trip.getDestination();
 
             Integer pickUpCount = placeCountMap.get(pickUp);
             if (pickUpCount != null) {
