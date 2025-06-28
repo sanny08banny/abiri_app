@@ -41,6 +41,7 @@ import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
 import okhttp3.RequestBody;
+import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
@@ -98,21 +99,28 @@ public class CarUploadLoader extends AsyncTaskLoader<String> {
             sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
             SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
 
+            // Add the logging interceptor
+            HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
+            logging.setLevel(HttpLoggingInterceptor.Level.BODY); // Log full request/response bodies
+
             OkHttpClient client = new OkHttpClient.Builder()
                     .connectTimeout(60, TimeUnit.SECONDS)
                     .readTimeout(60, TimeUnit.SECONDS)
-                    .sslSocketFactory(sslSocketFactory, (X509TrustManager)trustAllCerts[0])
+                    .sslSocketFactory(sslSocketFactory, (X509TrustManager) trustAllCerts[0])
                     .hostnameVerifier((hostname, session) -> true)
+                    .addInterceptor(logging) // ✅ add this line
                     .build();
+
             Gson gson = new GsonBuilder()
                     .setLenient()
                     .create();
-            // Create a Retrofit instance
+
             Retrofit retrofit = new Retrofit.Builder()
                     .baseUrl(baseUrl)
                     .addConverterFactory(GsonConverterFactory.create(gson))
                     .client(client)
                     .build();
+
             CarApiService carApiService = retrofit.create(CarApiService.class);
 
             if (carActions == CarActions.UPLOAD) {

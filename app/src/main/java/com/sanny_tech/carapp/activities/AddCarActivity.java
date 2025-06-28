@@ -106,7 +106,7 @@ public class AddCarActivity extends AppCompatActivity implements
         addCarBinding.uploadButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                openMediaPicker();
+                openPhotoPicker();
 
             }
         });
