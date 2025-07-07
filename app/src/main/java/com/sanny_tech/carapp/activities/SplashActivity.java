@@ -22,6 +22,8 @@ import android.os.Handler;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.example.clientlib.NimbusPushService;
+import com.example.clientlib.NimbusWebSocket;
 import com.google.android.play.core.appupdate.AppUpdateInfo;
 import com.google.android.play.core.appupdate.AppUpdateManager;
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory;
@@ -38,6 +40,7 @@ import com.sanny_tech.carapp.guides.LocationGuideActivity;
 import com.sanny_tech.carapp.guides.TaxiGuideActivity;
 import com.sanny_tech.carapp.storage.RemoteMessageSaver;
 import com.sanny_tech.carapp.taxi_utils.ClientRequest;
+import com.sanny_tech.carapp.utils.MyPushHandler;
 import com.sanny_tech.carapp.utils.NewAppManager;
 import com.sanny_tech.carapp.utils.TypewriterEffect;
 
@@ -70,7 +73,8 @@ public class SplashActivity extends AppCompatActivity {
                 PlayIntegrityAppCheckProviderFactory.getInstance());
         appUpdateManager = AppUpdateManagerFactory.create(this);
         checkForUpdate();
-
+        NimbusPushService.Companion.start(this);
+        NimbusWebSocket.INSTANCE.registerListener(new MyPushHandler(this));
         FirebaseMessaging.getInstance().subscribeToTopic(getCurrentAccountId())
                 .addOnCompleteListener(task -> {
                     String msg = "Subscribed to hire notifications";

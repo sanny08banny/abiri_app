@@ -60,7 +60,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
     @Override
     public void onNewToken(@NonNull String token) {
-        FCMTokenManager.saveToken(getApplicationContext(), token);
+//        FCMTokenManager.saveToken(getApplicationContext(), token);
     }
 
     @Override

@@ -3,7 +3,7 @@ import java.util.Properties
 @Suppress("DSL_SCOPE_VIOLATION") // TODO: Remove once KTIJ-19369 is fixed
 plugins {
     alias(libs.plugins.androidApplication)
-    kotlin("android") version "1.8.20"
+    kotlin("android") version "2.0.20"
     alias(libs.plugins.com.google.android.libraries.mapsplatform.secrets.gradle.plugin)
     id("com.google.gms.google-services")
     id("com.google.firebase.crashlytics")
@@ -11,12 +11,12 @@ plugins {
 
 android {
     namespace = "com.sanny_tech.carapp"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.sanny_tech.carapp"
-        minSdk = 23
-        targetSdk = 34
+        minSdk = 24
+        targetSdk = 35
         versionCode = 63
         versionName = "1.0"
 
@@ -38,11 +38,11 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "17"
     }
 }
 
@@ -104,5 +104,7 @@ dependencies {
     implementation("com.squareup.picasso:picasso:2.71828")
     implementation("com.google.android.play:app-update:2.1.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+        implementation(project(":clientlib"))
 
+//    implementation("com.github.sanny08banny:android-protocols-sdk:v1.0.6")
 }

@@ -18,6 +18,7 @@ import com.sanny_tech.carapp.services.TaxiApiService;
 import com.sanny_tech.carapp.taxi_utils.PricingDetails;
 import com.sanny_tech.carapp.taxi_utils.TaxiRequest;
 import com.sanny_tech.carapp.utils.IpAddressManager;
+import com.sanny_tech.carapp.utils.RetrofitClient;
 import com.sanny_tech.carapp.utils.SimCardManager;
 
 import java.io.IOException;
@@ -73,45 +74,7 @@ public class TaxiLoader extends AsyncTaskLoader<String> {
     @Override
     public String loadInBackground() {
         try {
-            TrustManager[] trustAllCerts = new TrustManager[]{
-                    new X509TrustManager() {
-                        @Override
-                        public void checkClientTrusted(java.security.cert.X509Certificate[] chain,
-                                                       String authType) {
-                        }
-
-                        @Override
-                        public void checkServerTrusted(java.security.cert.X509Certificate[] chain,
-                                                       String authType) {
-                        }
-
-                        @Override
-                        public java.security.cert.X509Certificate[] getAcceptedIssuers() {
-                            return new java.security.cert.X509Certificate[]{};
-                        }
-                    }
-            };
-
-// Install the all-trusting trust manager
-            SSLContext sslContext = SSLContext.getInstance("SSL");
-            sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
-            SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
-
-            OkHttpClient client = new OkHttpClient.Builder()
-                    .connectTimeout(60, TimeUnit.SECONDS)
-                    .readTimeout(60, TimeUnit.SECONDS)
-                    .sslSocketFactory(sslSocketFactory, (X509TrustManager) trustAllCerts[0])
-                    .hostnameVerifier((hostname, session) -> true)
-                    .build();
-            Retrofit retrofit = new Retrofit.Builder()
-                    .baseUrl(baseUrl + "/")
-                    .client(client)
-                    .addConverterFactory(GsonConverterFactory.create())
-                    .build();
-            database = FirebaseDatabase.getInstance();
-            reference = database.getReference("verified_requests");
-
-
+            Retrofit retrofit = RetrofitClient.getClient(baseUrl);
             TaxiApiService service = retrofit.create(TaxiApiService.class);
             Log.e(TAG, "UserId " + getCurrentAccountId());
 
@@ -175,8 +138,6 @@ public class TaxiLoader extends AsyncTaskLoader<String> {
         } catch (IOException e) {
             Log.e(TAG, "Error: " + e.getMessage());
             // Handle the failure
-        } catch (NoSuchAlgorithmException | KeyManagementException e) {
-            Log.e(TaxiLoader.class.getSimpleName(), "Error making API call: " + e.getMessage());
         }
         return null;
     }

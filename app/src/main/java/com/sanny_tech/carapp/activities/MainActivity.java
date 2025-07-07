@@ -48,6 +48,7 @@ import com.sanny_tech.carapp.taxi_utils.DriverAvailabilityManager;
 import com.sanny_tech.carapp.taxi_utils.TaxiInit;
 import com.sanny_tech.carapp.utils.FCMTokenManager;
 import com.sanny_tech.carapp.utils.IpAddressManager;
+import com.sanny_tech.carapp.utils.NimbusUtils;
 import com.sanny_tech.carapp.utils.RequestManager;
 import com.sanny_tech.carapp.utils.SimCardManager;
 import com.sanny_tech.carapp.utils.TaxiModeManager;
@@ -133,34 +134,56 @@ public class MainActivity extends AppCompatActivity implements BookingBottomShee
         navController.setGraph(R.navigation.nav_graph);
         navController.navigate(R.id.mainFragment, bundle);
 
-        FCMTokenManager.fetchToken(new FCMTokenManager.TokenCallback() {
-            @Override
-            public void onTokenReceived(String token) {
-                if (token != null) {
-                    Log.d("Token", token);
-                    if (getCurrentAccountId() != null &&
-                            !FCMTokenManager.getToken(MainActivity.this).isEmpty() &&
-                            FCMTokenManager.getToken(MainActivity.this).matches(token)) {
+        String nimbusId = NimbusUtils.getNimbusId(this);
+        if (getCurrentAccountId() != null) {
 //                    if (isLoggedIn) {
-                        DatabaseReference firebaseDatabase = FirebaseDatabase.getInstance().getReference("n_token");
-                        firebaseDatabase.child(getCurrentAccountUserName()).setValue(token);
+            DatabaseReference firebaseDatabase = FirebaseDatabase.getInstance().getReference("n_token");
+            firebaseDatabase.child(getCurrentAccountUserName()).setValue(nimbusId);
 
-                        TokenIdLoader tokenIdLoader = new TokenIdLoader(MainActivity.this, token);
-                        tokenIdLoader.forceLoad();
-                        tokenIdLoader.registerListener(7, new Loader.OnLoadCompleteListener<String>() {
-                            @Override
-                            public void onLoadComplete(@NonNull Loader<String> loader, @Nullable String data) {
-                                if (data != null) {
-                                    Log.d("TokenLoader", "success tokenId update");
-                                } else {
-                                    Log.d("TokenLoader", "failed tokenId update");
-                                }
-                            }
-                        });
+            TokenIdLoader tokenIdLoader = new TokenIdLoader(MainActivity.this, nimbusId);
+            tokenIdLoader.forceLoad();
+            tokenIdLoader.registerListener(7, new Loader.OnLoadCompleteListener<String>() {
+                @Override
+                public void onLoadComplete(@NonNull Loader<String> loader, @Nullable String data) {
+                    if (data != null) {
+                        FCMTokenManager.saveToken(MainActivity.this,nimbusId);
+                        Log.d("TokenLoader", "success tokenId update");
+                    } else {
+                        Log.d("TokenLoader", "failed tokenId update");
                     }
                 }
-            }
-        });
+            });
+        }
+
+
+//        FCMTokenManager.fetchToken(new FCMTokenManager.TokenCallback() {
+//            @Override
+//            public void onTokenReceived(String token) {
+//                if (token != null) {
+//                    Log.d("Token", token);
+//                    if (getCurrentAccountId() != null &&
+//                            !FCMTokenManager.getToken(MainActivity.this).isEmpty() &&
+//                            FCMTokenManager.getToken(MainActivity.this).matches(token)) {
+////                    if (isLoggedIn) {
+//                        DatabaseReference firebaseDatabase = FirebaseDatabase.getInstance().getReference("n_token");
+//                        firebaseDatabase.child(getCurrentAccountUserName()).setValue(token);
+//
+//                        TokenIdLoader tokenIdLoader = new TokenIdLoader(MainActivity.this, token);
+//                        tokenIdLoader.forceLoad();
+//                        tokenIdLoader.registerListener(7, new Loader.OnLoadCompleteListener<String>() {
+//                            @Override
+//                            public void onLoadComplete(@NonNull Loader<String> loader, @Nullable String data) {
+//                                if (data != null) {
+//                                    Log.d("TokenLoader", "success tokenId update");
+//                                } else {
+//                                    Log.d("TokenLoader", "failed tokenId update");
+//                                }
+//                            }
+//                        });
+//                    }
+//                }
+//            }
+//        });
 
         activityMainBinding.bottomNavView.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
             @Override
