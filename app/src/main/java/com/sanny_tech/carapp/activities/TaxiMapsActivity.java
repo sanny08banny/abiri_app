@@ -178,6 +178,7 @@ public class TaxiMapsActivity extends FragmentActivity implements OnMapReadyCall
         reference = database.getReference("taxi_rides");
         taxiReference = database.getReference("taxi_locations");
         declineReference = database.getReference("declines");
+        requestReference = database.getReference("verified_requests");
         firestore = FirebaseFirestore.getInstance();
         locationSearcher = new LocationSearcher(this,key);
 
@@ -403,7 +404,6 @@ public class TaxiMapsActivity extends FragmentActivity implements OnMapReadyCall
         startActivityForResult(intent,ADD_NEW_NUMBER);
     }
     private void createNewRideToFirebase(Ride ride) {
-        requestReference = database.getReference("verified_requests");
         requestReference.child(request.getSender_id()).removeValue();
         if (currentLocation != null) {
             ride.setDriver_lon((float) currentLocation.getLongitude());
@@ -675,14 +675,26 @@ public class TaxiMapsActivity extends FragmentActivity implements OnMapReadyCall
 
                         ride.setDriver_lat((float) currentLocation.getLatitude());
                         ride.setDriver_lon((float) currentLocation.getLongitude());
-                        if (areLatitudesEqual(ride.getDriver_lat() ,request.getCurrent_lat())){
+
+                        Location driverLocation = new Location("");
+                        driverLocation.setLatitude(currentLocation.getLatitude());
+                        driverLocation.setLongitude(currentLocation.getLongitude());
+
+                        Location pickupLocation = new Location("");
+                        pickupLocation.setLatitude(request.getCurrent_lat());
+                        pickupLocation.setLongitude(request.getCurrent_lon());
+
+                        float distanceInMeters = driverLocation.distanceTo(pickupLocation);
+
+                        if (distanceInMeters <= 50) { // ✅ within 50 meters of pickup
                             if (!Settings.canDrawOverlays(TaxiMapsActivity.this)) {
                                 Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
                                         Uri.parse("package:" + getPackageName()));
                                 startActivityForResult(intent, REQUEST_CODE);
-                            }
+                            } else {
                                 showStartJourney();
-                        }else {
+                            }
+                    }else {
                             binding.startStopButton.setVisibility(View.VISIBLE);
                             binding.startStopButton.setText("You are yet to arrive pick-up point");
                             JourneyStatusManager statusManager = new JourneyStatusManager(TaxiMapsActivity.this);

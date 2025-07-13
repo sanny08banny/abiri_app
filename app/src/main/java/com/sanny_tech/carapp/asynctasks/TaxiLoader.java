@@ -76,6 +76,9 @@ public class TaxiLoader extends AsyncTaskLoader<String> {
         try {
             Retrofit retrofit = RetrofitClient.getClient(baseUrl);
             TaxiApiService service = retrofit.create(TaxiApiService.class);
+
+            database = FirebaseDatabase.getInstance();
+            reference = database.getReference("verified_requests");
             Log.e(TAG, "UserId " + getCurrentAccountId());
 
             if (actionType == ActionType.BOOK) {
@@ -109,7 +112,7 @@ public class TaxiLoader extends AsyncTaskLoader<String> {
                 Response<Void> response = call.execute();
                 if (response.isSuccessful()) {
                     // Handle the successful response for booking
-                    return "Booking successful";
+                    return "Decline successful";
                 } else {
                     reference.child(getCurrentAccountId()).setValue(response.code() + " - " + response.message());
                     // Log the error message

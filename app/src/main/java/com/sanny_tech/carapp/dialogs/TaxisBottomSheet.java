@@ -98,121 +98,127 @@ public class TaxisBottomSheet extends BottomSheetDialogFragment implements TaxiA
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        taxisLtBinding = DataBindingUtil.inflate(inflater, R.layout.taxis_lt, container, false);
+        try {
+            taxisLtBinding = DataBindingUtil.inflate(inflater, R.layout.taxis_lt, container, false);
 
-        taxisLtBinding.selectedLoc.setText(pick_up_name + " to " + string);
-        taxisLtBinding.distance.setText(distance);
-        Log.d("Bottom sheet", String.valueOf(taxiLocations.size()));
-        database = FirebaseDatabase.getInstance();
-        ridesReference = database.getReference("taxi_rides");
-        FareCalculator fareCalculator = new FareCalculator(context);
-        pricingDetails = new PricingDetails(getCurrentAccountId(),
-                currentLatitude,currentLongitude,dest_lat,dest_lon);
-        fareCalculator.calculateFare(pricingDetails, new FareCalculator.FareCallback() {
-            @Override
-            public void onSuccess(TaxiPrice taxiPrice) {
-                List<Vehicle> vehicles = new ArrayList<>();
-                Map<String, List<TaxiLocation>> groupedTaxis = TaxiLocationGrouper.groupBySeatCount(taxiLocations);
+            taxisLtBinding.selectedLoc.setText(pick_up_name + " to " + string);
+            taxisLtBinding.distance.setText(distance);
+            Log.d("Bottom sheet", String.valueOf(taxiLocations.size()));
+            database = FirebaseDatabase.getInstance();
+            ridesReference = database.getReference("taxi_rides");
+            FareCalculator fareCalculator = new FareCalculator(context);
+            pricingDetails = new PricingDetails(getCurrentAccountId(),
+                    currentLatitude, currentLongitude, dest_lat, dest_lon);
+            fareCalculator.calculateFare(pricingDetails, new FareCalculator.FareCallback() {
+                @Override
+                public void onSuccess(TaxiPrice taxiPrice) {
+                    List<Vehicle> vehicles = new ArrayList<>();
+                    Map<String, List<TaxiLocation>> groupedTaxis = TaxiLocationGrouper.groupBySeatCount(taxiLocations);
 
-                Map<String, Double> categoryPrices = new HashMap<>();
-                categoryPrices.put("Economy", taxiPrice.getEconomy());
-                categoryPrices.put("Classic", taxiPrice.getClassic());
-                categoryPrices.put("Xl", taxiPrice.getXl());
-                categoryPrices.put("BodaBoda", taxiPrice.getBodaBoda());
+                    Map<String, Double> categoryPrices = new HashMap<>();
+                    categoryPrices.put("Economy", taxiPrice.getEconomy());
+                    categoryPrices.put("Classic", taxiPrice.getClassic());
+                    categoryPrices.put("Xl", taxiPrice.getXl());
+                    categoryPrices.put("BodaBoda", taxiPrice.getBodaBoda());
 
-                for (Map.Entry<String, Double> entry : categoryPrices.entrySet()) {
-                    String category = entry.getKey();
-                    double price = entry.getValue();
-                    Vehicle vehicle = new Vehicle(category, TaxiCategory.getNumberOfSeats(category)); // Initial seat count is 0
-                    vehicle.setTaxiLocations(new ArrayList<>()); // Empty list of TaxiLocations
-                    vehicle.setPrice(price);
-                    vehicles.add(vehicle);
-                }
+                    for (Map.Entry<String, Double> entry : categoryPrices.entrySet()) {
+                        String category = entry.getKey();
+                        double price = entry.getValue();
+                        Vehicle vehicle = new Vehicle(category, TaxiCategory.getNumberOfSeats(category)); // Initial seat count is 0
+                        vehicle.setTaxiLocations(new ArrayList<>()); // Empty list of TaxiLocations
+                        vehicle.setPrice(price);
+                        vehicles.add(vehicle);
+                    }
 
-                for (Map.Entry<String, List<TaxiLocation>> entry : groupedTaxis.entrySet()) {
-                    String category = entry.getKey();
-                    List<TaxiLocation> locations = entry.getValue();
-                    for (Vehicle vehicle : vehicles) {
-                        if (vehicle.getCategory().equals(category)) {
-                            if (!locations.isEmpty()) {
-                                vehicle.setSeat_count(TaxiCategory.getNumberOfSeats(vehicle.getCategory()));
-                                vehicle.setTaxiLocations(locations);
+                    for (Map.Entry<String, List<TaxiLocation>> entry : groupedTaxis.entrySet()) {
+                        String category = entry.getKey();
+                        List<TaxiLocation> locations = entry.getValue();
+                        for (Vehicle vehicle : vehicles) {
+                            if (vehicle.getCategory().equals(category)) {
+                                if (!locations.isEmpty()) {
+                                    vehicle.setSeat_count(TaxiCategory.getNumberOfSeats(vehicle.getCategory()));
+                                    vehicle.setTaxiLocations(locations);
+                                }
+                                break;
                             }
-                            break;
                         }
+                    }
+
+                    TaxiAdapter taxiAdapter = new TaxiAdapter(vehicles, context, currentLatitude, currentLongitude, travelDistance);
+                    taxisLtBinding.taxisRecycler.setAdapter(taxiAdapter);
+                    taxisLtBinding.taxisRecycler.setLayoutManager(new LinearLayoutManager(requireContext()));
+                    taxiAdapter.setOnItemClickListener(TaxisBottomSheet.this);
+
+                    if (vehicles.isEmpty()) {
+                        taxisLtBinding.noTaxisLt.setVisibility(View.VISIBLE);
                     }
                 }
 
-                TaxiAdapter taxiAdapter = new TaxiAdapter(vehicles, context, currentLatitude, currentLongitude, travelDistance);
-                taxisLtBinding.taxisRecycler.setAdapter(taxiAdapter);
-                taxisLtBinding.taxisRecycler.setLayoutManager(new LinearLayoutManager(requireContext()));
-                taxiAdapter.setOnItemClickListener(TaxisBottomSheet.this);
-
-                if (vehicles.isEmpty()){
-                    taxisLtBinding.noTaxisLt.setVisibility(View.VISIBLE);
+                @Override
+                public void onError(Exception e) {
+                    Toast.makeText(context, "Not loaded", Toast.LENGTH_SHORT).show();
                 }
-            }
+            });
 
-            @Override
-            public void onError(Exception e) {
-                Toast.makeText(context, "Not loaded", Toast.LENGTH_SHORT).show();
-            }
-        });
-
-        taxisLtBinding.closeButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                dismiss();
-            }
-        });
-        taxisLtBinding.requestRide.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (selectedItem != null){
-                    taxisLtBinding.mainLt.setVisibility(View.GONE);
-                    taxisLtBinding.confirmLt.setVisibility(View.VISIBLE);
-                    taxisLtBinding.confirm.setVisibility(View.GONE);
-                    taxisLtBinding.category.setText(selectedItem.getCategory());
-                    charges = selectedItem.getPrice();
-                    Locale kenyanLocale = new Locale("sw", "KE");
-                    Currency kenyanShilling = Currency.getInstance("KES");
-                    NumberFormat numberFormat = NumberFormat.getCurrencyInstance(kenyanLocale);
-                    numberFormat.setCurrency(kenyanShilling);
-                    String formattedAmount = numberFormat.format(charges);
-                    RouteCalculator routeCalculator = new RouteCalculator(context);
-                    routeCalculator.calculateSingleTravelDetails(new LatLng(currentLatitude,
-                            currentLongitude), new LatLng(dest_lat, dest_lon), new RouteCalculator.SingleTravelDetailsCallback() {
-                        @Override
-                        public void onSingleTravelDetailsCalculated(TravelDetails travelDetails) {
-                            taxisLtBinding.duration.setText("( " + travelDetails.getReadableDuration() + " ) " +
-                                    travelDetails.getReadableDistance() + " away");
-                            taxisLtBinding.price.setText(formattedAmount);
-                            taxisLtBinding.confirm.setVisibility(View.VISIBLE);
-                        }
-
-                        @Override
-                        public void onError(Throwable throwable) {
-
-                        }
-                    });
-                }else {
-                    Toast.makeText(context, "No ride selected", Toast.LENGTH_SHORT).show();
+            taxisLtBinding.closeButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    dismiss();
                 }
+            });
+            taxisLtBinding.requestRide.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (selectedItem != null) {
+                        taxisLtBinding.mainLt.setVisibility(View.GONE);
+                        taxisLtBinding.confirmLt.setVisibility(View.VISIBLE);
+                        taxisLtBinding.confirm.setVisibility(View.GONE);
+                        taxisLtBinding.category.setText(selectedItem.getCategory());
+                        charges = selectedItem.getPrice();
+                        Locale kenyanLocale = new Locale("sw", "KE");
+                        Currency kenyanShilling = Currency.getInstance("KES");
+                        NumberFormat numberFormat = NumberFormat.getCurrencyInstance(kenyanLocale);
+                        numberFormat.setCurrency(kenyanShilling);
+                        String formattedAmount = numberFormat.format(charges);
+                        RouteCalculator routeCalculator = new RouteCalculator(context);
+                        routeCalculator.calculateSingleTravelDetails(new LatLng(currentLatitude,
+                                currentLongitude), new LatLng(dest_lat, dest_lon), new RouteCalculator.SingleTravelDetailsCallback() {
+                            @Override
+                            public void onSingleTravelDetailsCalculated(TravelDetails travelDetails) {
+                                taxisLtBinding.duration.setText("( " + travelDetails.getReadableDuration() + " ) " +
+                                        travelDetails.getReadableDistance() + " away");
+                                taxisLtBinding.price.setText(formattedAmount);
+                                taxisLtBinding.confirm.setVisibility(View.VISIBLE);
+                            }
+
+                            @Override
+                            public void onError(Throwable throwable) {
+
+                            }
+                        });
+                    } else {
+                        Toast.makeText(context, "No ride selected", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            });
+            taxisLtBinding.confirm.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    loadRide(selectedItem);
+                }
+            });
+            taxisLtBinding.cancel.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    taxisLtBinding.mainLt.setVisibility(View.VISIBLE);
+                    taxisLtBinding.confirmLt.setVisibility(View.GONE);
+                }
+            });
+        }catch (IllegalStateException e){
+            if (e.getMessage() != null) {
+                Log.e("Error", e.getMessage());
             }
-        });
-        taxisLtBinding.confirm.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                loadRide(selectedItem);
-            }
-        });
-        taxisLtBinding.cancel.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                taxisLtBinding.mainLt.setVisibility(View.VISIBLE);
-                taxisLtBinding.confirmLt.setVisibility(View.GONE);
-            }
-        });
+        }
         return taxisLtBinding.getRoot();
     }
 

@@ -921,7 +921,7 @@ public class DriverMainFragment extends Fragment implements PaymentAdapter.OnIte
 
     private void savePayLink() {
         showProgressBar();
-        payLink.setId(Long.valueOf(getCurrentAccountId()));
+        payLink.setId(getCurrentAccountId());
         payLinksReference.child(getCurrentAccountId()).setValue(payLink);
         Toast.makeText(requireContext(), "Pay-link created successfully", Toast.LENGTH_SHORT).show();
     }

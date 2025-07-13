@@ -2,6 +2,7 @@ package com.sanny_tech.carapp.dialogs;
 
 import static android.content.Context.MODE_PRIVATE;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -221,9 +222,12 @@ public class BookingBottomSheet extends BottomSheetDialogFragment implements Tax
 
     }
     public String getCurrentAccountId() {
-        SharedPreferences sharedPreferences = requireContext().getSharedPreferences("AccountPrefs",
-                MODE_PRIVATE);
-        return sharedPreferences.getString("currentUserId", null);
+        Context context = getContext();
+        if (context != null) {
+            SharedPreferences sharedPreferences = context.getSharedPreferences("AccountPrefs", Context.MODE_PRIVATE);
+            return sharedPreferences.getString("currentUserId", null);
+        }
+        return null;
     }
     public String getCurrentAccountUserName() {
         SharedPreferences sharedPreferences = requireContext().getSharedPreferences("AccountPrefs", MODE_PRIVATE);

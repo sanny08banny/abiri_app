@@ -225,6 +225,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mapFragment.getMapAsync(this);
 
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
+        database = FirebaseDatabase.getInstance();
         reference = FirebaseDatabase.getInstance().getReference("taxi_locations");
         ridesReference = FirebaseDatabase.getInstance().getReference("taxi_rides");
         declineReference = FirebaseDatabase.getInstance().getReference("declines");
@@ -321,7 +322,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         binding.progressLt.cancelRide.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                database = FirebaseDatabase.getInstance();
                 DatabaseReference requestReference = database.getReference("verified_requests");
                 requestReference.child(getCurrentAccountId()).removeValue();
                 Toast.makeText(MapsActivity.this, "Trip canceled successfully", Toast.LENGTH_SHORT).show();
@@ -839,7 +839,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private void addOrUpdateMarker(TaxiLocation taxiLocation) {
         LatLng position = new LatLng(taxiLocation.getLatitude(), taxiLocation.getLongitude());
         String driverId = taxiLocation.getDriverId();
-        BitmapDescriptor customMarker = BitmapDescriptorFactory.fromResource(R.drawable.taxi_top_yellow_26334);
+        BitmapDescriptor customMarker = BitmapDescriptorFactory.fromResource(R.drawable.car_top_1);
 
         if (markers.containsKey(driverId)) {
             // Update existing marker

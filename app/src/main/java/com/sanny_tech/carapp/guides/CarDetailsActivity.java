@@ -370,27 +370,10 @@ public class CarDetailsActivity extends AppCompatActivity {
 
     private void openPhotoPicker() {
         try {
-            if (Build.VERSION.SDK_INT == Build.VERSION_CODES.TIRAMISU) {
-                requestPermissions.launch(new String[]{
-                        Manifest.permission.READ_MEDIA_IMAGES,
-                        Manifest.permission.READ_MEDIA_VIDEO
-                });
-            } else {
-                requestPermissions.launch(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE});
-            }
-
-            // Check for Google Play services availability or fallback if necessary
-            if (isGooglePlayServicesAvailable()) {
-                if (Build.VERSION.SDK_INT > Build.VERSION_CODES.Q) {
                     pickMultipleMedia.launch(new PickVisualMediaRequest.Builder()
                             .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE)
                             .build());
-                } else {
-                    openBackupImagePicker();
-                }
-            } else {
-                openBackupImagePicker();  // Fallback if Google Play services are unavailable
-            }
+
         } catch (Exception e) {
             Log.e("PhotoPicker", "Error opening photo picker: " + e.getMessage(), e);
             Toast.makeText(this, "An error occurred while opening the photo picker.", Toast.LENGTH_SHORT).show();

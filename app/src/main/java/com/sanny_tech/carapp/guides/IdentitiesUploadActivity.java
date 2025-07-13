@@ -33,6 +33,7 @@ import com.sanny_tech.carapp.adapters.OptionItemAdapter;
 import com.sanny_tech.carapp.asynctasks.CarUploadLoader;
 import com.sanny_tech.carapp.databinding.ActivityIdentitiesUploadBinding;
 import com.sanny_tech.carapp.entities.OptionItem;
+import com.sanny_tech.carapp.entities.TaxiCategory;
 import com.sanny_tech.carapp.enums.CarActions;
 import com.sanny_tech.carapp.taxi_utils.TaxiInit;
 
@@ -131,7 +132,7 @@ public class IdentitiesUploadActivity extends AppCompatActivity implements Optio
             }else {
                 TaxiInit taxiInit = new TaxiInit(getCurrentAccountId(),model,
                         defaultColor,manufacturer,
-                        plate,selectedOption.getTitle());
+                        plate, TaxiCategory.getMainCategory(selectedOption.getTitle()));
                 CarUploadLoader carUploadLoader = new CarUploadLoader(this,null,null,
                         CarActions.INIT,taxiInit);
                 binding.progressLt.setVisibility(View.VISIBLE);

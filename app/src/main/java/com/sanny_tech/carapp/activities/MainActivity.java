@@ -93,10 +93,12 @@ public class MainActivity extends AppCompatActivity implements BookingBottomShee
                 messageId = getIntent().getLongExtra("id", 0);
                 Log.d("NotificationDataSecondary", "MessageIdMA: " + messageId);
             }
+
             Object object = getIntent().getParcelableExtra("request");
             if (object instanceof ClientRequest) {
                 Log.e("NotificationData", "ClientExecuted");
                 request = (ClientRequest) object;
+
                 if (getIntent().getAction() != null) {
                     if (getIntent().getAction().equals("ACCEPT_ACTION")) {
                         request.setStatus("Accepted");
@@ -106,21 +108,27 @@ public class MainActivity extends AppCompatActivity implements BookingBottomShee
                         Decline decline = new Decline(getCurrentAccountId(), request.getSender_id());
                         createDecline(decline);
                         showSnackbar(activityMainBinding.getRoot(),
-                                "Request decline. Click the button to change preference.");
+                                "Request declined. Click the button to change preference.");
                     }
                 } else {
                     Log.e("NotificationData", "Executed");
                     openDriverMaps(request);
                     Log.d("NotificationData", "Opened from 3");
                 }
+
             } else if (object instanceof CarBookRequest) {
                 showBookingWindow((CarBookRequest) object);
             } else {
                 Log.e("NotificationData", "UNExecuted");
             }
+
+            // ✅ Clear the intent to prevent reprocessing
+            getIntent().removeExtra("request");
+            getIntent().removeExtra("id");
+            setIntent(null);  // Optional: fully reset if needed
+
         } else {
             Log.d("NotificationDataSecondary", "MessageIdA: unfound");
-
         }
         fetchAndUpdateLocalData();
         boolean isLoggedIn = getIntent().getBooleanExtra("signIn", false);

@@ -1,7 +1,7 @@
 package com.sanny_tech.carapp.entities;
 
 public class PayLink {
-    private Long id;
+    private String id;
     private String recipientNumber;
     private String shortcode;
     private String paybillNumber;
@@ -12,11 +12,11 @@ public class PayLink {
     public PayLink() {
     }
 
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 
