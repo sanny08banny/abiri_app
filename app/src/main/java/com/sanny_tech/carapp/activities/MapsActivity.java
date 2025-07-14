@@ -248,7 +248,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         Log.d("Edittext",pickUpLoc);
                         searchLocation(pickUpLoc, true);
                     } else {
-                        binding.locationListView.setVisibility(View.GONE);
+                        binding.searchBg.setVisibility(View.GONE);
                     }
                 }else {
                     isDest = false;
@@ -278,7 +278,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 if (!destination.isEmpty()) {
                     searchLocation(destination, true);
                 } else {
-                    binding.locationListView.setVisibility(View.GONE);
+                    binding.searchBg.setVisibility(View.GONE);
                 }
                 // Use the destination text as needed (e.g., for searching or displaying)
             }
@@ -346,7 +346,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 //                binding.destinationEditText.setEnabled(true);
                 binding.customEdittext.destinationEditText.setFocusable(true);
             }
-            binding.locationListView.setVisibility(View.GONE);
+            binding.searchBg.setVisibility(View.GONE);
         });
 
         if (NewAppManager.getNewApp(this)) {
@@ -856,6 +856,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     .position(position)
                     .icon(customMarker)
                     .rotation(taxiLocation.getOrientation())
+                    .anchor(0.5f,0.5f)
                     .title("Driver ID: " + driverId)
                     .snippet("Seats: " + taxiLocation.getSeats() + ", Status: " + taxiLocation.getStatus()));
             markers.put(driverId, marker);
@@ -990,7 +991,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             locationAdapter.clear();
             locationAdapter.setAddressItems(locationNames);
             binding.locationListView.setAdapter(locationAdapter);
-            binding.locationListView.setVisibility(View.VISIBLE);
+            binding.searchBg.setVisibility(View.VISIBLE);
         } else {
             handleSelectedAddress(addressList.get(locationNames.get(0)), locationNames.get(0));
         }

@@ -156,17 +156,9 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_marginHorizontal="6dp"
-                            android:layout_marginTop="8dp"
                             android:layout_weight="1" />
 
                     </LinearLayout>
-
-                    <ListView
-                        android:id="@+id/locationListView"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:padding="16dp"
-                        android:visibility="gone" />
                     </LinearLayout>
                 </LinearLayout>
 
@@ -181,6 +173,20 @@
                         android:name="com.google.android.gms.maps.SupportMapFragment"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent" />
+                    <com.google.android.material.card.MaterialCardView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:id="@+id/search_bg"
+                        android:background="?attr/backgroundColor"
+                        android:visibility="gone"
+                        android:layout_marginEnd="32dp">
+                    <ListView
+                        android:id="@+id/locationListView"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:padding="16dp"/>
+                    </com.google.android.material.card.MaterialCardView>
                 </RelativeLayout>
             </LinearLayout>
 

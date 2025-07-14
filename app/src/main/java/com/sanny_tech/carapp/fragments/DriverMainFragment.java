@@ -61,6 +61,7 @@ import com.sanny_tech.carapp.databinding.FragmentDriverMainBinding;
 import com.sanny_tech.carapp.entities.PayLink;
 import com.sanny_tech.carapp.entities.Ride;
 import com.sanny_tech.carapp.entities.SubscriptionPlan;
+import com.sanny_tech.carapp.entities.TaxiCategory;
 import com.sanny_tech.carapp.entities.TaxiLocation;
 import com.sanny_tech.carapp.enums.CarActions;
 import com.sanny_tech.carapp.guides.NewDriverGuideActivity;
@@ -423,7 +424,7 @@ public class DriverMainFragment extends Fragment implements PaymentAdapter.OnIte
                                     taxiLocation.setPayLink(payLink);
                                 }
                                 TaxisAvailable available = taxiLocation.createTaxiAvailble();
-                                String category = taxiLocation.getTaxiInit().getCategory();
+                                String category = TaxiCategory.getMainCategory(taxiLocation.getTaxiInit().getCategory());
                                 if (category.equals("Boda Boda")){
                                     category = "BodaBoda";
                                 }

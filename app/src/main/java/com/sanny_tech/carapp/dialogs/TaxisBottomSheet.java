@@ -122,7 +122,7 @@ public class TaxisBottomSheet extends BottomSheetDialogFragment implements TaxiA
                     categoryPrices.put("BodaBoda", taxiPrice.getBodaBoda());
 
                     for (Map.Entry<String, Double> entry : categoryPrices.entrySet()) {
-                        String category = entry.getKey();
+                        String category = TaxiCategory.getMainCategory(entry.getKey());
                         double price = entry.getValue();
                         Vehicle vehicle = new Vehicle(category, TaxiCategory.getNumberOfSeats(category)); // Initial seat count is 0
                         vehicle.setTaxiLocations(new ArrayList<>()); // Empty list of TaxiLocations
@@ -131,7 +131,7 @@ public class TaxisBottomSheet extends BottomSheetDialogFragment implements TaxiA
                     }
 
                     for (Map.Entry<String, List<TaxiLocation>> entry : groupedTaxis.entrySet()) {
-                        String category = entry.getKey();
+                        String category = TaxiCategory.getMainCategory(entry.getKey());
                         List<TaxiLocation> locations = entry.getValue();
                         for (Vehicle vehicle : vehicles) {
                             if (vehicle.getCategory().equals(category)) {

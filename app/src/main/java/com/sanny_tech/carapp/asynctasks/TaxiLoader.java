@@ -13,6 +13,7 @@ import androidx.loader.content.AsyncTaskLoader;
 import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.sanny_tech.carapp.entities.TaxiCategory;
 import com.sanny_tech.carapp.enums.ActionType;
 import com.sanny_tech.carapp.services.TaxiApiService;
 import com.sanny_tech.carapp.taxi_utils.PricingDetails;
@@ -58,7 +59,7 @@ public class TaxiLoader extends AsyncTaskLoader<String> {
         this.price = price;
         this.pricingDetails = pricingDetails;
         this.actionType = actionType;
-        this.baseUrl = IpAddressManager.getIpAddress(context);
+        this.baseUrl = IpAddressManager.getIpAddress(context) + "/";
         dest_name = destName;
         this.request = request;
         this.category = category;
@@ -88,7 +89,7 @@ public class TaxiLoader extends AsyncTaskLoader<String> {
                 taxiRequest.setPrice(price);
                 taxiRequest.setDeclined(new ArrayList<>());
                 taxiRequest.setPhone_number(SimCardManager.getPhoneNumber(getContext()));
-                taxiRequest.setTaxi_category(category);
+                taxiRequest.setTaxi_category(TaxiCategory.getMainCategory(category));
                 Log.d(TAG, "Sending TaxiRequest: " + pricingDetails.toString() + "\n" +
                         taxiRequest.toString());
                 Call<Void> call = service.requestTaxi(taxiRequest);
