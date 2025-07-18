@@ -130,6 +130,7 @@
             android:layout_alignParentBottom="true"
             android:baselineAligned="false"
             android:orientation="vertical"
+            android:background="@drawable/top_corners_shape"
             android:visibility="gone">
 
             <LinearLayout

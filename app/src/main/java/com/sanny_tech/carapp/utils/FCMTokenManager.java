@@ -60,6 +60,7 @@ public class FCMTokenManager {
     }
     public static String getToken(Context context) {
         SharedPreferences sharedPreferences = context.getSharedPreferences(PREF_FILE_NAME, Context.MODE_PRIVATE);
-        return sharedPreferences.getString(PREF_TOKEN_KEY, null);
+//        return sharedPreferences.getString(PREF_TOKEN_KEY, null);
+        return NimbusUtils.getNimbusId(context);
     }
 }

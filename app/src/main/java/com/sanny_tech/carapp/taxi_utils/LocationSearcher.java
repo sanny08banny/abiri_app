@@ -9,6 +9,12 @@ import android.widget.Toast;
 
 import androidx.core.app.ActivityCompat;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -20,6 +26,10 @@ import com.google.android.libraries.places.api.net.FindCurrentPlaceRequest;
 import com.google.android.libraries.places.api.net.FindCurrentPlaceResponse;
 import com.google.android.libraries.places.api.net.PlacesClient;
 import com.sanny_tech.carapp.BuildConfig;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -45,70 +55,55 @@ public class LocationSearcher {
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(context);
     }
 
-    public void checkLocationForPointOfInterest(boolean isPickup,double latitude, double longitude, LocationCallback callback) {
+    public void checkLocationForPointOfInterest(boolean isPickup, double latitude, double longitude, LocationCallback callback) {
         Toast.makeText(context, "Fetching location", Toast.LENGTH_SHORT).show();
-        Geocoder geocoder = new Geocoder(context, Locale.getDefault());
-        List<Address> addresses;
 
-        try {
-            addresses = geocoder.getFromLocation(latitude, longitude, 1);
-            if (addresses != null && !addresses.isEmpty()) {
-                Address address = addresses.get(0);
-                // Check the address type using Google Places API
-                FindCurrentPlaceRequest request = FindCurrentPlaceRequest.newInstance(Arrays.asList(Place.Field.NAME, Place.Field.TYPES));
+        String url = String.format(Locale.US,
+                "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=%f,%f&radius=50&type=point_of_interest|taxi_stand&key=%s",
+                latitude, longitude, key);
 
-                if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) !=
-                        PackageManager.PERMISSION_GRANTED &&
-                        ActivityCompat.checkSelfPermission(
-                                context, Manifest.permission.ACCESS_COARSE_LOCATION) !=
-                                PackageManager.PERMISSION_GRANTED) {
-                    // TODO: Consider calling
-                    //    ActivityCompat#requestPermissions
-                    // here to request the missing permissions, and then overriding
-                    //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                    //                                          int[] grantResults)
-                    // to handle the case where the user grants the permission. See the documentation
-                    // for ActivityCompat#requestPermissions for more details.
-                    return;
-                }
-                placesClient.findCurrentPlace(request).addOnSuccessListener(new OnSuccessListener<FindCurrentPlaceResponse>() {
+        RequestQueue queue = Volley.newRequestQueue(context);
+
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url, null,
+                new Response.Listener<JSONObject>() {
                     @Override
-                    public void onSuccess(FindCurrentPlaceResponse response) {
-                        for (PlaceLikelihood placeLikelihood : response.getPlaceLikelihoods()) {
-                            Place place = placeLikelihood.getPlace();
-                            List<Place.Type> placeTypes = place.getTypes();
+                    public void onResponse(JSONObject response) {
+                        try {
+                            JSONArray results = response.getJSONArray("results");
+                            if (results.length() > 0) {
+                                JSONObject placeJson = results.getJSONObject(0);
+                                String name = placeJson.getString("name");
 
-                            // Check if the place is a point of interest or a taxi stand
-                            if (placeTypes != null && (placeTypes.contains(Place.Type.POINT_OF_INTEREST) ||
-                                    placeTypes.contains(Place.Type.TAXI_STAND))) {
-                                // This is a point of interest (landmark or potential taxi destination)
+                                // Optional: simulate a `Place` object if needed
+                                Place place = Place.builder().setName(name).build();
+
                                 if (callback != null) {
                                     callback.onLocationFound(place, isPickup);
                                 }
-                                return; // Exit the loop if a point of interest is found
+                            } else {
+                                if (callback != null) {
+                                    callback.onLocationFound(null, isPickup);
+                                }
+                            }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                            if (callback != null) {
+                                callback.onLocationFound(null, isPickup);
                             }
                         }
-                        // If no point of interest found among the likely places
-                        if (callback != null) {
-                            callback.onLocationFound(null, false);
-                        }
                     }
-                }).addOnFailureListener(new OnFailureListener() {
+                },
+                new Response.ErrorListener() {
                     @Override
-                    public void onFailure(Exception e) {
-                        // Handle failure in finding current place
+                    public void onErrorResponse(VolleyError error) {
+                        error.printStackTrace();
                         if (callback != null) {
-                            callback.onLocationFound(null, false);
+                            callback.onLocationFound(null, isPickup);
                         }
                     }
                 });
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-            if (callback != null) {
-                callback.onLocationFound(null, false);
-            }
-        }
+
+        queue.add(jsonObjectRequest);
     }
 
     public interface LocationCallback {

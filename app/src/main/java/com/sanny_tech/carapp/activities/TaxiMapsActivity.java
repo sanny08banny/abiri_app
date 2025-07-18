@@ -685,6 +685,7 @@ public class TaxiMapsActivity extends FragmentActivity implements OnMapReadyCall
                         pickupLocation.setLongitude(request.getCurrent_lon());
 
                         float distanceInMeters = driverLocation.distanceTo(pickupLocation);
+                        Log.e("Distance to pickup", String.valueOf(distanceInMeters));
 
                         if (distanceInMeters <= 50) { // ✅ within 50 meters of pickup
                             if (!Settings.canDrawOverlays(TaxiMapsActivity.this)) {

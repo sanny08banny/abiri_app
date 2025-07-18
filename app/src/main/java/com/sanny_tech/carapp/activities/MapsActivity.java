@@ -47,6 +47,10 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.request.RequestOptions;
@@ -116,10 +120,15 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -919,66 +928,111 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
-    private void searchLocation(String locationName, boolean b) {
-        List<Place.Field> placeFields = Arrays.asList(
-                Place.Field.ID, Place.Field.NAME, Place.Field.ADDRESS, Place.Field.LAT_LNG);
-        List<String> locationNames = new ArrayList<>();
-        AutocompleteSessionToken autocompleteSessionToken = AutocompleteSessionToken.newInstance();
-        LatLngBounds kenyaBounds = new LatLngBounds(
-                new LatLng(-4.6765, 33.9981), // South-west corner of Kenya
-                new LatLng(4.6225, 41.9062)  // North-east corner of Kenya
-        );
-        RectangularBounds locationBias = RectangularBounds.newInstance(kenyaBounds);
+//    private void searchLocation(String locationName, boolean b) {
+//        List<Place.Field> placeFields = Arrays.asList(
+//                Place.Field.ID, Place.Field.NAME, Place.Field.ADDRESS, Place.Field.LAT_LNG);
+//        List<String> locationNames = new ArrayList<>();
+//        AutocompleteSessionToken autocompleteSessionToken = AutocompleteSessionToken.newInstance();
+//        LatLngBounds kenyaBounds = new LatLngBounds(
+//                new LatLng(-4.6765, 33.9981), // South-west corner of Kenya
+//                new LatLng(4.6225, 41.9062)  // North-east corner of Kenya
+//        );
+//        RectangularBounds locationBias = RectangularBounds.newInstance(kenyaBounds);
+//
+//        FindAutocompletePredictionsRequest request = FindAutocompletePredictionsRequest.builder()
+//                .setQuery(locationName)
+//                .setLocationBias(locationBias)
+//                .setSessionToken(autocompleteSessionToken)
+//                .build();
+//
+//        placesClient.findAutocompletePredictions(request).addOnCompleteListener(task -> {
+//            if (task.isSuccessful()) {
+//                List<AutocompletePrediction> predictions = task.getResult().getAutocompletePredictions();
+//                int predictionsCount = predictions.size();
+//                AtomicInteger successCount = new AtomicInteger(0); // Counter to track successful fetchPlace operations
+//
+//                for (AutocompletePrediction prediction : predictions) {
+//                    placesClient.fetchPlace(FetchPlaceRequest.newInstance(prediction.getPlaceId(), placeFields))
+//                            .addOnSuccessListener((fetchPlaceResponse) -> {
+//                                Place place = fetchPlaceResponse.getPlace();
+//                                if (isLocationInKenya(place.getLatLng())) {
+//                                    LatLng latLng = place.getLatLng();
+//                                    Address address = new Address(Locale.getDefault());
+//                                    address.setAddressLine(0, place.getAddress());
+//                                    addressList.put(address.getAddressLine(0), latLng);
+//
+//                                    locationNames.add(address.getAddressLine(0));
+//                                }
+//                                successCount.incrementAndGet(); // Increment counter on success
+//
+//                                // Check if all fetchPlace operations completed, update the adapter if needed
+//                                if (successCount.get() == predictionsCount) {
+//                                    updateAdapter(locationNames, b);
+//                                }
+//                            })
+//                            .addOnFailureListener((e) -> {
+//                                // Log the failure reason
+//                                Log.e("SearchLocation", "Fetch place request failed: " + e.getMessage());
+//                                // Increment counter on failure to ensure it's considered in completion check
+//                                successCount.incrementAndGet();
+//                                // Check if all fetchPlace operations completed, update the adapter if needed
+//                                if (successCount.get() == predictionsCount) {
+//                                    updateAdapter(locationNames, b);
+//                                }
+//                            });
+//                }
+//            } else {
+//                // Log the autocomplete request failure reason
+//                Log.e("SearchLocation", "Autocomplete request failed: " + task.getException().getMessage());
+//                Toast.makeText(this, "No locations found", Toast.LENGTH_SHORT).show();
+//            }
+//        });
+//    }
+private void searchLocation(String locationName, boolean isPickup) {
+    List<String> locationNames = Collections.synchronizedList(new ArrayList<>());
+    Map<String, LatLng> addressItems = new HashMap<>(); // Ensure this is accessible or use your existing one
 
-        FindAutocompletePredictionsRequest request = FindAutocompletePredictionsRequest.builder()
-                .setQuery(locationName)
-                .setLocationBias(locationBias)
-                .setSessionToken(autocompleteSessionToken)
-                .build();
+    String url = String.format(Locale.US,
+            "https://maps.googleapis.com/maps/api/geocode/json?address=%s&components=country:KE&key=%s",
+            Uri.encode(locationName), key);
 
-        placesClient.findAutocompletePredictions(request).addOnCompleteListener(task -> {
-            if (task.isSuccessful()) {
-                List<AutocompletePrediction> predictions = task.getResult().getAutocompletePredictions();
-                int predictionsCount = predictions.size();
-                AtomicInteger successCount = new AtomicInteger(0); // Counter to track successful fetchPlace operations
+    RequestQueue queue = Volley.newRequestQueue(this);
 
-                for (AutocompletePrediction prediction : predictions) {
-                    placesClient.fetchPlace(FetchPlaceRequest.newInstance(prediction.getPlaceId(), placeFields))
-                            .addOnSuccessListener((fetchPlaceResponse) -> {
-                                Place place = fetchPlaceResponse.getPlace();
-                                if (isLocationInKenya(place.getLatLng())) {
-                                    LatLng latLng = place.getLatLng();
-                                    Address address = new Address(Locale.getDefault());
-                                    address.setAddressLine(0, place.getAddress());
-                                    addressList.put(address.getAddressLine(0), latLng);
+    JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,
+            response -> {
+                try {
+                    JSONArray results = response.getJSONArray("results");
+                    for (int i = 0; i < results.length(); i++) {
+                        JSONObject result = results.getJSONObject(i);
+                        String formattedAddress = result.optString("formatted_address");
 
-                                    locationNames.add(address.getAddressLine(0));
-                                }
-                                successCount.incrementAndGet(); // Increment counter on success
+                        JSONObject location = result
+                                .getJSONObject("geometry")
+                                .getJSONObject("location");
 
-                                // Check if all fetchPlace operations completed, update the adapter if needed
-                                if (successCount.get() == predictionsCount) {
-                                    updateAdapter(locationNames, b);
-                                }
-                            })
-                            .addOnFailureListener((e) -> {
-                                // Log the failure reason
-                                Log.e("SearchLocation", "Fetch place request failed: " + e.getMessage());
-                                // Increment counter on failure to ensure it's considered in completion check
-                                successCount.incrementAndGet();
-                                // Check if all fetchPlace operations completed, update the adapter if needed
-                                if (successCount.get() == predictionsCount) {
-                                    updateAdapter(locationNames, b);
-                                }
-                            });
+                        double lat = location.getDouble("lat");
+                        double lng = location.getDouble("lng");
+
+                        LatLng latLng = new LatLng(lat, lng);
+                        addressList.put(formattedAddress, latLng);
+                        locationNames.add(formattedAddress);
+                    }
+
+                    updateAdapter(locationNames, isPickup);
+
+                } catch (JSONException e) {
+                    Log.e("GeocodeSearch", "Parsing error: " + e.getMessage());
+                    Toast.makeText(this, "Location parsing failed", Toast.LENGTH_SHORT).show();
                 }
-            } else {
-                // Log the autocomplete request failure reason
-                Log.e("SearchLocation", "Autocomplete request failed: " + task.getException().getMessage());
-                Toast.makeText(this, "No locations found", Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
+            },
+            error -> {
+                Log.e("GeocodeSearch", "Request error: " + error.getMessage());
+                Toast.makeText(this, "Failed to find location", Toast.LENGTH_SHORT).show();
+            });
+
+    queue.add(request);
+}
+
 
     private boolean isLocationInKenya(LatLng latLng) {
         // Check if the latitude and longitude are within the bounds of Kenya
@@ -1262,7 +1316,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private void glideImage(TaxiInit s) {
         if (s.getTaxi_images().size() != 0) {
-            String endPoint = baseUrl + "/taxi/image/" + getCurrentAccountId() + "/"
+            String endPoint = baseUrl + "/taxi/image/" + s.getDriver_id() + "/"
                     + s.getTaxi_images().get(0);
             Log.e(DriverMainFragment.class.getSimpleName(), endPoint);
             Glide.with(this)
@@ -1382,6 +1436,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             driverMarker = mMap.addMarker(new MarkerOptions()
                     .position(latLng)
                     .icon(customMarker)
+                    .anchor(0.5f,0.5f)
                     .title("Driver's Location"));
             mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
         }
@@ -1462,26 +1517,28 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private void clearDecline(Decline decline) {
         declineReference.child(decline.getDriver_id()).removeValue();
     }
-
     private void showTripCompletePrompt(Trip trip) {
-        // Create and configure an AlertDialog or DialogFragment
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Trip complete!");
-        builder.setMessage("Driver has ended the trip. Charges for the journey: " +
-                trip.getCharges());
+        if (isFinishing() || isDestroyed()) {
+            return; // Don't show dialog if activity is not running
+        }
 
-        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
+        runOnUiThread(() -> {
+            if (isFinishing() || isDestroyed()) return;
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("Trip complete!");
+            builder.setMessage("Driver has ended the trip. Charges for the journey: " + trip.getCharges());
+
+            builder.setPositiveButton("OK", (dialog, which) -> {
                 DatabaseReference tripsRef = FirebaseDatabase.getInstance().getReference("trips");
                 tripsRef.child(trip.getDriver_id()).removeValue();
                 tripItemListener.stopTripUpdates();
                 finish();
-            }
-        });
+            });
 
-        builder.setCancelable(false);
-        builder.show();
+            builder.setCancelable(false);
+            builder.show();
+        });
     }
 
     @Override
