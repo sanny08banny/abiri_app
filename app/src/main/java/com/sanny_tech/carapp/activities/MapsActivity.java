@@ -21,6 +21,8 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.location.Address;
@@ -848,7 +850,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private void addOrUpdateMarker(TaxiLocation taxiLocation) {
         LatLng position = new LatLng(taxiLocation.getLatitude(), taxiLocation.getLongitude());
         String driverId = taxiLocation.getDriverId();
-        BitmapDescriptor customMarker = BitmapDescriptorFactory.fromResource(R.drawable.car_top_1);
+
+        // Resize the marker icon
+        int width = 40; // Adjust width as needed
+        int height = 77; // Adjust height as needed
+        Bitmap originalBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.transport_car_taxi);
+        Bitmap resizedBitmap = Bitmap.createScaledBitmap(originalBitmap, width, height, false);
+        BitmapDescriptor customMarker = BitmapDescriptorFactory.fromBitmap(resizedBitmap);
 
         if (markers.containsKey(driverId)) {
             // Update existing marker
@@ -865,13 +873,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     .position(position)
                     .icon(customMarker)
                     .rotation(taxiLocation.getOrientation())
-                    .anchor(0.5f,0.5f)
+                    .anchor(0.5f, 0.5f)
                     .title("Driver ID: " + driverId)
                     .snippet("Seats: " + taxiLocation.getSeats() + ", Status: " + taxiLocation.getStatus()));
             markers.put(driverId, marker);
             taxiLocations.add(taxiLocation);
         }
     }
+
 
     private boolean isWithinDistance(double lat1, double lon1, double lat2, double lon2) {
         final int R = 6371; // Radius of the Earth in kilometers

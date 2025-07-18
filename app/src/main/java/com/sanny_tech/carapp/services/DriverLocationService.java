@@ -42,6 +42,7 @@ public class DriverLocationService extends Service {
     private LocationRequest locationRequest;
     private LocationCallback locationCallback;
     private DatabaseReference locationReference;
+    private final DatabaseReference reference = FirebaseDatabase.getInstance().getReference("taxi_rides");
 
     @Override
     public void onCreate() {
@@ -118,7 +119,6 @@ public class DriverLocationService extends Service {
     }
     private void updateLocationInFirebase(double latitude, double longitude) {
         // Store the driver's current location in Firebase Realtime Database
-        DatabaseReference reference = FirebaseDatabase.getInstance().getReference("taxi_rides");
         reference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {

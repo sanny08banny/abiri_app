@@ -93,6 +93,8 @@ public class FloatingOverlayService extends Service implements MyApplication.OnA
     private CountDownTimer countDownTimer;
     private boolean arrivedPickUp = false;
     private DatabaseReference availableRef;
+    private DatabaseReference reference = FirebaseDatabase.getInstance().getReference("taxi_rides");
+
 
     @Override
     public void onCreate() {
@@ -386,7 +388,6 @@ public class FloatingOverlayService extends Service implements MyApplication.OnA
     }
 
     private void updateLocationInFirebase(double latitude, double longitude) {
-        DatabaseReference reference = FirebaseDatabase.getInstance().getReference("taxi_rides");
         reference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
