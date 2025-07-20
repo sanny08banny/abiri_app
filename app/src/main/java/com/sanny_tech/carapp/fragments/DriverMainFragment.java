@@ -26,7 +26,6 @@ import androidx.databinding.DataBindingUtil;
 import androidx.fragment.app.Fragment;
 import androidx.loader.content.Loader;
 import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.viewpager2.widget.ViewPager2;
 
 import android.provider.Settings;
 import android.util.Log;
@@ -41,10 +40,6 @@ import android.widget.CompoundButton;
 import android.widget.Spinner;
 import android.widget.Toast;
 
-import com.bumptech.glide.Glide;
-import com.bumptech.glide.load.engine.DiskCacheStrategy;
-import com.bumptech.glide.request.RequestOptions;
-import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.sanny_tech.carapp.R;
@@ -87,7 +82,7 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.sanny_tech.carapp.taxi_utils.TripUtils;
-import com.sanny_tech.carapp.utils.ImagePagerAdapter;
+import com.sanny_tech.carapp.viewPagers.ImagePagerAdapter;
 import com.sanny_tech.carapp.utils.IpAddressManager;
 import com.sanny_tech.carapp.utils.RequestManager;
 import com.squareup.picasso.Picasso;

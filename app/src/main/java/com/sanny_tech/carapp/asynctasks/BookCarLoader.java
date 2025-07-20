@@ -22,6 +22,7 @@ import com.sanny_tech.carapp.enums.ActionType;
 import com.sanny_tech.carapp.hire_utils.OwnerResponse;
 import com.sanny_tech.carapp.services.CarApiService;
 import com.sanny_tech.carapp.utils.IpAddressManager;
+import com.sanny_tech.carapp.utils.RetrofitClient;
 
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicMarkableReference;
@@ -42,7 +43,7 @@ public class BookCarLoader extends AsyncTaskLoader<String> {
 
     public BookCarLoader(@NonNull Context context, String driver_id, ActionType actionType, Car car) {
         super(context);
-        this.baseUrl = IpAddressManager.getIpAddress(context);
+        this.baseUrl = IpAddressManager.getIpAddress(context) + "/";
         this.driver_id = driver_id;
         this.actionType = actionType;
         this.car = car;
@@ -58,10 +59,7 @@ public class BookCarLoader extends AsyncTaskLoader<String> {
     @Override
     public String loadInBackground() {
         try {
-            Retrofit retrofit = new Retrofit.Builder()
-                    .baseUrl(baseUrl + "/")
-                    .addConverterFactory(GsonConverterFactory.create())
-                    .build();
+            Retrofit retrofit = RetrofitClient.getClient(baseUrl);
             database = FirebaseDatabase.getInstance();
             reference = database.getReference("logs");
 

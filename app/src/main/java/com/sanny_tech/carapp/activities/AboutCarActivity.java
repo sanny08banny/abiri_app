@@ -33,7 +33,7 @@ import com.sanny_tech.carapp.hire_utils.Hire;
 import com.sanny_tech.carapp.hire_utils.HireActivity;
 import com.sanny_tech.carapp.hire_utils.HireManager;
 import com.sanny_tech.carapp.review.CarReviewResponse;
-import com.sanny_tech.carapp.utils.ImagePagerAdapter;
+import com.sanny_tech.carapp.viewPagers.ImagePagerAdapter;
 import com.sanny_tech.carapp.utils.IpAddressManager;
 import com.google.android.material.datepicker.MaterialDatePicker;
 import com.google.android.material.datepicker.MaterialPickerOnPositiveButtonClickListener;

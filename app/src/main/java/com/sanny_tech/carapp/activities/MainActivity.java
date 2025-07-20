@@ -143,10 +143,10 @@ public class MainActivity extends AppCompatActivity implements BookingBottomShee
         navController.navigate(R.id.mainFragment, bundle);
 
         String nimbusId = NimbusUtils.getNimbusId(this);
-        if (getCurrentAccountId() != null) {
+        if (getCurrentAccountId() != null && !getCurrentAccountId().equals("")) {
 //                    if (isLoggedIn) {
-            DatabaseReference firebaseDatabase = FirebaseDatabase.getInstance().getReference("n_token");
-            firebaseDatabase.child(getCurrentAccountUserName()).setValue(nimbusId);
+//            DatabaseReference firebaseDatabase = FirebaseDatabase.getInstance().getReference("n_token");
+//            firebaseDatabase.child(getCurrentAccountUserName()).setValue(nimbusId);
 
             TokenIdLoader tokenIdLoader = new TokenIdLoader(MainActivity.this, nimbusId);
             tokenIdLoader.forceLoad();

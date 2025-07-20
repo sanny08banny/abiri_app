@@ -217,8 +217,8 @@ public class HireActivity extends AppCompatActivity implements
                 hire.setCar(car);
                 hire.setStart_date(String.valueOf(fromString));
                 hire.setEnd_date(String.valueOf(toString));
-                createNewHireToFirebase(hire);
                 if (data != null) {
+                    createNewHireToFirebase(hire);
                     hireManager.startRideUpdates(HireActivity.this);
                 } else {
                     hideProgreeBar();

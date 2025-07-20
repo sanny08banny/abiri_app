@@ -1,25 +1,16 @@
-package com.sanny_tech.carapp.utils;
+package com.sanny_tech.carapp.viewPagers;
 
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.drawable.Drawable;
-import android.graphics.drawable.GradientDrawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.palette.graphics.Palette;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.bumptech.glide.Glide;
-import com.bumptech.glide.load.engine.DiskCacheStrategy;
-import com.bumptech.glide.request.RequestOptions;
-import com.bumptech.glide.request.target.CustomTarget;
-import com.bumptech.glide.request.transition.Transition;
 import com.sanny_tech.carapp.R;
+import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
@@ -46,9 +37,24 @@ public class ImagePagerAdapter extends RecyclerView.Adapter<ImagePagerAdapter.Im
     @Override
     public void onBindViewHolder(@NonNull ImageViewHolder holder, int position) {
         String resourceId = imageResources.get(position);
+        ImageView imageView = holder.imageView;
+
+        imageView.setImageDrawable(null); // Clear any previous image
+        imageView.setBackgroundResource(R.drawable.static_shimmer_placeholder);
+
         Picasso.get()
                 .load(resourceId)
-                .into(holder.imageView);
+                .into(imageView, new Callback() {
+                    @Override
+                    public void onSuccess() {
+                        imageView.setBackground(null); // Remove placeholder
+                    }
+
+                    @Override
+                    public void onError(Exception e) {
+                        imageView.setBackground(null); // Optional: set an error background
+                    }
+                });
 //        Glide.with(context)
 //                .asBitmap() // Ensure Glide loads the image as a Bitmap
 //                .load(resourceId)
