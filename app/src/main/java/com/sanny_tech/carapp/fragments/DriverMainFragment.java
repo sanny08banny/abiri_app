@@ -443,7 +443,7 @@ public class DriverMainFragment extends Fragment implements PaymentAdapter.OnIte
         boolean isGpsEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
         boolean isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
 
-        if (!isGpsEnabled && !isNetworkEnabled) {
+        if (!isGpsEnabled) {
             // Show a dialog to prompt the user to enable location services
             showLocationServicesDialog();
         } else {

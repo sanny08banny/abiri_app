@@ -1,8 +1,11 @@
 package com.sanny_tech.carapp.adapters;
 
+import static android.content.Context.MODE_PRIVATE;
+
 import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
 import android.text.method.LinkMovementMethod;
@@ -27,6 +30,8 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.sanny_tech.carapp.R;
 import com.sanny_tech.carapp.asynctasks.BookCarLoader;
 import com.sanny_tech.carapp.databinding.BookedCarItemBinding;
+import com.sanny_tech.carapp.entities.Car;
+import com.sanny_tech.carapp.entities.NewBookingRequest;
 import com.sanny_tech.carapp.enums.ActionType;
 import com.sanny_tech.carapp.hire_utils.Hire;
 import com.sanny_tech.carapp.utils.IpAddressManager;
@@ -221,26 +226,41 @@ public class BookedCarAdapter extends RecyclerView.Adapter<BookedCarAdapter.Book
         }
 
         private void deleteCar(Hire hire) {
-            BookCarLoader bookCarLoader = new BookCarLoader(context, hire.getOwner_id(),
-                    ActionType.DELETE, hire.getCar());
-            showLoadingState();
-            bookCarLoader.forceLoad();
-            bookCarLoader.registerListener(7, new Loader.OnLoadCompleteListener<String>() {
-                @Override
-                public void onLoadComplete(@NonNull Loader<String> loader, @Nullable String data) {
-                    hideLoadingState();
-                    if (data != null) {
-                        Toast.makeText(context, "Successful connect", Toast.LENGTH_SHORT).show();
-                        DatabaseReference reference = FirebaseDatabase.getInstance()
-                                .getReference("hires");
-                        reference.child(hire.getId()).removeValue();
-                        hires.remove(hire);
-                        notifyDataSetChanged();
-                    }
-                }
-            });
-        }
+            Car car = hire.getCar();
+            if (car != null) {
+                NewBookingRequest bookingRequest = new NewBookingRequest(
+                        getCurrentAccountId(), car.getCar_id(), car.getOwner_id(), "Cancel",
+                        formatTime1(Long.parseLong(hire.getStart_date())), formatTime1(Long.parseLong(hire.getEnd_date())));
 
+                BookCarLoader bookCarLoader = new BookCarLoader(context, bookingRequest,
+                        ActionType.DELETE);
+                showLoadingState();
+                bookCarLoader.forceLoad();
+                bookCarLoader.registerListener(7, new Loader.OnLoadCompleteListener<String>() {
+                    @Override
+                    public void onLoadComplete(@NonNull Loader<String> loader, @Nullable String data) {
+                        hideLoadingState();
+                        if (data != null) {
+                            Toast.makeText(context, "Successful connect", Toast.LENGTH_SHORT).show();
+                            DatabaseReference reference = FirebaseDatabase.getInstance()
+                                    .getReference("hires");
+                            reference.child(hire.getId()).removeValue();
+                            hires.remove(hire);
+                            notifyDataSetChanged();
+                        }
+                    }
+                });
+            }
+        }
+        public String getCurrentAccountId() {
+            SharedPreferences sharedPreferences = context.getSharedPreferences("AccountPrefs",
+                    MODE_PRIVATE);
+            return sharedPreferences.getString("currentUserId", null);
+        }
+        private String formatTime1(long timestamp) {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+            return sdf.format(new Date(timestamp));
+        }
         private void showLoadingState() {
             bookedCarItemBinding.deleteButton.setVisibility(View.GONE);
         }

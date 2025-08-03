@@ -3,8 +3,11 @@ package com.sanny_tech.carapp.activities;
 import android.app.DatePickerDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.DocumentsContract;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
 import android.widget.DatePicker;
@@ -31,8 +34,6 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
 import com.sanny_tech.carapp.R;
 import com.sanny_tech.carapp.adapters.DestinationsAdapter;
 import com.sanny_tech.carapp.adapters.PreviewImageAdapter;
@@ -150,21 +151,45 @@ public class CreateFunSpaceActivity extends AppCompatActivity implements Destina
     // Method to save a FunSpaceItem with images to the Realtime Database
     private void saveFunSpaceItemWithImages(FunSpace funSpaceItem, List<Uri> imageUris) {
         showProgressBar();
-        if (destination != null){
+
+        if (destination != null) {
             funSpaceItem.setDestination(destination);
         }
         funSpaceItem.setExpiry_date(String.valueOf(calendar.getTime()));
-        FunSpaceLoader spaceLoader = new FunSpaceLoader(this, FunActions.SAVE,
-                funSpaceItem,imageUris,null);
+
+        List<File> imageFiles = new ArrayList<>();
+
+        for (Uri uri : imageUris) {
+            String path = getPathFromUri(uri);
+            if (path == null) {
+                Toast.makeText(this, "Invalid file path: " + uri.toString(), Toast.LENGTH_SHORT).show();
+                hideProgressBar();
+                return;
+            }
+            File file = new File(path);
+            if (!file.exists()) {
+                Toast.makeText(this, "File does not exist: " + path, Toast.LENGTH_SHORT).show();
+                hideProgressBar();
+                return;
+            }
+            imageFiles.add(file);
+        }
+
+        FunSpaceLoader spaceLoader = new FunSpaceLoader(
+                this,
+                FunActions.SAVE,
+                funSpaceItem,
+                imageFiles, // Now using files instead of URIs
+                null
+        );
+
         spaceLoader.forceLoad();
         spaceLoader.registerListener(3, new Loader.OnLoadCompleteListener<List<FunSpace>>() {
             @Override
             public void onLoadComplete(@NonNull Loader<List<FunSpace>> loader, @Nullable List<FunSpace> data) {
-                if (data == null){
-                    hideProgressBar();
-                    Toast.makeText(CreateFunSpaceActivity.this, "FunSpaceItem with images saved successfully!", Toast.LENGTH_SHORT).show();
-                    finish();
-                }
+                hideProgressBar();
+                Toast.makeText(CreateFunSpaceActivity.this, "FunSpaceItem with images saved successfully!", Toast.LENGTH_SHORT).show();
+                finish();
             }
         });
     }
@@ -218,6 +243,62 @@ public class CreateFunSpaceActivity extends AppCompatActivity implements Destina
                 // Handle errors if any
             }
         });
+    }
+    public String getPathFromUri(Uri uri) {
+        if (DocumentsContract.isDocumentUri(this, uri)) {
+            String documentId = DocumentsContract.getDocumentId(uri);
+            String[] split = documentId.split(":");
+            if (split.length < 2) {
+                Log.e("getPathFromUri", "Invalid document ID: " + documentId);
+                return null;
+            }
+            String type = split[0];
+            String id = split[1];
+            Log.d("getPathFromUri", "Document ID: " + documentId + ", Type: " + type + ", ID: " + id);
+
+            if ("image".equals(type)) {
+                Uri contentUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+                String selection = "_id=?";
+                String[] selectionArgs = new String[]{id};
+                return getDataColumn(contentUri, selection, selectionArgs);
+            } else if ("raw".equals(type)) {
+                // Directly use the ID as the path for `raw` type
+                return id;
+            } else {
+                Log.e("getPathFromUri", "Unsupported document type: " + type);
+                return null;
+            }
+        } else if ("content".equalsIgnoreCase(uri.getScheme())) {
+            // Handle content URIs from MediaStore and other providers
+            return getDataColumn(uri, null, null);
+        } else {
+            Log.e("getPathFromUri", "URI is not a document URI: " + uri.toString());
+        }
+        return null;
+    }
+    private String getDataColumn(Uri uri, String selection, String[] selectionArgs) {
+        Cursor cursor = null;
+        String column = "_data";
+        String[] projection = {column};
+
+        try {
+            cursor = getContentResolver().query(uri, projection, selection, selectionArgs, null);
+            if (cursor != null && cursor.moveToFirst()) {
+                int index = cursor.getColumnIndexOrThrow(column);
+                String path = cursor.getString(index);
+                Log.d("getDataColumn", "File path: " + path);
+                return path;
+            } else {
+                Log.e("getDataColumn", "Cursor is null or empty for URI: " + uri.toString());
+            }
+        } catch (Exception e) {
+            Log.e("getDataColumn", "Exception occurred while querying: " + e.getMessage(), e);
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+        return null;
     }
 
     @Override

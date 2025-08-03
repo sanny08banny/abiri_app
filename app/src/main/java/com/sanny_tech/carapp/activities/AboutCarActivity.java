@@ -16,9 +16,11 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Parcel;
 import android.view.View;
 import android.widget.Toast;
 
+import com.google.android.material.datepicker.CalendarConstraints;
 import com.sanny_tech.carapp.R;
 import com.sanny_tech.carapp.adapters.CommentAdapter;
 import com.sanny_tech.carapp.asynctasks.CarUploadLoader;
@@ -45,9 +47,16 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.text.NumberFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Currency;
+import java.util.Date;
+import java.util.HashSet;
 import java.util.Locale;
+import java.util.Set;
+import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
 public class AboutCarActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Object>{
@@ -162,34 +171,131 @@ public class AboutCarActivity extends AppCompatActivity implements LoaderManager
         return durationInMinutes;
     }
 
-    private void showDatePickerDialog(Context context, Car car) {
-        // Create a MaterialDatePicker for selecting a date range
-        MaterialDatePicker<Pair<Long, Long>> picker = MaterialDatePicker.Builder.dateRangePicker()
-                .setTitleText("Select Date Range")
-                .setSelection(Pair.create(System.currentTimeMillis(), System.currentTimeMillis())) // Initial selection (today)
-                .build();
+//    private void showDatePickerDialog(Context context, Car car) {
+//        // Create a MaterialDatePicker for selecting a date range
+//        MaterialDatePicker<Pair<Long, Long>> picker = MaterialDatePicker.Builder.dateRangePicker()
+//                .setTitleText("Select Date Range")
+//                .setSelection(Pair.create(System.currentTimeMillis(), System.currentTimeMillis())) // Initial selection (today)
+//                .build();
+//
+//        picker.addOnPositiveButtonClickListener(new MaterialPickerOnPositiveButtonClickListener<Pair<Long, Long>>() {
+//            @Override
+//            public void onPositiveButtonClick(Pair<Long, Long> selection) {
+//                long fromDateMillis = selection.first;
+//                long toDateMillis = selection.second;
+//
+//                // Convert milliseconds to a duration string
+//                long durationMillis = toDateMillis - fromDateMillis;
+//                long days = TimeUnit.MILLISECONDS.toDays(durationMillis);
+//                long hours = TimeUnit.MILLISECONDS.toHours(durationMillis) - TimeUnit.DAYS.toHours(days);
+//                duration = String.format(Locale.US, "%d days", days);
+//
+//                // Call the bookCar method with the car and duration
+//                bookCar(car,fromDateMillis,toDateMillis);
+//            }
+//        });
+//
+//
+//        picker.show(((AppCompatActivity) context).getSupportFragmentManager(), picker.toString());
+//    }
+private void showDatePickerDialog(Context context, Car car) {
+    // Parse car's unavailable dates to a Set of UTC-normalized timestamps
+    Set<Long> unavailableTimestamps = new HashSet<>();
+    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+    sdf.setTimeZone(TimeZone.getTimeZone("UTC")); // Force UTC parsing
 
-        picker.addOnPositiveButtonClickListener(new MaterialPickerOnPositiveButtonClickListener<Pair<Long, Long>>() {
-            @Override
-            public void onPositiveButtonClick(Pair<Long, Long> selection) {
-                long fromDateMillis = selection.first;
-                long toDateMillis = selection.second;
-
-                // Convert milliseconds to a duration string
-                long durationMillis = toDateMillis - fromDateMillis;
-                long days = TimeUnit.MILLISECONDS.toDays(durationMillis);
-                long hours = TimeUnit.MILLISECONDS.toHours(durationMillis) - TimeUnit.DAYS.toHours(days);
-                duration = String.format(Locale.US, "%d days", days);
-
-                // Call the bookCar method with the car and duration
-                bookCar(car,fromDateMillis,toDateMillis);
+    for (String dateStr : car.getUnavailable_dates()) {
+        try {
+            Date date = sdf.parse(dateStr);
+            if (date != null) {
+                Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+                cal.setTime(date);
+                cal.set(Calendar.HOUR_OF_DAY, 0);
+                cal.set(Calendar.MINUTE, 0);
+                cal.set(Calendar.SECOND, 0);
+                cal.set(Calendar.MILLISECOND, 0);
+                unavailableTimestamps.add(cal.getTimeInMillis());
             }
-        });
-
-
-        picker.show(((AppCompatActivity) context).getSupportFragmentManager(), picker.toString());
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
     }
 
+    // Validator to block unavailable and past dates
+    CalendarConstraints.DateValidator validator = new CalendarConstraints.DateValidator() {
+        @Override
+        public boolean isValid(long date) {
+            Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+            cal.setTimeInMillis(date);
+            cal.set(Calendar.HOUR_OF_DAY, 0);
+            cal.set(Calendar.MINUTE, 0);
+            cal.set(Calendar.SECOND, 0);
+            cal.set(Calendar.MILLISECOND, 0);
+            long normalizedDate = cal.getTimeInMillis();
+
+            Calendar todayCal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+            todayCal.set(Calendar.HOUR_OF_DAY, 0);
+            todayCal.set(Calendar.MINUTE, 0);
+            todayCal.set(Calendar.SECOND, 0);
+            todayCal.set(Calendar.MILLISECOND, 0);
+            long today = todayCal.getTimeInMillis();
+
+            return normalizedDate >= today && !unavailableTimestamps.contains(normalizedDate);
+        }
+
+        @Override
+        public int describeContents() {
+            return 0;
+        }
+
+        @Override
+        public void writeToParcel(Parcel dest, int flags) {}
+    };
+
+    CalendarConstraints constraints = new CalendarConstraints.Builder()
+            .setValidator(validator)
+            .build();
+
+    // Create and show the MaterialDatePicker
+    MaterialDatePicker<Pair<Long, Long>> picker = MaterialDatePicker.Builder.dateRangePicker()
+            .setTitleText("Select Available Date Range")
+            .setCalendarConstraints(constraints)
+            .setSelection(Pair.create(System.currentTimeMillis(), System.currentTimeMillis()))
+            .build();
+
+    picker.addOnPositiveButtonClickListener(selection -> {
+        long fromDateMillis = selection.first;
+        long toDateMillis = selection.second;
+
+        boolean valid = true;
+
+        for (long millis = fromDateMillis; millis <= toDateMillis; millis += TimeUnit.DAYS.toMillis(1)) {
+            Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+            cal.setTimeInMillis(millis);
+            cal.set(Calendar.HOUR_OF_DAY, 0);
+            cal.set(Calendar.MINUTE, 0);
+            cal.set(Calendar.SECOND, 0);
+            cal.set(Calendar.MILLISECOND, 0);
+            if (unavailableTimestamps.contains(cal.getTimeInMillis())) {
+                valid = false;
+                break;
+            }
+        }
+
+        if (!valid) {
+            Toast.makeText(context, "One or more selected days are unavailable", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        long durationMillis = toDateMillis - fromDateMillis;
+        long days = TimeUnit.MILLISECONDS.toDays(durationMillis);
+
+        // Proceed with booking
+        bookCar(car, fromDateMillis, toDateMillis);
+    });
+
+    picker.show(((AppCompatActivity) context).getSupportFragmentManager(), picker.toString());
+}
     private void bookCar(Car car, long fromDateMillis, long toDateMillis) {
         Intent intent = new Intent(this, HireActivity.class);
         intent.setAction("book car");

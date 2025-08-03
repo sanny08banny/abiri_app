@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
+import android.os.Parcel;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -28,6 +29,7 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.request.target.CustomTarget;
 import com.bumptech.glide.request.transition.Transition;
+import com.google.android.material.datepicker.CalendarConstraints;
 import com.sanny_tech.carapp.R;
 import com.sanny_tech.carapp.activities.AboutCarActivity;
 import com.sanny_tech.carapp.activities.BookedActivity;
@@ -38,11 +40,20 @@ import com.sanny_tech.carapp.utils.FavouritesManager;
 import com.sanny_tech.carapp.utils.IpAddressManager;
 import com.google.android.material.datepicker.MaterialDatePicker;
 import com.google.android.material.datepicker.MaterialPickerOnPositiveButtonClickListener;
+import com.squareup.picasso.Callback;
+import com.squareup.picasso.Picasso;
 
 
 import java.text.MessageFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
+import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
 public class CarAdapter extends RecyclerView.Adapter<CarAdapter.ViewHolder> {
@@ -64,13 +75,13 @@ public class CarAdapter extends RecyclerView.Adapter<CarAdapter.ViewHolder> {
         }
         return null;
     }
-    public void checkCarAvailability() {
-        for (Car car : carList){
-            if (car.getAvailable().equals("Unavailable")){
-
-            }
-        }
-    }
+//    public void checkCarAvailability() {
+//        for (Car car : carList){
+//            if (car.getAvailable().equals("Unavailable")){
+//
+//            }
+//        }
+//    }
 
     public interface OnItemClickListener {
         void onItemClick(Car item);
@@ -117,11 +128,11 @@ public class CarAdapter extends RecyclerView.Adapter<CarAdapter.ViewHolder> {
         }
 
         void bind(Car car) {
-            Log.e(car.getCar_id(),car.getAvailable());
             carItemBinding.location.setText(car.getLocation());
             carItemBinding.model.setText(car.getModel());
             carItemBinding.description.setText(car.getDescription());
-
+            carItemBinding.imageView.setImageDrawable(null); // Clear previous
+            carItemBinding.imageView.setBackgroundResource(R.drawable.static_shimmer_placeholder);
             if (car.getCar_images() != null) {
                 glideImage(car, carItemBinding.imageView, carItemBinding.price);
             }
@@ -156,50 +167,53 @@ public class CarAdapter extends RecyclerView.Adapter<CarAdapter.ViewHolder> {
         }
 
         private void glideImage(Car car, ImageView imageView, View gradientView) {
-            if (car != null) {
+            if (car != null && car.getCar_images() != null && !car.getCar_images().isEmpty()) {
+                // Set shimmer background before loading
+
                 String endPoint = baseUrl + "/car/image/" + car.getOwner_id() + "/"
                         + car.getCar_id() + "/" + car.getCar_images().get(0);
-                Glide.with(context).asBitmap().load(endPoint)
+
+                Glide.with(context)
+                        .asBitmap()
+                        .load(endPoint)
                         .apply(new RequestOptions()
-                                .placeholder(R.drawable.baseline_downloading_350) // Placeholder image while loading
-                                .error(R.drawable.baseline_downloading_350)      // Error image if loading fails
+                                .placeholder(R.drawable.baseline_downloading_350)
+                                .error(R.drawable.baseline_downloading_350)
                                 .diskCacheStrategy(DiskCacheStrategy.ALL))
                         .override(ViewGroup.LayoutParams.MATCH_PARENT, 500)
                         .into(new CustomTarget<Bitmap>() {
                             @Override
                             public void onResourceReady(@NonNull Bitmap resource, @Nullable Transition<? super Bitmap> transition) {
-                                // Set the loaded bitmap to the ImageView
                                 imageView.setImageBitmap(resource);
+                                imageView.setBackground(null); // Remove shimmer placeholder
 
-                                // Retain the original aspect ratio of the image
+                                // Maintain aspect ratio
                                 float aspectRatio = (float) resource.getWidth() / resource.getHeight();
-
-                                // Calculate the desired height based on the original aspect ratio
                                 int desiredHeight = (int) (imageView.getWidth() / aspectRatio);
-
-                                // Resize the ImageView to the desired height while keeping the width MATCH_PARENT
                                 ViewGroup.LayoutParams layoutParams = imageView.getLayoutParams();
                                 layoutParams.height = desiredHeight;
                                 imageView.setLayoutParams(layoutParams);
 
-                                // Generate color palette
-                                Palette.from(resource).generate(new Palette.PaletteAsyncListener() {
-                                    @Override
-                                    public void onGenerated(@Nullable Palette palette) {
-                                        if (palette != null) {
-                                            int vibrantColor = palette.getDominantColor(0xFF000000);
-
-                                            // Set the dynamic end color of the gradient overlay
-                                            GradientDrawable gradientDrawable = (GradientDrawable) gradientView.getBackground();
-                                            gradientDrawable.setColors(new int[]{vibrantColor, vibrantColor});
-                                        }
+                                // Extract dominant color
+                                Palette.from(resource).generate(palette -> {
+                                    if (palette != null) {
+                                        int vibrantColor = palette.getDominantColor(0xFF000000);
+                                        GradientDrawable gradientDrawable = (GradientDrawable) gradientView.getBackground();
+                                        gradientDrawable.setColors(new int[]{vibrantColor, vibrantColor});
                                     }
                                 });
                             }
 
                             @Override
                             public void onLoadCleared(@Nullable Drawable placeholder) {
-                                // Clear any previous loaded resources if needed
+                                imageView.setBackground(null); // Remove shimmer on clear
+                            }
+
+                            @Override
+                            public void onLoadFailed(@Nullable Drawable errorDrawable) {
+                                super.onLoadFailed(errorDrawable);
+                                imageView.setBackground(null); // Remove shimmer on error
+                                imageView.setImageDrawable(errorDrawable);
                             }
                         });
             }
@@ -250,32 +264,131 @@ public class CarAdapter extends RecyclerView.Adapter<CarAdapter.ViewHolder> {
         context.startActivity(intent);
     }
 
-    private void showDatePickerDialog(Context context, Car car) {
-        // Create a MaterialDatePicker for selecting a date range
-        MaterialDatePicker<Pair<Long, Long>> picker = MaterialDatePicker.Builder.dateRangePicker()
-                .setTitleText("Select Date Range")
-                .setSelection(Pair.create(System.currentTimeMillis(), System.currentTimeMillis())) // Initial selection (today)
-                .build();
+//    private void showDatePickerDialog(Context context, Car car) {
+//        // Create a MaterialDatePicker for selecting a date range
+//        MaterialDatePicker<Pair<Long, Long>> picker = MaterialDatePicker.Builder.dateRangePicker()
+//                .setTitleText("Select Date Range")
+//                .setSelection(Pair.create(System.currentTimeMillis(), System.currentTimeMillis())) // Initial selection (today)
+//                .build();
+//
+//        picker.addOnPositiveButtonClickListener(new MaterialPickerOnPositiveButtonClickListener<Pair<Long, Long>>() {
+//            @Override
+//            public void onPositiveButtonClick(Pair<Long, Long> selection) {
+//                long fromDateMillis = selection.first;
+//                long toDateMillis = selection.second;
+//
+//                // Convert milliseconds to a duration string
+//                long durationMillis = toDateMillis - fromDateMillis;
+//                long days = TimeUnit.MILLISECONDS.toDays(durationMillis);
+//                long hours = TimeUnit.MILLISECONDS.toHours(durationMillis) - TimeUnit.DAYS.toHours(days);
+//                String duration = String.format(Locale.US, "%d days", days);
+//
+//                // Call the bookCar method with the car and duration
+//                bookCar(car, fromDateMillis,toDateMillis);
+//            }
+//        });
+//
+//
+//        picker.show(((AppCompatActivity) context).getSupportFragmentManager(), picker.toString());
+//    }
+private void showDatePickerDialog(Context context, Car car) {
+    // Parse car's unavailable dates to a Set of UTC-normalized timestamps
+    Set<Long> unavailableTimestamps = new HashSet<>();
+    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+    sdf.setTimeZone(TimeZone.getTimeZone("UTC")); // Force UTC parsing
 
-        picker.addOnPositiveButtonClickListener(new MaterialPickerOnPositiveButtonClickListener<Pair<Long, Long>>() {
-            @Override
-            public void onPositiveButtonClick(Pair<Long, Long> selection) {
-                long fromDateMillis = selection.first;
-                long toDateMillis = selection.second;
-
-                // Convert milliseconds to a duration string
-                long durationMillis = toDateMillis - fromDateMillis;
-                long days = TimeUnit.MILLISECONDS.toDays(durationMillis);
-                long hours = TimeUnit.MILLISECONDS.toHours(durationMillis) - TimeUnit.DAYS.toHours(days);
-                String duration = String.format(Locale.US, "%d days", days);
-
-                // Call the bookCar method with the car and duration
-                bookCar(car, fromDateMillis,toDateMillis);
+    for (String dateStr : car.getUnavailable_dates()) {
+        try {
+            Date date = sdf.parse(dateStr);
+            if (date != null) {
+                Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+                cal.setTime(date);
+                cal.set(Calendar.HOUR_OF_DAY, 0);
+                cal.set(Calendar.MINUTE, 0);
+                cal.set(Calendar.SECOND, 0);
+                cal.set(Calendar.MILLISECOND, 0);
+                unavailableTimestamps.add(cal.getTimeInMillis());
             }
-        });
-
-
-        picker.show(((AppCompatActivity) context).getSupportFragmentManager(), picker.toString());
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
     }
+
+    // Validator to block unavailable and past dates
+    CalendarConstraints.DateValidator validator = new CalendarConstraints.DateValidator() {
+        @Override
+        public boolean isValid(long date) {
+            Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+            cal.setTimeInMillis(date);
+            cal.set(Calendar.HOUR_OF_DAY, 0);
+            cal.set(Calendar.MINUTE, 0);
+            cal.set(Calendar.SECOND, 0);
+            cal.set(Calendar.MILLISECOND, 0);
+            long normalizedDate = cal.getTimeInMillis();
+
+            Calendar todayCal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+            todayCal.set(Calendar.HOUR_OF_DAY, 0);
+            todayCal.set(Calendar.MINUTE, 0);
+            todayCal.set(Calendar.SECOND, 0);
+            todayCal.set(Calendar.MILLISECOND, 0);
+            long today = todayCal.getTimeInMillis();
+
+            return normalizedDate >= today && !unavailableTimestamps.contains(normalizedDate);
+        }
+
+        @Override
+        public int describeContents() {
+            return 0;
+        }
+
+        @Override
+        public void writeToParcel(Parcel dest, int flags) {}
+    };
+
+    CalendarConstraints constraints = new CalendarConstraints.Builder()
+            .setValidator(validator)
+            .build();
+
+    // Create and show the MaterialDatePicker
+    MaterialDatePicker<Pair<Long, Long>> picker = MaterialDatePicker.Builder.dateRangePicker()
+            .setTitleText("Select Available Date Range")
+            .setCalendarConstraints(constraints)
+            .setSelection(Pair.create(System.currentTimeMillis(), System.currentTimeMillis()))
+            .build();
+
+    picker.addOnPositiveButtonClickListener(selection -> {
+        long fromDateMillis = selection.first;
+        long toDateMillis = selection.second;
+
+        boolean valid = true;
+
+        for (long millis = fromDateMillis; millis <= toDateMillis; millis += TimeUnit.DAYS.toMillis(1)) {
+            Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+            cal.setTimeInMillis(millis);
+            cal.set(Calendar.HOUR_OF_DAY, 0);
+            cal.set(Calendar.MINUTE, 0);
+            cal.set(Calendar.SECOND, 0);
+            cal.set(Calendar.MILLISECOND, 0);
+            if (unavailableTimestamps.contains(cal.getTimeInMillis())) {
+                valid = false;
+                break;
+            }
+        }
+
+        if (!valid) {
+            Toast.makeText(context, "One or more selected days are unavailable", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        long durationMillis = toDateMillis - fromDateMillis;
+        long days = TimeUnit.MILLISECONDS.toDays(durationMillis);
+
+        // Proceed with booking
+        bookCar(car, fromDateMillis, toDateMillis);
+    });
+
+    picker.show(((AppCompatActivity) context).getSupportFragmentManager(), picker.toString());
+}
+
 }
 

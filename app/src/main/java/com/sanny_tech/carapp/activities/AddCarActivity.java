@@ -146,7 +146,7 @@ public class AddCarActivity extends AppCompatActivity implements
                         addressItem.getAddress() : "";
                 newCar = new Car(null, model, carId, getCurrentAccountId(), location,
                         description, Double.parseDouble(dailyPrice),
-                        Double.parseDouble(dailyDownPayment), "");
+                        Double.parseDouble(dailyDownPayment), new ArrayList<>());
                 addCarBinding.carDetails.setVisibility(View.GONE);
                 addCarBinding.uploadLt.setVisibility(View.VISIBLE);
             }

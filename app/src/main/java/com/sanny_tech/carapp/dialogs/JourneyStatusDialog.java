@@ -54,7 +54,7 @@ public class JourneyStatusDialog {
     private TextView pickUpText;
     private AlertDialog dialog;
     private EditText chargesEditText;
-    private Button startStopButton;
+    private Button startStopButton,arriveButton;
     private TextView destinationText;
 
     private JourneyStatusManager journeyStatusManager;
@@ -64,7 +64,7 @@ public class JourneyStatusDialog {
     private Runnable updateCountdownRunnable;
     private OnTripStartListener trip_listener;
     private Context context;
-    private static final float ARRIVAL_RADIUS_METERS = 50.0f; // Define your arrival radius
+    private static final float ARRIVAL_RADIUS_METERS = 100; // Define your arrival radius
     private boolean arrivedPickUp = false;
 
     public interface JourneyStatusListener {
@@ -104,6 +104,7 @@ public class JourneyStatusDialog {
         pickUpText = dialogView.findViewById(R.id.pick_up);
         duration = dialogView.findViewById(R.id.trip_duration);
         startStopButton = dialogView.findViewById(R.id.start_stop_button);
+        arriveButton = dialogView.findViewById(R.id.arrive_button);
         navigate = dialogView.findViewById(R.id.navigate);
         locationHelper = new LocationHelper(context);
         handler = new Handler();
@@ -146,7 +147,16 @@ public class JourneyStatusDialog {
                 handleStartStopButtonClick(context, dest, latLngPickUp);
             }
         });
-
+        arriveButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                notifyClient();
+                arrivedPickUp = true;
+                duration.setText("Waiting...");
+                startStopButton.setText("Start Trip");
+                arriveButton.setVisibility(View.GONE);
+            }
+        });
         dialog.setCancelable(true);
         dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
             @Override
@@ -285,6 +295,7 @@ public class JourneyStatusDialog {
             if (!arrivedPickUp) {
                 if (!journeyStatusManager.isJourneyStarted()) {
                     startStopButton.setText("Arrived");
+                    arriveButton.setVisibility(View.GONE);
                 }else {
                     startStopButton.setText("Start trip");
                 }
@@ -294,6 +305,8 @@ public class JourneyStatusDialog {
                     String formattedElapsedTime = journeyStatusManager.getFormattedElapsedTime();
                     duration.setText(MessageFormat.format("Journey started {0}",
                             formattedElapsedTime));
+                }else {
+                    arriveButton.setVisibility(View.VISIBLE);
                 }
             }
         } else if (distanceToDestination <= ARRIVAL_RADIUS_METERS) {
@@ -305,7 +318,12 @@ public class JourneyStatusDialog {
                 duration.setText(MessageFormat.format("Journey started {0}",
                         formattedElapsedTime));
             }else {
-                startStopButton.setText("Navigate to pick-up");
+                if (arrivedPickUp) {
+                    startStopButton.setText("Start Trip");
+                }else {
+                    startStopButton.setText("Navigate to pick-up");
+                    arriveButton.setVisibility(View.VISIBLE);
+                }
             }
         }
     }

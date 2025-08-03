@@ -10,6 +10,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Parcelable;
+import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
@@ -38,8 +39,6 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
 import com.sanny_tech.carapp.R;
 import com.sanny_tech.carapp.adapters.MiniPreviewImageAdapter;
 import com.sanny_tech.carapp.adapters.OptionItemAdapter;
@@ -53,6 +52,7 @@ import com.sanny_tech.carapp.enums.DatabaseAction;
 import com.sanny_tech.carapp.fun_utils.OperatingHours;
 import com.sanny_tech.carapp.fun_utils.SpaceDest;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -260,18 +260,18 @@ public class AddDestinationActivity extends AppCompatActivity implements
                 .into(binding.imagePlaceholder);
     }
 
-    private String getPathFromUri(Uri uri) {
-        String[] projection = {MediaStore.Images.Media.DATA};
-        Cursor cursor = getContentResolver().query(uri, projection, null, null, null);
-        if (cursor != null) {
-            cursor.moveToFirst();
-            int columnIndex = cursor.getColumnIndex(projection[0]);
-            String filePath = cursor.getString(columnIndex);
-            cursor.close();
-            return filePath;
-        }
-        return null;
-    }
+//    private String getPathFromUri(Uri uri) {
+//        String[] projection = {MediaStore.Images.Media.DATA};
+//        Cursor cursor = getContentResolver().query(uri, projection, null, null, null);
+//        if (cursor != null) {
+//            cursor.moveToFirst();
+//            int columnIndex = cursor.getColumnIndex(projection[0]);
+//            String filePath = cursor.getString(columnIndex);
+//            cursor.close();
+//            return filePath;
+//        }
+//        return null;
+//    }
 
     private void showSnackbar(View rootView, String message) {
         Snackbar snackbar = Snackbar.make(rootView, message, Snackbar.LENGTH_LONG);
@@ -363,8 +363,23 @@ public class AddDestinationActivity extends AppCompatActivity implements
     @NonNull
     @Override
     public Loader<Boolean> onCreateLoader(int id, @Nullable Bundle args) {
+        List<File> imageFiles = new ArrayList<>();
+
+        for (Uri uri : selectedFiles) {
+            String path = getPathFromUri(uri);
+            if (path == null) {
+                Toast.makeText(this, "Invalid file path: " + uri.toString(), Toast.LENGTH_SHORT).show();
+                hideProgressBar();
+            }
+            File file = new File(path);
+            if (!file.exists()) {
+                Toast.makeText(this, "File does not exist: " + path, Toast.LENGTH_SHORT).show();
+                hideProgressBar();
+            }
+            imageFiles.add(file);
+        }
         return new DatabaseAsyncTaskLoader(this,DatabaseAction.SAVE,
-                space,selectedFiles);
+                space,imageFiles);
     }
     @Override
     public void onLoadFinished(@NonNull Loader<Boolean> loader, Boolean data) {
@@ -379,5 +394,61 @@ public class AddDestinationActivity extends AppCompatActivity implements
     @Override
     public void onLoaderReset(@NonNull Loader<Boolean> loader) {
 
+    }
+    public String getPathFromUri(Uri uri) {
+        if (DocumentsContract.isDocumentUri(this, uri)) {
+            String documentId = DocumentsContract.getDocumentId(uri);
+            String[] split = documentId.split(":");
+            if (split.length < 2) {
+                Log.e("getPathFromUri", "Invalid document ID: " + documentId);
+                return null;
+            }
+            String type = split[0];
+            String id = split[1];
+            Log.d("getPathFromUri", "Document ID: " + documentId + ", Type: " + type + ", ID: " + id);
+
+            if ("image".equals(type)) {
+                Uri contentUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+                String selection = "_id=?";
+                String[] selectionArgs = new String[]{id};
+                return getDataColumn(contentUri, selection, selectionArgs);
+            } else if ("raw".equals(type)) {
+                // Directly use the ID as the path for `raw` type
+                return id;
+            } else {
+                Log.e("getPathFromUri", "Unsupported document type: " + type);
+                return null;
+            }
+        } else if ("content".equalsIgnoreCase(uri.getScheme())) {
+            // Handle content URIs from MediaStore and other providers
+            return getDataColumn(uri, null, null);
+        } else {
+            Log.e("getPathFromUri", "URI is not a document URI: " + uri.toString());
+        }
+        return null;
+    }
+    private String getDataColumn(Uri uri, String selection, String[] selectionArgs) {
+        Cursor cursor = null;
+        String column = "_data";
+        String[] projection = {column};
+
+        try {
+            cursor = getContentResolver().query(uri, projection, selection, selectionArgs, null);
+            if (cursor != null && cursor.moveToFirst()) {
+                int index = cursor.getColumnIndexOrThrow(column);
+                String path = cursor.getString(index);
+                Log.d("getDataColumn", "File path: " + path);
+                return path;
+            } else {
+                Log.e("getDataColumn", "Cursor is null or empty for URI: " + uri.toString());
+            }
+        } catch (Exception e) {
+            Log.e("getDataColumn", "Exception occurred while querying: " + e.getMessage(), e);
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+        return null;
     }
 }

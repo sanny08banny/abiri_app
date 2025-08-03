@@ -35,16 +35,16 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class BookCarLoader extends AsyncTaskLoader<String> {
     private static final String TAG = BookCarLoader.class.getSimpleName();
     private String baseUrl;
-    private String driver_id;
+    private NewBookingRequest bookingRequest;
     private ActionType actionType;
     private Car car;
     private FirebaseDatabase database;
     private DatabaseReference reference;
 
-    public BookCarLoader(@NonNull Context context, String driver_id, ActionType actionType, Car car) {
+    public BookCarLoader(@NonNull Context context, NewBookingRequest bookingRequest, ActionType actionType) {
         super(context);
         this.baseUrl = IpAddressManager.getIpAddress(context) + "/";
-        this.driver_id = driver_id;
+        this.bookingRequest = bookingRequest;
         this.actionType = actionType;
         this.car = car;
     }
@@ -64,12 +64,9 @@ public class BookCarLoader extends AsyncTaskLoader<String> {
             reference = database.getReference("logs");
 
             CarApiService service = retrofit.create(CarApiService.class);
-            Log.e(TAG, "UserId " + getCurrentAccountId());
-            Log.e(TAG, "CarId " + car.getCar_id());
 
             if (actionType == ActionType.BOOK) {
-                NewBookingRequest bookingRequest = new NewBookingRequest(
-                        getCurrentAccountId(),car.getCar_id(), driver_id, "Book");
+
                 Call<Void> call = service.newBookCar(bookingRequest);
                 Response<Void> response = call.execute();
                 if (response.isSuccessful()) {
@@ -84,9 +81,6 @@ public class BookCarLoader extends AsyncTaskLoader<String> {
                 }
 
             } else if (actionType == ActionType.DELETE) {
-                // Perform delete action here
-                NewBookingRequest bookingRequest = new NewBookingRequest(
-                        getCurrentAccountId(),car.getCar_id(), driver_id, "Cancel");
                 Call<Void> call = service.bookCar(bookingRequest);
                 Response<Void> response = call.execute();
                 if (response.isSuccessful()) {
@@ -100,8 +94,6 @@ public class BookCarLoader extends AsyncTaskLoader<String> {
                 // Perform update action here
                 // ...
             } else  if (actionType == ActionType.ACCEPT_BOOK) {
-                NewBookingRequest bookingRequest = new NewBookingRequest(
-                        getCurrentAccountId(),car.getCar_id(), driver_id, "Accept");
                 Call<Void> call = service.bookCar(bookingRequest);
                 Response<Void> response = call.execute();
                 if (response.isSuccessful()) {
@@ -114,8 +106,6 @@ public class BookCarLoader extends AsyncTaskLoader<String> {
                     // Handle the error response for booking
                 }
             }else  if (actionType == ActionType.DECLINE) {
-                NewBookingRequest bookingRequest = new NewBookingRequest(
-                        getCurrentAccountId(),car.getCar_id(), driver_id, "Decline");
                 Call<Void> call = service.bookCar(bookingRequest);
                 Response<Void> response = call.execute();
                 if (response.isSuccessful()) {

@@ -10,36 +10,29 @@ public class NewBookingRequest implements Parcelable {
     private String car_id;
     private String owner_id;
     private String description;
+    private String start_date;
+    private String end_date;
 
     public NewBookingRequest(String description) {
         this.description = description;
     }
 
-    public NewBookingRequest(String user_id, String car_id, String owner_id, String description) {
+    public NewBookingRequest(String user_id, String car_id, String owner_id, String description, String start_date, String end_date) {
         this.user_id = user_id;
         this.car_id = car_id;
         this.owner_id = owner_id;
         this.description = description;
+        this.start_date = start_date;
+        this.end_date = end_date;
     }
 
     protected NewBookingRequest(Parcel in) {
         user_id = in.readString();
-        owner_id = in.readString();
         car_id = in.readString();
+        owner_id = in.readString();
         description = in.readString();
-    }
-
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(user_id);
-        dest.writeString(owner_id);
-        dest.writeString(car_id);
-        dest.writeString(description);
-    }
-
-    @Override
-    public int describeContents() {
-        return 0;
+        start_date = in.readString();
+        end_date = in.readString();
     }
 
     public static final Creator<NewBookingRequest> CREATOR = new Creator<NewBookingRequest>() {
@@ -84,5 +77,43 @@ public class NewBookingRequest implements Parcelable {
 
     public void setOwner_id(String owner_id) {
         this.owner_id = owner_id;
+    }
+
+    public String getStart_date() {
+        return start_date;
+    }
+
+    public void setStart_date(String start_date) {
+        this.start_date = start_date;
+    }
+
+    public String getEnd_date() {
+        return end_date;
+    }
+
+    public void setEnd_date(String end_date) {
+        this.end_date = end_date;
+    }
+
+    /**
+     * @return 
+     */
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    /**
+     * @param parcel 
+     * @param i
+     */
+    @Override
+    public void writeToParcel(@NonNull Parcel parcel, int i) {
+        parcel.writeString(user_id);
+        parcel.writeString(car_id);
+        parcel.writeString(owner_id);
+        parcel.writeString(description);
+        parcel.writeString(start_date);
+        parcel.writeString(end_date);
     }
 }

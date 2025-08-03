@@ -15,12 +15,13 @@ public class Car implements Parcelable {
     private String description;
     private double daily_amount;
     private double daily_downpayment_amt;
-    private String available;
+    private ArrayList<String> unavailable_dates;
 
     public Car() {
     }
 
-    public Car(ArrayList<String> car_images, String model, String car_id, String owner_id, String location, String description, double amount, double downpayment_amt, String available) {
+    public Car(ArrayList<String> car_images, String model, String car_id, String owner_id, String location, String description,
+               double amount, double downpayment_amt, ArrayList<String> unavailable_dates) {
         this.car_images = car_images;
         this.model = model;
         this.car_id = car_id;
@@ -29,7 +30,7 @@ public class Car implements Parcelable {
         this.description = description;
         this.daily_amount = amount;
         this.daily_downpayment_amt = downpayment_amt;
-        this.available = available;
+        this.unavailable_dates = unavailable_dates;
     }
 
     protected Car(Parcel in) {
@@ -41,7 +42,7 @@ public class Car implements Parcelable {
         description = in.readString();
         daily_amount = in.readDouble();
         daily_downpayment_amt = in.readDouble();
-        available = in.readString();
+        unavailable_dates = in.createStringArrayList();
     }
 
     @Override
@@ -54,7 +55,7 @@ public class Car implements Parcelable {
         dest.writeString(description);
         dest.writeDouble(daily_amount);
         dest.writeDouble(daily_downpayment_amt);
-        dest.writeString(available);
+        dest.writeStringList(unavailable_dates);
     }
 
     @Override
@@ -138,11 +139,11 @@ public class Car implements Parcelable {
         this.daily_downpayment_amt = daily_downpayment_amt;
     }
 
-    public String getAvailable() {
-        return available;
+    public ArrayList<String> getUnavailable_dates() {
+        return unavailable_dates;
     }
 
-    public void setAvailable(String available) {
-        this.available = available;
+    public void setUnavailable_dates(ArrayList<String> unavailable_dates) {
+        this.unavailable_dates = unavailable_dates;
     }
 }

@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Parcel;
 import android.text.SpannableString;
 import android.text.Spanned;
 import android.text.method.LinkMovementMethod;
@@ -26,6 +27,7 @@ import androidx.loader.content.Loader;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.request.RequestOptions;
+import com.google.android.material.datepicker.CalendarConstraints;
 import com.google.android.material.datepicker.MaterialDatePicker;
 import com.google.android.material.datepicker.MaterialPickerOnPositiveButtonClickListener;
 import com.google.firebase.database.DataSnapshot;
@@ -41,14 +43,20 @@ import com.sanny_tech.carapp.asynctasks.BookCarLoader;
 import com.sanny_tech.carapp.databinding.ActivityHireBinding;
 import com.sanny_tech.carapp.dialogs.ProgressDialogFragment;
 import com.sanny_tech.carapp.entities.Car;
+import com.sanny_tech.carapp.entities.NewBookingRequest;
 import com.sanny_tech.carapp.enums.ActionType;
 import com.sanny_tech.carapp.utils.IpAddressManager;
 import com.sanny_tech.carapp.utils.SimCardManager;
 
 import java.text.MessageFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Locale;
+import java.util.Set;
+import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
 public class HireActivity extends AppCompatActivity implements
@@ -201,8 +209,9 @@ public class HireActivity extends AppCompatActivity implements
     }
 
     private void bookCar(Car car) {
-        BookCarLoader bookCarLoader = new BookCarLoader(this, car.getOwner_id(),
-                ActionType.BOOK, car);
+        NewBookingRequest bookingRequest = new NewBookingRequest(
+                getCurrentAccountId(),car.getCar_id(), car.getOwner_id(), "Book",formatTime1(fromString),formatTime1(toString));
+        BookCarLoader bookCarLoader = new BookCarLoader(this, bookingRequest ,ActionType.BOOK);
         bookCarLoader.forceLoad();
         bookCarLoader.registerListener(7, new Loader.OnLoadCompleteListener<String>() {
             @Override
@@ -248,7 +257,10 @@ public class HireActivity extends AppCompatActivity implements
         SimpleDateFormat sdf = new SimpleDateFormat("dd MMM", Locale.getDefault());
         return sdf.format(new Date(timestamp));
     }
-
+    private String formatTime1(long timestamp) {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        return sdf.format(new Date(timestamp));
+    }
     private void showProgreeBar() {
         progressDialogFragment = new ProgressDialogFragment();
         progressDialogFragment.show(getSupportFragmentManager(), "progress_dialog");
@@ -290,39 +302,142 @@ public class HireActivity extends AppCompatActivity implements
         }
     }
 
-    private void showDatePickerDialog(Context context, Car car) {
-        // Create a MaterialDatePicker for selecting a date range
-        MaterialDatePicker<Pair<Long, Long>> picker = MaterialDatePicker.Builder.dateRangePicker()
-                .setTitleText("Select Date Range")
-                .setSelection(Pair.create(System.currentTimeMillis(), System.currentTimeMillis())) // Initial selection (today)
-                .build();
+//    private void showDatePickerDialog(Context context, Car car) {
+//        // Create a MaterialDatePicker for selecting a date range
+//        MaterialDatePicker<Pair<Long, Long>> picker = MaterialDatePicker.Builder.dateRangePicker()
+//                .setTitleText("Select Date Range")
+//                .setSelection(Pair.create(System.currentTimeMillis(), System.currentTimeMillis())) // Initial selection (today)
+//                .build();
+//
+//        picker.addOnPositiveButtonClickListener(new MaterialPickerOnPositiveButtonClickListener<Pair<Long, Long>>() {
+//            @Override
+//            public void onPositiveButtonClick(Pair<Long, Long> selection) {
+//                fromString = selection.first;
+//                toString = selection.second;
+//
+//                // Convert milliseconds to a duration string
+//                long durationMillis = toString - fromString;
+//                long days = TimeUnit.MILLISECONDS.toDays(durationMillis);
+//                long hours = TimeUnit.MILLISECONDS.toHours(durationMillis) - TimeUnit.DAYS.toHours(days);
+//                duration = String.format(Locale.US, "%d days", days);
+//
+//                hireBinding.priceDetails.setText(receivedCar.getDaily_amount() + " * " + duration);
+//                double totalPrice = days * receivedCar.getDaily_amount();
+//                hireBinding.totalPrice.setText("KSH " + totalPrice);
+//                hireBinding.totalPrice2.setText("KSH " + totalPrice);
+//
+//                hireBinding.date.setText(MessageFormat.format("{0} - {1}",
+//                        formatTime(fromString), formatTime(toString)));
+//            }
+//        });
+//
+//
+//        picker.show(((AppCompatActivity) context).getSupportFragmentManager(), picker.toString());
+//    }
+private void showDatePickerDialog(Context context, Car car) {
+    // Convert car's unavailable date strings (e.g., "2025-07-29") to a Set of UTC-normalized timestamps
+    Set<Long> unavailableTimestamps = new HashSet<>();
+    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+    sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
 
-        picker.addOnPositiveButtonClickListener(new MaterialPickerOnPositiveButtonClickListener<Pair<Long, Long>>() {
-            @Override
-            public void onPositiveButtonClick(Pair<Long, Long> selection) {
-                fromString = selection.first;
-                toString = selection.second;
-
-                // Convert milliseconds to a duration string
-                long durationMillis = toString - fromString;
-                long days = TimeUnit.MILLISECONDS.toDays(durationMillis);
-                long hours = TimeUnit.MILLISECONDS.toHours(durationMillis) - TimeUnit.DAYS.toHours(days);
-                duration = String.format(Locale.US, "%d days", days);
-
-                hireBinding.priceDetails.setText(receivedCar.getDaily_amount() + " * " + duration);
-                double totalPrice = days * receivedCar.getDaily_amount();
-                hireBinding.totalPrice.setText("KSH " + totalPrice);
-                hireBinding.totalPrice2.setText("KSH " + totalPrice);
-
-                hireBinding.date.setText(MessageFormat.format("{0} - {1}",
-                        formatTime(fromString), formatTime(toString)));
+    for (String dateStr : car.getUnavailable_dates()) {
+        try {
+            Date date = sdf.parse(dateStr);
+            if (date != null) {
+                Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+                cal.setTime(date);
+                cal.set(Calendar.HOUR_OF_DAY, 0);
+                cal.set(Calendar.MINUTE, 0);
+                cal.set(Calendar.SECOND, 0);
+                cal.set(Calendar.MILLISECOND, 0);
+                unavailableTimestamps.add(cal.getTimeInMillis());
             }
-        });
-
-
-        picker.show(((AppCompatActivity) context).getSupportFragmentManager(), picker.toString());
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
     }
 
+    // Validator to block unavailable and past dates
+    CalendarConstraints.DateValidator validator = new CalendarConstraints.DateValidator() {
+        @Override
+        public boolean isValid(long date) {
+            Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+            cal.setTimeInMillis(date);
+            cal.set(Calendar.HOUR_OF_DAY, 0);
+            cal.set(Calendar.MINUTE, 0);
+            cal.set(Calendar.SECOND, 0);
+            cal.set(Calendar.MILLISECOND, 0);
+            long normalizedDate = cal.getTimeInMillis();
+
+            Calendar todayCal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+            todayCal.set(Calendar.HOUR_OF_DAY, 0);
+            todayCal.set(Calendar.MINUTE, 0);
+            todayCal.set(Calendar.SECOND, 0);
+            todayCal.set(Calendar.MILLISECOND, 0);
+            long today = todayCal.getTimeInMillis();
+
+            return normalizedDate >= today && !unavailableTimestamps.contains(normalizedDate);
+        }
+
+        @Override
+        public int describeContents() {
+            return 0;
+        }
+
+        @Override
+        public void writeToParcel(Parcel dest, int flags) {}
+    };
+
+    CalendarConstraints constraints = new CalendarConstraints.Builder()
+            .setValidator(validator)
+            .build();
+
+    MaterialDatePicker<Pair<Long, Long>> picker = MaterialDatePicker.Builder.dateRangePicker()
+            .setTitleText("Select Available Date Range")
+            .setCalendarConstraints(constraints)
+            .setSelection(Pair.create(System.currentTimeMillis(), System.currentTimeMillis()))
+            .build();
+
+    picker.addOnPositiveButtonClickListener(selection -> {
+        fromString = selection.first;
+        toString = selection.second;
+
+        // Check if any selected day is unavailable
+        boolean hasUnavailable = false;
+        for (long dayMillis = fromString; dayMillis <= toString; dayMillis += TimeUnit.DAYS.toMillis(1)) {
+            Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+            cal.setTimeInMillis(dayMillis);
+            cal.set(Calendar.HOUR_OF_DAY, 0);
+            cal.set(Calendar.MINUTE, 0);
+            cal.set(Calendar.SECOND, 0);
+            cal.set(Calendar.MILLISECOND, 0);
+            if (unavailableTimestamps.contains(cal.getTimeInMillis())) {
+                hasUnavailable = true;
+                break;
+            }
+        }
+
+        if (hasUnavailable) {
+            Toast.makeText(context, "Selected range includes unavailable dates.", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        long durationMillis = toString - fromString;
+        long days = TimeUnit.MILLISECONDS.toDays(durationMillis) + 1; // Include end day
+
+        duration = String.format(Locale.US, "%d days", days);
+
+        hireBinding.priceDetails.setText(car.getDaily_amount() + " * " + duration);
+        double totalPrice = days * car.getDaily_amount();
+        hireBinding.totalPrice.setText("KSH " + totalPrice);
+        hireBinding.totalPrice2.setText("KSH " + totalPrice);
+
+        hireBinding.date.setText(MessageFormat.format("{0} - {1}",
+                formatTime(fromString), formatTime(toString)));
+    });
+
+    picker.show(((AppCompatActivity) context).getSupportFragmentManager(), picker.toString());
+}
     public String getCurrentAccountUserName() {
         SharedPreferences sharedPreferences = getSharedPreferences("AccountPrefs", MODE_PRIVATE);
         return sharedPreferences.getString("currentUserName", null);

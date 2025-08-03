@@ -13,7 +13,7 @@ import retrofit2.http.Path;
 public interface UserApiService {
     @POST("")
     Call<Void> deleteUser(UserDTO userRequest);
-    @POST("user/new")
+    @POST("logins")
     Call<Void> createUser(@Body UserDTO userRequest);
     @POST("user/login")
     Call<UserLoginResponse> signInProfileByEmail(@Body UserDTO userRequest);

@@ -176,9 +176,10 @@ public class CreateAccountActivity extends AppCompatActivity {
         if (existingUser == null) {
             String accountSavedLocally = databaseHelper.addUser(profile);
             if (accountSavedLocally.length() != 0) {
-                Toast.makeText(this, "Account saved successfully", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Account saved successfully. Please wait", Toast.LENGTH_SHORT).show();
                 setCurrentProfile(profile);
                 setWallPaper(profile.getProfilePic());
+                restartApp();
             }
         } else {
             showSnackbar(createAccountBinding.getRoot(), "This user exists");
@@ -211,7 +212,12 @@ public class CreateAccountActivity extends AppCompatActivity {
             }
         });
     }
-
+    private void restartApp() {
+        Intent intent = new Intent(this, SplashActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        Runtime.getRuntime().exit(0);
+    }
     private void hideProgreeBar() {
         createAccountBinding.createProfileButton.setVisibility(View.VISIBLE);
         createAccountBinding.progressBar.setVisibility(View.GONE);

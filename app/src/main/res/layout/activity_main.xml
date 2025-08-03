@@ -51,6 +51,7 @@
                 android:text="Create account"
                 android:layout_gravity="center_vertical"
                 android:layout_weight="1"
+                android:layout_marginBottom="8dp"
                 android:backgroundTint="#80808080"
                 android:layout_marginStart="8dp"
                 android:id="@+id/sign_up"/>
@@ -58,6 +59,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Login"
+                android:layout_marginBottom="8dp"
+
                 android:layout_gravity="center_vertical"
                 android:id="@+id/sign_in"
                 android:layout_weight="1"

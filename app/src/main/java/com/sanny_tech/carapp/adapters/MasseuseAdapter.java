@@ -59,13 +59,13 @@ public class MasseuseAdapter extends RecyclerView.Adapter<MasseuseAdapter.ViewHo
         }
         return null;
     }
-    public void checkCarAvailability() {
-        for (Car car : carList){
-            if (car.getAvailable().equals("Unavailable")){
-
-            }
-        }
-    }
+//    public void checkCarAvailability() {
+//        for (Car car : carList){
+//            if (car.getAvailable().equals("Unavailable")){
+//
+//            }
+//        }
+//    }
 
     public interface OnItemClickListener {
         void onItemClick(Car item);
@@ -112,7 +112,6 @@ public class MasseuseAdapter extends RecyclerView.Adapter<MasseuseAdapter.ViewHo
         }
 
         void bind(Car car) {
-            Log.e(car.getCar_id(),car.getAvailable());
             massueseItemBinding.location.setText(car.getLocation());
 
             if (car.getCar_images() != null) {

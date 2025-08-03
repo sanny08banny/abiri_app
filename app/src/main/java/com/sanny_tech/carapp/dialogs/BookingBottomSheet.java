@@ -28,6 +28,7 @@ import com.sanny_tech.carapp.databasehelpers.UploadedCarsHelper;
 import com.sanny_tech.carapp.databinding.BookingDialogLtBinding;
 import com.sanny_tech.carapp.entities.Car;
 import com.sanny_tech.carapp.entities.CarBookRequest;
+import com.sanny_tech.carapp.entities.NewBookingRequest;
 import com.sanny_tech.carapp.entities.TaxiLocation;
 import com.sanny_tech.carapp.enums.ActionType;
 import com.sanny_tech.carapp.hire_utils.Hire;
@@ -50,6 +51,7 @@ public class BookingBottomSheet extends BottomSheetDialogFragment implements Tax
     private DatabaseReference reference;
     private FirebaseDatabase database;
     private Hire activeHire;
+    private NewBookingRequest bookingRequest;
 
     public BookingBottomSheet(CarBookRequest carBookRequest) {
         this.carBookRequest = carBookRequest;
@@ -105,10 +107,10 @@ public class BookingBottomSheet extends BottomSheetDialogFragment implements Tax
     private void acceptBookingRequest(CarBookRequest carBookRequest) {
         UploadedCarsHelper uploadedCarsHelper = new UploadedCarsHelper(requireContext());
         Car car = uploadedCarsHelper.getCarById(carBookRequest.getCar_id());
+
         if (car != null) {
-            BookCarLoader bookCarLoader = new BookCarLoader(requireContext()
-                    , getCurrentAccountId(),
-                    ActionType.ACCEPT_BOOK, car);
+            BookCarLoader bookCarLoader = new BookCarLoader(requireContext(),bookingRequest,
+                    ActionType.ACCEPT_BOOK);
             bookCarLoader.forceLoad();
             bookCarLoader.registerListener(8, new Loader.OnLoadCompleteListener<String>() {
                 @Override
@@ -127,7 +129,10 @@ public class BookingBottomSheet extends BottomSheetDialogFragment implements Tax
             });
         }
     }
-
+    private String formatTime1(long timestamp) {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        return sdf.format(new Date(timestamp));
+    }
     private void acceptHire(Hire hire) {
         hire.setOwner(getCurrentAccountUserName());
         hire.setOwner_contact(SimCardManager.getPhoneNumber(requireContext()));
@@ -142,9 +147,9 @@ public class BookingBottomSheet extends BottomSheetDialogFragment implements Tax
         UploadedCarsHelper uploadedCarsHelper = new UploadedCarsHelper(requireContext());
         Car car = uploadedCarsHelper.getCarById(carBookRequest.getCar_id());
         if (car != null) {
-            BookCarLoader bookCarLoader = new BookCarLoader(requireContext()
-                    , getCurrentAccountId(),
-                    ActionType.DECLINE, car);
+            bookingRequest.setDescription("Decline");
+            BookCarLoader bookCarLoader = new BookCarLoader(requireContext(),bookingRequest,
+                    ActionType.DECLINE);
             bookCarLoader.forceLoad();
             bookCarLoader.registerListener(8, new Loader.OnLoadCompleteListener<String>() {
                 @Override
@@ -196,6 +201,10 @@ public class BookingBottomSheet extends BottomSheetDialogFragment implements Tax
                                         formatTime(Long.parseLong(hire.getStart_date())),
                                         formatTime(Long.parseLong(hire.getEnd_date()))));
                             }
+                            bookingRequest = new NewBookingRequest(
+                                    hire.getClient_id(), hire.getCarId(), hire.getOwner_id(), "Accept",
+                                    formatTime1(Long.parseLong(hire.getStart_date())),
+                                    formatTime1(Long.parseLong(hire.getEnd_date())));
                         }
                     }
                 }

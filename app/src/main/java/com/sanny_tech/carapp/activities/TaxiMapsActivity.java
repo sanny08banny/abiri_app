@@ -127,6 +127,7 @@ public class TaxiMapsActivity extends FragmentActivity implements OnMapReadyCall
         @Override
         public void onReceive(Context context, Intent intent) {
             String rideId = intent.getStringExtra("ride_id");
+            Log.e("Broadcaster","triggered");
             // Handle the received ride ID
             // Load the ride information using the rideId
         }
@@ -409,7 +410,7 @@ public class TaxiMapsActivity extends FragmentActivity implements OnMapReadyCall
             ride.setDriver_lon((float) currentLocation.getLongitude());
             ride.setDriver_lat((float) currentLocation.getLatitude());
         }
-        reference.child(getCurrentAccountId()).setValue(ride);
+        reference.child(request.getSender_id()).setValue(ride);
         makeUnavailable();
         createTripToFirebase();
         showToolTip();
@@ -687,7 +688,7 @@ public class TaxiMapsActivity extends FragmentActivity implements OnMapReadyCall
                         float distanceInMeters = driverLocation.distanceTo(pickupLocation);
                         Log.e("Distance to pickup", String.valueOf(distanceInMeters));
 
-                        if (distanceInMeters <= 50) { // ✅ within 50 meters of pickup
+                        if (distanceInMeters <= 100) { // ✅ within 50 meters of pickup
                             if (!Settings.canDrawOverlays(TaxiMapsActivity.this)) {
                                 Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
                                         Uri.parse("package:" + getPackageName()));
