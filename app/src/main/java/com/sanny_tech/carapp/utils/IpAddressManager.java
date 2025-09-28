@@ -26,7 +26,7 @@ public class IpAddressManager {
 
     private static String getDefaultIpAddress() {
         // Set your default IP address here
-        return "https://abiriapp.com/v1";
+        return "https://abiri.duckdns.org/api4020";
     }
 }
 

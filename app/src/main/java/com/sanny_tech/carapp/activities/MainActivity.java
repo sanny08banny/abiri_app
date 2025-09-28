@@ -429,7 +429,8 @@ public class MainActivity extends AppCompatActivity implements BookingBottomShee
                 if (ip != null) {
                     String newBaseUrl = "https://" + ip + "/api";
                     if (!newBaseUrl.equals(IpAddressManager.getIpAddress(MainActivity.this))) {
-                        IpAddressManager.setIpAddress(MainActivity.this, ip);
+                        IpAddressManager.setIpAddress(MainActivity.this,
+                                IpAddressManager.getIpAddress(MainActivity.this));
                     }
                 }
                 if (ip == null) {

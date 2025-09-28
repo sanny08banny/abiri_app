@@ -155,7 +155,46 @@
                             android:layout_height="wrap_content"/>
 
                     </LinearLayout>
-
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/ongoing_lt"
+                        android:visibility="gone"
+                        android:orientation="horizontal">
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+                        <TextView
+                            android:id="@+id/ongoing_title"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center_vertical"
+                            android:layout_marginHorizontal="16dp"
+                            android:textStyle="bold"
+                            android:textSize="18sp"
+                            android:text="Active" />
+                        <TextView
+                            android:id="@+id/ongoing_desc"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center_vertical"
+                            android:layout_marginHorizontal="8dp"
+                            android:text="Jump back in?"
+                            android:fontFamily="@font/jost_semibold"
+                            android:gravity="end" />
+                        </LinearLayout>
+                        <com.google.android.material.button.MaterialButton
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:id="@+id/price"
+                            android:textColor="?attr/backgroundColor"
+                            app:backgroundTint="?attr/background"
+                            android:layout_gravity="center_vertical"
+                            android:layout_marginHorizontal="8dp"
+                            android:text="Price"/>
+                    </LinearLayout>
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
