@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:id="@+id/title_services_offered"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Services Offered"
+            android:textAppearance="?attr/textAppearanceHeadline6" />
+
+        <!-- Chips for Services Offered -->
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/chip_group_services_offered"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="16dp"
+            app:singleSelection="false">
+
+            <com.google.android.material.chip.Chip
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Bar &amp; Restaurant"
+                app:chipIcon="@drawable/ic_check"
+                app:chipIconVisible="false"
+                app:checkedIconVisible="true"
+                android:checkable="true" />
+
+            <com.google.android.material.chip.Chip
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Accommodation"
+                app:chipIcon="@drawable/ic_check"
+                app:chipIconVisible="false"
+                app:checkedIconVisible="true"
+                android:checkable="true" />
+
+            <com.google.android.material.chip.Chip
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Corporate Events"
+                app:chipIcon="@drawable/ic_check"
+                app:chipIconVisible="false"
+                app:checkedIconVisible="true"
+                android:checkable="true" />
+
+            <com.google.android.material.chip.Chip
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Social Events"
+                app:chipIcon="@drawable/ic_check"
+                app:chipIconVisible="false"
+                app:checkedIconVisible="true"
+                android:checkable="true" />
+
+            <com.google.android.material.chip.Chip
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Weddings"
+                app:chipIcon="@drawable/ic_check"
+                app:chipIconVisible="false"
+                app:checkedIconVisible="true"
+                android:checkable="true" />
+        </com.google.android.material.chip.ChipGroup>
+
+        <!-- Title for Games and Entertainment -->
+        <TextView
+            android:id="@+id/title_games_entertainment"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Games and Entertainment"
+            android:textAppearance="?attr/textAppearanceHeadline6" />
+
+        <!-- Chips for Games and Entertainment -->
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/chip_group_games_entertainment"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            app:singleSelection="false">
+
+            <com.google.android.material.chip.Chip
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Pool"
+                app:chipIcon="@drawable/ic_check"
+                app:chipIconVisible="false"
+                app:checkedIconVisible="true"
+                android:checkable="true" />
+
+            <com.google.android.material.chip.Chip
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Horse riding"
+                app:chipIcon="@drawable/ic_check"
+                app:chipIconVisible="false"
+                app:checkedIconVisible="true"
+                android:checkable="true" />
+
+            <com.google.android.material.chip.Chip
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Archery"
+                app:chipIcon="@drawable/ic_check"
+                app:chipIconVisible="false"
+                app:checkedIconVisible="true"
+                android:checkable="true" />
+
+            <com.google.android.material.chip.Chip
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Swimming Pool"
+                app:chipIcon="@drawable/ic_check"
+                app:chipIconVisible="false"
+                app:checkedIconVisible="true"
+                android:checkable="true" />
+
+            <com.google.android.material.chip.Chip
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Boat riding"
+                app:chipIcon="@drawable/ic_check"
+                app:chipIconVisible="false"
+                app:checkedIconVisible="true"
+                android:checkable="true" />
+
+            <com.google.android.material.chip.Chip
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Slam dunk"
+                app:chipIcon="@drawable/ic_check"
+                app:chipIconVisible="false"
+                app:checkedIconVisible="true"
+                android:checkable="true" />
+
+            <com.google.android.material.chip.Chip
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Zip Lining"
+                app:chipIcon="@drawable/ic_check"
+                app:chipIconVisible="false"
+                app:checkedIconVisible="true"
+                android:checkable="true" />
+
+            <com.google.android.material.chip.Chip
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Cycling"
+                app:chipIcon="@drawable/ic_check"
+                app:chipIconVisible="false"
+                app:checkedIconVisible="true"
+                android:checkable="true" />
+        </com.google.android.material.chip.ChipGroup>
+    </LinearLayout>
+
+</layout>

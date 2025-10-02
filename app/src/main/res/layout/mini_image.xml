@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+<!--        <ImageButton-->
+<!--            android:id="@+id/close_button"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:layout_gravity="end"-->
+<!--            android:layout_marginHorizontal="10dp"-->
+<!--            android:layout_marginTop="8dp"-->
+<!--            android:background="?attr/selectableItemBackgroundBorderless"-->
+<!--            android:contentDescription="@string/close"-->
+<!--            android:src="@drawable/baseline_close_24"-->
+<!--            app:tint="?attr/imageButtonStyle" />-->
+
+        <RelativeLayout
+            android:id="@+id/sub_image1_lt"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:layout_margin="12dp"
+            android:background="@drawable/image_placeholder"
+            android:gravity="center"
+            android:orientation="vertical">
+
+
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/sub_image1"
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                app:shapeAppearanceOverlay="@style/MiniRoundedImageView"
+                android:contentDescription="@string/image_placeholder"
+                android:scaleType="centerCrop" />
+
+        </RelativeLayout>
+    </LinearLayout>
+</layout>

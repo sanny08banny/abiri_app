@@ -308,7 +308,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         });
         clearIcon = ContextCompat.getDrawable(this, R.drawable.baseline_close_24);
         clearIcon.setTint(com.google.android.material.R.attr.imageButtonStyle);
-
         // Set the compound drawable with the clear icon
         binding.pickupLocationEditText.setCompoundDrawablesWithIntrinsicBounds(null, null, clearIcon, null);
 

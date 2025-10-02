@@ -11,13 +11,13 @@ plugins {
 
 android {
     namespace = "com.sanny_tech.carapp"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.sanny_tech.carapp"
         minSdk = 24
         targetSdk = 35
-        versionCode = 65
+        versionCode = 66
         versionName = "1.0"
 
         buildConfigField("String", "MAPS_API_KEY", properties["MAP_API_KEY"].toString())

@@ -74,7 +74,7 @@ androidx-test-ext-junit = { group = "androidx.test.ext", name = "junit", version
 espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version = "3.6.1" }
 appcompat = { group = "androidx.appcompat", name = "appcompat", version = "1.7.0" }
 map-display = { module = "com.tomtom.sdk.maps:map-display", version.ref = "version" }
-material = { group = "com.google.android.material", name = "material", version = "1.12.0" }
+material = { group = "com.google.android.material", name = "material", version = "1.13.0" }
 constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
 androidx-swiperefreshlayout = { group = "androidx.swiperefreshlayout", name = "swiperefreshlayout", version.ref = "swiperefreshlayout" }
 glide = { group = "com.github.bumptech.glide", name = "glide", version.ref = "glide" }

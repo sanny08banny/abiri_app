@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/drive"
+        android:icon="@drawable/driver_filled"
+        android:title="Drive" />
+    <item
+        android:id="@+id/rental"
+        android:icon="@drawable/car_rental"
+        android:title="Rental" />
+    <item
+        android:id="@+id/fun_space"
+        android:icon="@drawable/celebration"
+        android:title="FunSpaces" />
+    <item
+        android:id="@+id/massage"
+        android:icon="@drawable/spa"
+        android:title="Massage" />
+</menu>

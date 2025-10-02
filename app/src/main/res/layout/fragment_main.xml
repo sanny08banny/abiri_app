@@ -60,76 +60,76 @@
 
                 </RelativeLayout>
 
-<!--                <LinearLayout-->
-<!--                    android:layout_width="match_parent"-->
-<!--                    android:layout_height="wrap_content"-->
-<!--                    android:id="@+id/new_client"-->
-<!--                    android:orientation="horizontal">-->
+                <!--                <LinearLayout-->
+                <!--                    android:layout_width="match_parent"-->
+                <!--                    android:layout_height="wrap_content"-->
+                <!--                    android:id="@+id/new_client"-->
+                <!--                    android:orientation="horizontal">-->
 
-<!--                    <LinearLayout-->
-<!--                        android:layout_width="wrap_content"-->
-<!--                        android:layout_height="wrap_content"-->
-<!--                        android:layout_marginHorizontal="8dp"-->
-<!--                        android:orientation="vertical">-->
+                <!--                    <LinearLayout-->
+                <!--                        android:layout_width="wrap_content"-->
+                <!--                        android:layout_height="wrap_content"-->
+                <!--                        android:layout_marginHorizontal="8dp"-->
+                <!--                        android:orientation="vertical">-->
 
-<!--                        <TextView-->
-<!--                            android:id="@+id/login_text"-->
-<!--                            android:layout_width="wrap_content"-->
-<!--                            android:layout_height="wrap_content"-->
-<!--                            android:layout_marginHorizontal="8dp"-->
-<!--                            android:layout_marginTop="16dp"-->
-<!--                            android:textStyle="bold"-->
-<!--                            android:textSize="18sp"-->
-<!--                            android:textColor="@color/white"-->
-<!--                            android:layout_weight="1"-->
-<!--                            android:text="Your first time here?" />-->
-<!--                        <TextView-->
-<!--                            android:id="@+id/login_text2"-->
-<!--                            android:layout_width="wrap_content"-->
-<!--                            android:layout_height="wrap_content"-->
-<!--                            android:layout_marginHorizontal="8dp"-->
-<!--                            android:layout_marginTop="16dp"-->
-<!--                            android:layout_weight="1"-->
-<!--                            android:textSize="14sp"-->
-<!--                            android:textColor="@color/white"-->
-<!--                            android:text="Login to get full experience!" />-->
-<!--                    </LinearLayout>-->
+                <!--                        <TextView-->
+                <!--                            android:id="@+id/login_text"-->
+                <!--                            android:layout_width="wrap_content"-->
+                <!--                            android:layout_height="wrap_content"-->
+                <!--                            android:layout_marginHorizontal="8dp"-->
+                <!--                            android:layout_marginTop="16dp"-->
+                <!--                            android:textStyle="bold"-->
+                <!--                            android:textSize="18sp"-->
+                <!--                            android:textColor="@color/white"-->
+                <!--                            android:layout_weight="1"-->
+                <!--                            android:text="Your first time here?" />-->
+                <!--                        <TextView-->
+                <!--                            android:id="@+id/login_text2"-->
+                <!--                            android:layout_width="wrap_content"-->
+                <!--                            android:layout_height="wrap_content"-->
+                <!--                            android:layout_marginHorizontal="8dp"-->
+                <!--                            android:layout_marginTop="16dp"-->
+                <!--                            android:layout_weight="1"-->
+                <!--                            android:textSize="14sp"-->
+                <!--                            android:textColor="@color/white"-->
+                <!--                            android:text="Login to get full experience!" />-->
+                <!--                    </LinearLayout>-->
 
-<!--                    <ImageView-->
-<!--                        android:id="@+id/iconImageView"-->
-<!--                        android:layout_width="100dp"-->
-<!--                        android:layout_height="100dp"-->
-<!--                        android:padding="8dp"-->
-<!--                        android:layout_weight="0"-->
-<!--                        android:scaleType="fitCenter"-->
-<!--                        android:src="@drawable/icons8login" />-->
-<!--                </LinearLayout>-->
+                <!--                    <ImageView-->
+                <!--                        android:id="@+id/iconImageView"-->
+                <!--                        android:layout_width="100dp"-->
+                <!--                        android:layout_height="100dp"-->
+                <!--                        android:padding="8dp"-->
+                <!--                        android:layout_weight="0"-->
+                <!--                        android:scaleType="fitCenter"-->
+                <!--                        android:src="@drawable/icons8login" />-->
+                <!--                </LinearLayout>-->
             </LinearLayout>
 
-<!--            <LinearLayout-->
-<!--                android:id="@+id/search_btn"-->
-<!--                android:layout_width="match_parent"-->
-<!--                android:layout_height="wrap_content"-->
-<!--                android:layout_alignBottom="@id/collapsible_image"-->
-<!--                android:layout_marginStart="16dp"-->
-<!--                android:layout_marginEnd="16dp"-->
-<!--                android:layout_marginBottom="-25dp"-->
-<!--                android:background="@drawable/search_background"-->
-<!--                android:drawablePadding="8dp"-->
-<!--                android:elevation="16dp"-->
-<!--                android:padding="16dp"-->
-<!--                android:shadowColor="#808080"-->
-<!--                android:shadowDx="0"-->
-<!--                android:shadowDy="2"-->
-<!--                android:shadowRadius="8">-->
+            <!--            <LinearLayout-->
+            <!--                android:id="@+id/search_btn"-->
+            <!--                android:layout_width="match_parent"-->
+            <!--                android:layout_height="wrap_content"-->
+            <!--                android:layout_alignBottom="@id/collapsible_image"-->
+            <!--                android:layout_marginStart="16dp"-->
+            <!--                android:layout_marginEnd="16dp"-->
+            <!--                android:layout_marginBottom="-25dp"-->
+            <!--                android:background="@drawable/search_background"-->
+            <!--                android:drawablePadding="8dp"-->
+            <!--                android:elevation="16dp"-->
+            <!--                android:padding="16dp"-->
+            <!--                android:shadowColor="#808080"-->
+            <!--                android:shadowDx="0"-->
+            <!--                android:shadowDy="2"-->
+            <!--                android:shadowRadius="8">-->
 
-<!--                <TextView-->
-<!--                    android:layout_width="wrap_content"-->
-<!--                    android:layout_height="wrap_content"-->
-<!--                    android:layout_gravity="center_vertical"-->
-<!--                    android:layout_marginStart="12dp"-->
-<!--                    android:text="Search..." />-->
-<!--            </LinearLayout>-->
+            <!--                <TextView-->
+            <!--                    android:layout_width="wrap_content"-->
+            <!--                    android:layout_height="wrap_content"-->
+            <!--                    android:layout_gravity="center_vertical"-->
+            <!--                    android:layout_marginStart="12dp"-->
+            <!--                    android:text="Search..." />-->
+            <!--            </LinearLayout>-->
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -162,35 +162,35 @@
                         android:visibility="gone"
                         android:orientation="horizontal">
                         <LinearLayout
-                            android:layout_width="match_parent"
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:orientation="vertical">
-                        <TextView
-                            android:id="@+id/ongoing_title"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_gravity="center_vertical"
-                            android:layout_marginHorizontal="16dp"
-                            android:textStyle="bold"
-                            android:textSize="18sp"
-                            android:text="Active" />
-                        <TextView
-                            android:id="@+id/ongoing_desc"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_gravity="center_vertical"
-                            android:layout_marginHorizontal="8dp"
-                            android:text="Jump back in?"
-                            android:fontFamily="@font/jost_semibold"
-                            android:gravity="end" />
+                            <TextView
+                                android:id="@+id/ongoing_title"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center_vertical"
+                                android:layout_marginHorizontal="16dp"
+                                android:textStyle="bold"
+                                android:textSize="18sp"
+                                android:text="Active" />
+                            <TextView
+                                android:id="@+id/ongoing_desc"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center_vertical"
+                                android:layout_marginHorizontal="8dp"
+                                android:text="Jump back in?"
+                                android:fontFamily="@font/jost_semibold"
+                                android:gravity="end" />
                         </LinearLayout>
                         <com.google.android.material.button.MaterialButton
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:id="@+id/price"
                             android:textColor="?attr/backgroundColor"
-                            app:backgroundTint="?attr/background"
+                            app:backgroundTint="?attr/backgroundColor"
                             android:layout_gravity="center_vertical"
                             android:layout_marginHorizontal="8dp"
                             android:text="Price"/>

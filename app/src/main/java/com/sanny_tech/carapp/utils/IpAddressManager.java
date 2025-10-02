@@ -18,7 +18,7 @@ public class IpAddressManager {
     }
 
     public static void setIpAddress(Context context, String newIpAddress) {
-        String newBaseUrl = "http://" + newIpAddress + "/v1";
+        String newBaseUrl = "https://" + newIpAddress;
         SharedPreferences.Editor editor = getSharedPreferences(context).edit();
         editor.putString(KEY_IP_ADDRESS, newBaseUrl);
         editor.apply();

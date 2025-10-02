@@ -43,7 +43,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.CarApp"
         android:usesCleartextTraffic="true"
-        tools:targetApi="35">
+        tools:targetApi="36">
 
         <!--
              TODO: Before you run your application, you need a Google Maps API key.

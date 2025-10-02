@@ -60,7 +60,6 @@
                 android:layout_height="wrap_content"
                 android:text="Login"
                 android:layout_marginBottom="8dp"
-
                 android:layout_gravity="center_vertical"
                 android:id="@+id/sign_in"
                 android:layout_weight="1"

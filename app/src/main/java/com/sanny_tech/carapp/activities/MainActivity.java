@@ -75,6 +75,8 @@ public class MainActivity extends AppCompatActivity implements BookingBottomShee
     private CarBookRequest bookingRequest;
     private BookingBottomSheet bookingBottomSheet;
     private long messageId;
+    private static final String TAG = "MainActivity";
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -414,36 +416,52 @@ public class MainActivity extends AppCompatActivity implements BookingBottomShee
     }
 
     private void fetchAndUpdateLocalData() {
+        Log.d(TAG, "Starting fetchAndUpdateLocalData...");
+
         reference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                Log.d(TAG, "onDataChange triggered. Children count: " + dataSnapshot.getChildrenCount());
+
                 String ip = null;
 
                 for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                     String key = snapshot.getKey();
+                    Log.d(TAG, "Found child: key=" + key + ", value=" + snapshot.getValue());
+
                     if ("ip".equals(key)) {
                         ip = snapshot.getValue(String.class);
+                        Log.d(TAG, "IP found in database: " + ip);
                     }
                 }
 
                 if (ip != null) {
-                    String newBaseUrl = "https://" + ip + "/api";
-                    if (!newBaseUrl.equals(IpAddressManager.getIpAddress(MainActivity.this))) {
-                        IpAddressManager.setIpAddress(MainActivity.this,
-                                IpAddressManager.getIpAddress(MainActivity.this));
+                    String newBaseUrl = "https://" + ip;
+                    String currentIp = IpAddressManager.getIpAddress(MainActivity.this);
+
+                    Log.d(TAG, "Current saved IP: " + currentIp);
+                    Log.d(TAG, "New Base URL: " + newBaseUrl);
+
+                    if (!newBaseUrl.equals(currentIp)) {
+                        IpAddressManager.setIpAddress(MainActivity.this, ip);
+                        Log.i(TAG, "Updated IP address to: " + ip);
+                    } else {
+                        Log.d(TAG, "IP address unchanged.");
                     }
-                }
-                if (ip == null) {
-                    reference.child("ip").setValue(IpAddressManager.getIpAddress(MainActivity.this));
+                } else {
+                    String currentIp = IpAddressManager.getIpAddress(MainActivity.this);
+                    reference.child("ip").setValue(currentIp);
+                    Log.w(TAG, "No IP found in database. Setting current IP: " + currentIp);
                 }
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
-                // Handle errors if any
+                Log.e(TAG, "Database error: " + databaseError.getMessage(), databaseError.toException());
             }
         });
     }
+
 
     private void openDriverMaps(ClientRequest request) {
         try {

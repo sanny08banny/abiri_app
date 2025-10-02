@@ -112,8 +112,12 @@ public class CarAdapter extends RecyclerView.Adapter<CarAdapter.ViewHolder> {
     public int getItemCount() {
         return carList.size();
     }
+    public void setItems(List<Car> data) {
+        carList.clear();
+        carList.addAll(data);
+        notifyDataSetChanged();
+    }
 
-z
     public class ViewHolder extends RecyclerView.ViewHolder {
         private CarItemBinding carItemBinding;
 

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:id="@+id/tv_driver_cancel_reason"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginHorizontal="16dp"
+            android:text="Select a reason for cancelling the trip:" />
+
+        <RadioGroup
+            android:id="@+id/rg_driver_cancel_reasons"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <RadioButton
+                android:id="@+id/rb_driver_reason_1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Passenger is late" />
+
+            <RadioButton
+                android:id="@+id/rb_driver_reason_2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Passenger did not show up" />
+
+            <RadioButton
+                android:id="@+id/rb_driver_reason_3"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Emergency" />
+        </RadioGroup>
+
+        <EditText
+            android:id="@+id/et_driver_custom_reason"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Other reason (optional)" />
+
+        <Button
+            android:id="@+id/btn_driver_cancel_trip"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Cancel Trip" />
+    </LinearLayout>
+
+</layout>
