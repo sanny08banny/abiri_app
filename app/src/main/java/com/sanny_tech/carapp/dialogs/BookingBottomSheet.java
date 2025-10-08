@@ -105,6 +105,7 @@ public class BookingBottomSheet extends BottomSheetDialogFragment implements Tax
     }
 
     private void acceptBookingRequest(CarBookRequest carBookRequest) {
+        showProgressBar();
         UploadedCarsHelper uploadedCarsHelper = new UploadedCarsHelper(requireContext());
         Car car = uploadedCarsHelper.getCarById(carBookRequest.getCar_id());
 
@@ -115,6 +116,7 @@ public class BookingBottomSheet extends BottomSheetDialogFragment implements Tax
             bookCarLoader.registerListener(8, new Loader.OnLoadCompleteListener<String>() {
                 @Override
                 public void onLoadComplete(@NonNull Loader<String> loader, @Nullable String data) {
+                    hideProgressBar();
                     if (data != null) {
                         if (activeHire != null){
                         acceptHire(activeHire);
@@ -259,5 +261,15 @@ public class BookingBottomSheet extends BottomSheetDialogFragment implements Tax
             }
         });
         snackbar.show();
+    }
+    private void showProgressBar() {
+        bookingDialogLtBinding.progressBar.setVisibility(View.VISIBLE);
+        bookingDialogLtBinding.buttonsLt.setVisibility(View.GONE);
+
+    }
+
+    private void hideProgressBar() {
+        bookingDialogLtBinding.progressBar.setVisibility(View.GONE);
+        bookingDialogLtBinding.buttonsLt.setVisibility(View.VISIBLE);
     }
 }

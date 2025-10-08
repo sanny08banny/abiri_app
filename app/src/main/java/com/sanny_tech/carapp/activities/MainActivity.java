@@ -133,8 +133,11 @@ public class MainActivity extends AppCompatActivity implements BookingBottomShee
             Log.d("NotificationDataSecondary", "MessageIdA: unfound");
         }
         fetchAndUpdateLocalData();
-        boolean isLoggedIn = getIntent().getBooleanExtra("signIn", false);
-//        loadFragment(new MainFragment(isLoggedIn)); // Load the default fragment
+        Intent intent = getIntent();
+        boolean isLoggedIn = false;
+        if (intent != null) {
+            isLoggedIn = intent.getBooleanExtra("signIn", false);
+        }//        loadFragment(new MainFragment(isLoggedIn)); // Load the default fragment
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
 
         NavigationUI.setupWithNavController(activityMainBinding.bottomNavView, navController);
@@ -416,31 +419,31 @@ public class MainActivity extends AppCompatActivity implements BookingBottomShee
     }
 
     private void fetchAndUpdateLocalData() {
-        Log.d(TAG, "Starting fetchAndUpdateLocalData...");
+        Log.e(TAG, "Starting fetchAndUpdateLocalData...");
 
         reference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                Log.d(TAG, "onDataChange triggered. Children count: " + dataSnapshot.getChildrenCount());
+                Log.e(TAG, "onDataChange triggered. Children count: " + dataSnapshot.getChildrenCount());
 
                 String ip = null;
 
                 for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                     String key = snapshot.getKey();
-                    Log.d(TAG, "Found child: key=" + key + ", value=" + snapshot.getValue());
+                    Log.e(TAG, "Found child: key=" + key + ", value=" + snapshot.getValue());
 
                     if ("ip".equals(key)) {
                         ip = snapshot.getValue(String.class);
-                        Log.d(TAG, "IP found in database: " + ip);
+                        Log.e(TAG, "IP found in database: " + ip);
                     }
                 }
 
                 if (ip != null) {
-                    String newBaseUrl = "https://" + ip;
+                    String newBaseUrl = "https://" + ip + "/api4000/v1";
                     String currentIp = IpAddressManager.getIpAddress(MainActivity.this);
 
-                    Log.d(TAG, "Current saved IP: " + currentIp);
-                    Log.d(TAG, "New Base URL: " + newBaseUrl);
+                    Log.e(TAG, "Current saved IP: " + currentIp);
+                    Log.e(TAG, "New Base URL: " + newBaseUrl);
 
                     if (!newBaseUrl.equals(currentIp)) {
                         IpAddressManager.setIpAddress(MainActivity.this, ip);
@@ -451,7 +454,7 @@ public class MainActivity extends AppCompatActivity implements BookingBottomShee
                 } else {
                     String currentIp = IpAddressManager.getIpAddress(MainActivity.this);
                     reference.child("ip").setValue(currentIp);
-                    Log.w(TAG, "No IP found in database. Setting current IP: " + currentIp);
+                    Log.e(TAG, "No IP found in database. Setting current IP: " + currentIp);
                 }
             }
 

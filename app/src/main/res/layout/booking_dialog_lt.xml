@@ -57,43 +57,66 @@
             android:layout_marginHorizontal="16dp"
             android:layout_marginVertical="4dp"
             android:background="?attr/imageButtonStyle" />
-
+            <ProgressBar
+                android:id="@+id/progress_bar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:layout_margin="8dp"
+                android:visibility="gone" />
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
-            <Button
-                android:layout_width="180dp"
-                android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:padding="4dp"
+            android:id="@+id/buttons_lt"
+            android:weightSum="2">
+
+            <androidx.cardview.widget.CardView
                 android:id="@+id/accept"
-                android:background="@drawable/custom_button_bg"
-                android:layout_marginVertical="8dp"
-                android:layout_marginHorizontal="8dp"
-                android:text="Accept"/>
-            <com.google.android.material.button.MaterialButton
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:id="@+id/decline"
                 android:layout_weight="1"
-                app:cornerRadius="8dp"
-                android:layout_marginVertical="8dp"
-                android:layout_marginHorizontal="8dp"
-                android:text="Decline"/>
-        </LinearLayout>
-        <androidx.cardview.widget.CardView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:backgroundTint="?attr/imageButtonStyle"
-            app:cardCornerRadius="8dp">
-            <TextView
-                android:layout_width="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:backgroundTint="?attr/colorPrimary"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="4dp">
+
+                <TextView
+                    android:id="@+id/accept_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="Accept"
+                    android:textColor="@android:color/white"
+                    android:paddingVertical="12dp"
+                    android:textStyle="bold" />
+            </androidx.cardview.widget.CardView>
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/decline"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="Accept"
-                android:id="@+id/accept_text"
-                android:textColor="?attr/backgroundColor"
-                android:paddingHorizontal="32dp"
-                android:paddingVertical="8dp"/>
-        </androidx.cardview.widget.CardView>
+                android:layout_weight="1"
+                android:layout_marginStart="8dp"
+                android:backgroundTint="?attr/colorError"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="4dp">
+
+                <TextView
+                    android:id="@+id/decline_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="Decline"
+                    android:textColor="@android:color/white"
+                    android:paddingVertical="12dp"
+                    android:textStyle="bold" />
+            </androidx.cardview.widget.CardView>
+
+        </LinearLayout>
+
         <TextView
             android:id="@+id/date"
             android:layout_width="wrap_content"

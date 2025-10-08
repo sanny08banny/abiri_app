@@ -43,6 +43,7 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -307,7 +308,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         });
         clearIcon = ContextCompat.getDrawable(this, R.drawable.baseline_close_24);
-        clearIcon.setTint(com.google.android.material.R.attr.imageButtonStyle);
+        clearIcon.setTint(com.google.android.material.R.attr.containerColor);
         // Set the compound drawable with the clear icon
         binding.pickupLocationEditText.setCompoundDrawablesWithIntrinsicBounds(null, null, clearIcon, null);
 
@@ -1526,26 +1527,36 @@ private void searchLocation(String locationName, boolean isPickup) {
         declineReference.child(decline.getDriver_id()).removeValue();
     }
     private void showTripCompletePrompt(Trip trip) {
-        if (isFinishing() || isDestroyed()) {
-            return; // Don't show dialog if activity is not running
-        }
+        if (isFinishing() || isDestroyed()) return;
 
         runOnUiThread(() -> {
-            if (isFinishing() || isDestroyed()) return;
+            // Double-check context validity *here*
+            if (isFinishing() || isDestroyed() || getWindow() == null) return;
 
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setTitle("Trip complete!");
-            builder.setMessage("Driver has ended the trip. Charges for the journey: " + trip.getCharges());
+            try {
+                AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                builder.setTitle("Trip complete!");
+                builder.setMessage("Driver has ended the trip. Charges for the journey: " + trip.getCharges());
 
-            builder.setPositiveButton("OK", (dialog, which) -> {
-                DatabaseReference tripsRef = FirebaseDatabase.getInstance().getReference("trips");
-                tripsRef.child(trip.getDriver_id()).removeValue();
-                tripItemListener.stopTripUpdates();
-                finish();
-            });
+                builder.setPositiveButton("OK", (dialog, which) -> {
+                    DatabaseReference tripsRef = FirebaseDatabase.getInstance().getReference("trips");
+                    tripsRef.child(trip.getDriver_id()).removeValue();
+                    tripItemListener.stopTripUpdates();
+                    finish();
+                });
 
-            builder.setCancelable(false);
-            builder.show();
+                builder.setCancelable(false);
+                AlertDialog dialog = builder.create();
+
+                // Safety: check window token before showing
+                if (!isFinishing() && !isDestroyed() && dialog.getWindow() != null) {
+                    dialog.show();
+                }
+
+            } catch (WindowManager.BadTokenException e) {
+                // Gracefully handle race condition
+                Log.w("MapsActivity", "Attempted to show dialog after activity closed", e);
+            }
         });
     }
 

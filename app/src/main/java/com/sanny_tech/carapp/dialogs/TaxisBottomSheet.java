@@ -109,6 +109,9 @@ public class TaxisBottomSheet extends BottomSheetDialogFragment implements TaxiA
             FareCalculator fareCalculator = new FareCalculator(context);
             pricingDetails = new PricingDetails(getCurrentAccountId(),
                     currentLatitude, currentLongitude, dest_lat, dest_lon);
+
+            taxisLtBinding.shimmerContainer.setVisibility(View.VISIBLE);
+            taxisLtBinding.taxisRecycler.setVisibility(View.GONE);
             fareCalculator.calculateFare(pricingDetails, new FareCalculator.FareCallback() {
                 @Override
                 public void onSuccess(TaxiPrice taxiPrice) {
@@ -148,6 +151,8 @@ public class TaxisBottomSheet extends BottomSheetDialogFragment implements TaxiA
                     taxisLtBinding.taxisRecycler.setAdapter(taxiAdapter);
                     taxisLtBinding.taxisRecycler.setLayoutManager(new LinearLayoutManager(requireContext()));
                     taxiAdapter.setOnItemClickListener(TaxisBottomSheet.this);
+                    taxisLtBinding.shimmerContainer.setVisibility(View.GONE);
+                    taxisLtBinding.taxisRecycler.setVisibility(View.VISIBLE);
 
                     if (vehicles.isEmpty()) {
                         taxisLtBinding.noTaxisLt.setVisibility(View.VISIBLE);
