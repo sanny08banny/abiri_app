@@ -213,7 +213,7 @@ public class HireActivity extends AppCompatActivity implements
                 getCurrentAccountId(),car.getCar_id(), car.getOwner_id(), "Book",formatTime1(fromString),formatTime1(toString));
         BookCarLoader bookCarLoader = new BookCarLoader(this, bookingRequest ,ActionType.BOOK);
         bookCarLoader.forceLoad();
-        bookCarLoader.registerListener(7, new Loader.OnLoadCompleteListener<String>() {
+        bookCarLoader.registerListener(77, new Loader.OnLoadCompleteListener<String>() {
             @Override
             public void onLoadComplete(@NonNull Loader<String> loader, @Nullable String data) {
                 String id = car.getOwner_id() + "_" + getCurrentAccountId() +
