@@ -42,7 +42,7 @@ object NimbusWebSocket {
     fun unregisterListener() {
         listener = null
     }
-
+    fun isConnected(): Boolean = connected
     fun connect(id: String, context: Context) {
         if (connected) {
             Log.d(TAG, "Already connected, skipping connect()")

@@ -147,56 +147,84 @@ public class MainActivity extends AppCompatActivity implements BookingBottomShee
         navController.setGraph(R.navigation.nav_graph);
         navController.navigate(R.id.mainFragment, bundle);
 
-        String nimbusId = NimbusUtils.getNimbusId(this);
-        if (getCurrentAccountId() != null && !getCurrentAccountId().equals("")) {
-//                    if (isLoggedIn) {
-//            DatabaseReference firebaseDatabase = FirebaseDatabase.getInstance().getReference("n_token");
-//            firebaseDatabase.child(getCurrentAccountUserName()).setValue(nimbusId);
-
-            TokenIdLoader tokenIdLoader = new TokenIdLoader(MainActivity.this, nimbusId);
-            tokenIdLoader.forceLoad();
-            tokenIdLoader.registerListener(7, new Loader.OnLoadCompleteListener<String>() {
-                @Override
-                public void onLoadComplete(@NonNull Loader<String> loader, @Nullable String data) {
-                    if (data != null) {
-                        FCMTokenManager.saveToken(MainActivity.this,nimbusId);
-                        Log.d("TokenLoader", "success tokenId update");
-                    } else {
-                        Log.d("TokenLoader", "failed tokenId update");
-                    }
-                }
-            });
-        }
-
-
-//        FCMTokenManager.fetchToken(new FCMTokenManager.TokenCallback() {
-//            @Override
-//            public void onTokenReceived(String token) {
-//                if (token != null) {
-//                    Log.d("Token", token);
-//                    if (getCurrentAccountId() != null &&
-//                            !FCMTokenManager.getToken(MainActivity.this).isEmpty() &&
-//                            FCMTokenManager.getToken(MainActivity.this).matches(token)) {
+//        String nimbusId = NimbusUtils.getNimbusId(this);
+//        if (getCurrentAccountId() != null && !getCurrentAccountId().equals("")) {
 ////                    if (isLoggedIn) {
-//                        DatabaseReference firebaseDatabase = FirebaseDatabase.getInstance().getReference("n_token");
-//                        firebaseDatabase.child(getCurrentAccountUserName()).setValue(token);
+////            DatabaseReference firebaseDatabase = FirebaseDatabase.getInstance().getReference("n_token");
+////            firebaseDatabase.child(getCurrentAccountUserName()).setValue(nimbusId);
 //
-//                        TokenIdLoader tokenIdLoader = new TokenIdLoader(MainActivity.this, token);
-//                        tokenIdLoader.forceLoad();
-//                        tokenIdLoader.registerListener(7, new Loader.OnLoadCompleteListener<String>() {
-//                            @Override
-//                            public void onLoadComplete(@NonNull Loader<String> loader, @Nullable String data) {
-//                                if (data != null) {
-//                                    Log.d("TokenLoader", "success tokenId update");
-//                                } else {
-//                                    Log.d("TokenLoader", "failed tokenId update");
-//                                }
-//                            }
-//                        });
+//            TokenIdLoader tokenIdLoader = new TokenIdLoader(MainActivity.this, nimbusId);
+//            tokenIdLoader.forceLoad();
+//            tokenIdLoader.registerListener(7, new Loader.OnLoadCompleteListener<String>() {
+//                @Override
+//                public void onLoadComplete(@NonNull Loader<String> loader, @Nullable String data) {
+//                    if (data != null) {
+//                        FCMTokenManager.saveToken(MainActivity.this,nimbusId);
+//                        Log.d("TokenLoader", "success tokenId update");
+//                    } else {
+//                        Log.d("TokenLoader", "failed tokenId update");
 //                    }
 //                }
-//            }
-//        });
+//            });
+//        }
+
+
+        FCMTokenManager.fetchToken(new FCMTokenManager.TokenCallback() {
+            @Override
+            public void onTokenReceived(String token) {
+                if (token == null) {
+                    Log.w("FCM", "Received null token");
+                    return;
+                }
+
+                Log.d("Token", "Fetched token: " + token);
+
+                String storedToken = FCMTokenManager.getToken(MainActivity.this);
+                String userId = getCurrentAccountId();
+                String username = getCurrentAccountUserName();
+
+                // --- handle missing or empty stored token ---
+                if (storedToken.isEmpty()) {
+                    Log.w("FCM", "No stored token found. Saving new one.");
+                    FCMTokenManager.saveToken(MainActivity.this, token);
+                }
+
+                // --- validate before proceeding ---
+                if (userId != null && username != null && token.equals(storedToken)) {
+
+                    DatabaseReference firebaseDatabase =
+                            FirebaseDatabase.getInstance().getReference("n_token");
+
+                    firebaseDatabase.child(username).setValue(token)
+                            .addOnCompleteListener(task -> {
+                                if (task.isSuccessful()) {
+                                    Log.d("Firebase", "Token saved successfully");
+                                } else {
+                                    Log.e("Firebase", "Token save failed", task.getException());
+                                }
+                            });
+
+                    TokenIdLoader tokenIdLoader = new TokenIdLoader(MainActivity.this, token);
+                    tokenIdLoader.registerListener(7, (loader, data) -> {
+                        if (data != null) {
+                            Log.d("TokenLoader", "success tokenId update");
+                        } else {
+                            Log.d("TokenLoader", "failed tokenId update");
+                        }
+                    });
+                    tokenIdLoader.forceLoad();
+
+                } else {
+                    // --- Case: user not logged in or token mismatch ---
+                    if (userId == null || username == null) {
+                        Log.w("FCM", "User not logged in; skipping token upload.");
+                    } else {
+                        Log.w("FCM", "Token mismatch. Updating stored token.");
+                        FCMTokenManager.saveToken(MainActivity.this, token);
+                    }
+                }
+            }
+        });
 
         activityMainBinding.bottomNavView.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
             @Override

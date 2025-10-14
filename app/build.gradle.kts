@@ -76,6 +76,7 @@ dependencies {
     implementation(libs.firebase.crashlytics)
     implementation(libs.firebase.messaging)
     implementation(libs.google.firebase.appcheck.playintegrity)
+    implementation(libs.androidx.work.runtime)
 
 
     testImplementation(libs.junit)

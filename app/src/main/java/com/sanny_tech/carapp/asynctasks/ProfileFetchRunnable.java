@@ -15,9 +15,11 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
+import com.example.clientlib.NimbusPushService;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.sanny_tech.carapp.activities.MainActivity;
+import com.sanny_tech.carapp.activities.SignInActivity;
 import com.sanny_tech.carapp.databasehelpers.DatabaseHelper;
 import com.sanny_tech.carapp.entities.AdminAccessRequest;
 import com.sanny_tech.carapp.entities.User;
@@ -167,6 +169,7 @@ public class ProfileFetchRunnable implements Runnable {
                             if (userId != null) {
                                 // Save the profile account to the SQLite database
                                 showToast("Login successful");
+                                NimbusPushService.Companion.updateNimbusId(context,userId);
                                 saveProfileToDatabase(userId, loginResponse.getIs_driver());
                                 Log.e("ProfileFetchSuccess", loginResponse.toString());
 

@@ -50,6 +50,7 @@ afterEvaluate {
 
 dependencies {
     implementation("androidx.core:core-ktx:1.16.0")
+    implementation(libs.androidx.work.runtime.ktx)
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")

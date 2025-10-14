@@ -12,6 +12,7 @@ import androidx.loader.content.AsyncTaskLoader;
 
 import com.sanny_tech.carapp.services.UserApiService;
 import com.sanny_tech.carapp.utils.IpAddressManager;
+import com.sanny_tech.carapp.utils.RetrofitClient;
 
 import java.io.IOException;
 
@@ -46,7 +47,7 @@ public class TokenIdLoader extends AsyncTaskLoader<String> {
                     .addConverterFactory(GsonConverterFactory.create())
                     .build();
 
-            UserApiService service = retrofit.create(UserApiService.class);
+            UserApiService service = RetrofitClient.getClient(baseUrl + "/").create(UserApiService.class);
 
             Call<Void> call = service.updateToken(getCurrentAccountId(),newToken);
             Response<Void> response = call.execute();
