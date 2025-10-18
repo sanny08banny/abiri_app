@@ -64,7 +64,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         }
 
         if (!remoteMessage.getData().isEmpty()) {
-            String action = remoteMessage.getData().get("action");
+            String action = remoteMessage.getData().get("msg");
             Log.d(TAG, "Checking data action: " + action);
             if ("sync".equalsIgnoreCase(action)) {
                 Log.d(TAG, "Action matched 'sync' -> shouldSync = true");
