@@ -4,10 +4,10 @@
     <selectionStates>
       <SelectionState runConfigName="app">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2025-10-17T07:26:56.396628375Z">
+        <DropdownSelection timestamp="2025-10-21T07:55:35.357550883Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="LocalEmulator" identifier="path=/home/penumbra/.android/avd/Medium_Phone.avd" />
+              <DeviceId pluginId="Default" identifier="serial=HZQL1838LAKC0900745;connection=1508f9fc" />
             </handle>
           </Target>
         </DropdownSelection>

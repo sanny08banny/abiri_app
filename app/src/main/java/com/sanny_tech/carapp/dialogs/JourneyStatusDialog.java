@@ -214,12 +214,7 @@ public class JourneyStatusDialog {
         } else if ("End Trip".equals(startStopButton.getText().toString()) ||
                 "On the way...".equals(startStopButton.getText().toString()) ||
                 "Started".equals(startStopButton.getText().toString())){
-            trip_listener.onTripStart(false);
-            journeyStatusManager.setJourneyStarted(false);
-            stopServiceIfRunning(context, FloatingOverlayService.class);
-            journeyListener.onJourneyComplete(true);
-            startTrip(false);
-            cancelRide();
+           showDeleteAccountDialog();
         } else if ("Navigate to pick-up".equals(startStopButton.getText().toString())) {
             RouteCalculator routeCalculator = new RouteCalculator(context);
             routeCalculator.calculateSingleTravelDetails(latLngPickUp, latLngPickUp,
@@ -492,4 +487,32 @@ public class JourneyStatusDialog {
         SharedPreferences sharedPreferences = context.getSharedPreferences("AccountPrefs", MODE_PRIVATE);
         return sharedPreferences.getString("currentUserId", null);
     }
+    private void showDeleteAccountDialog() {
+        LayoutInflater inflater = LayoutInflater.from(context);
+        View dialogView = inflater.inflate(R.layout.dialog_delete_account, null);
+
+        AlertDialog dialog = new AlertDialog.Builder(context)
+                .setView(dialogView)
+                .setCancelable(false) // cannot dismiss by tapping outside
+                .create();
+
+        // Grab views from the layout
+        Button btnDelete = dialogView.findViewById(R.id.btn_delete);
+        Button btnCancel = dialogView.findViewById(R.id.btn_cancel);
+
+        btnDelete.setOnClickListener(v -> {
+            trip_listener.onTripStart(false);
+            journeyStatusManager.setJourneyStarted(false);
+            stopServiceIfRunning(context, FloatingOverlayService.class);
+            journeyListener.onJourneyComplete(true);
+            startTrip(false);
+            cancelRide();
+            dialog.dismiss();
+        });
+
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+
+        dialog.show();
+    }
+
 }

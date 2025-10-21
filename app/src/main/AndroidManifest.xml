@@ -214,7 +214,7 @@
             android:exported="true" />
 
         <service
-            android:name=".utils.MyFirebaseMessagingServiceOld"
+            android:name=".utils.MyFirebaseMessagingService"
             android:exported="false">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
@@ -259,12 +259,7 @@
             android:name="com.example.clientlib.NimbusPushService"
             android:exported="false"
             android:foregroundServiceType="remoteMessaging" />
-        <receiver android:name=".utils.BootReceiver"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED" />
-            </intent-filter>
-        </receiver>
+
     </application>
 
 </manifest>
