@@ -22,8 +22,9 @@ object NimbusWebSocket {
     private var contextRef: WeakReference<Context>? = null
 
     private val client = OkHttpClient.Builder()
-        .pingInterval(15, TimeUnit.SECONDS) // Send ping every 15s
+        .pingInterval(15, TimeUnit.SECONDS)
         .build()
+
     private var reconnectAttempts = 0
     private var lastMessageTime = System.currentTimeMillis()
 
@@ -42,12 +43,15 @@ object NimbusWebSocket {
     fun unregisterListener() {
         listener = null
     }
+
     fun isConnected(): Boolean = connected
+
     fun connect(id: String, context: Context) {
         if (connected) {
             Log.d(TAG, "Already connected, skipping connect()")
             return
         }
+
         Log.d(TAG, "Attempting to connect with ID: $id")
         deviceId = id
         contextRef = WeakReference(context.applicationContext)
@@ -75,13 +79,15 @@ object NimbusWebSocket {
             override fun onMessage(webSocket: WebSocket, text: String) {
                 lastMessageTime = System.currentTimeMillis()
                 Log.d(TAG, "Received message: $text")
+
                 contextRef?.get()?.let { ctx ->
+                    ensureListener(ctx)
+
                     listener?.onMessageReceived(text)
                         ?: run {
-                            Log.w("NimbusPush", "No listener registered; using default handler")
-                            MessageHandler.onMessageReceived(ctx,text)
+                            Log.w(TAG, "No listener even after reflection — using default handler")
+                            MessageHandler.onMessageReceived(ctx, text)
                         }
-//                    MessageHandler.onMessageReceived(ctx, text)
                 }
             }
 
@@ -104,6 +110,36 @@ object NimbusWebSocket {
                 stopWatchdog()
             }
         })
+    }
+
+    /**
+     * Try to find and register a MyPushHandler in the main app dynamically.
+     */
+    private fun ensureListener(context: Context) {
+        if (listener != null) return
+
+        try {
+            // ✅ Adjust package name if known — or derive from context
+            val pkgName = context.packageName
+            val className = "$pkgName.utils.MyPushHandler"
+
+            Log.d(TAG, "Attempting to load listener: $className")
+
+            val clazz = Class.forName(className)
+            val constructor = clazz.getConstructor(Context::class.java)
+            val instance = constructor.newInstance(context) as? PushMessageListener
+
+            if (instance != null) {
+                listener = instance
+                Log.i(TAG, "Successfully registered MyPushHandler via reflection")
+            } else {
+                Log.w(TAG, "Class found but not assignable to PushMessageListener")
+            }
+        } catch (cnfe: ClassNotFoundException) {
+            Log.w(TAG, "MyPushHandler class not found in main project")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to instantiate MyPushHandler", e)
+        }
     }
 
     private fun scheduleReconnect() {

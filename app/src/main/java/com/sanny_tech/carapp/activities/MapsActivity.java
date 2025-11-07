@@ -1184,17 +1184,21 @@ private void searchLocation(String locationName, boolean isPickup) {
                 for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                     ride = snapshot.getValue(Ride.class);
                     if (ride != null && ride.getUser_id().equals(getCurrentAccountId())) {
-                        if (bottomSheetDialog == null) {
-                            ride.setClientNumber(SimCardManager.getPhoneNumber(MapsActivity.this));
-                            updateRideToFirebase(ride);
-                            showRideBottomSheet(ride);
-                        } else {
-                            if (ride.getDriver_lat() != 0) {
-                                if (pickUpLatLan == null && currentLocation != null) {
-                                    pickUpLatLan = new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude());
+                        if (ride.getStatus().equals("completed")){
+                            tripItemListener.startTripUpdates(MapsActivity.this);
+                        }else {
+                            if (bottomSheetDialog == null) {
+                                ride.setClientNumber(SimCardManager.getPhoneNumber(MapsActivity.this));
+                                updateRideToFirebase(ride);
+                                showRideBottomSheet(ride);
+                            } else {
+                                if (ride.getDriver_lat() != 0) {
+                                    if (pickUpLatLan == null && currentLocation != null) {
+                                        pickUpLatLan = new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude());
+                                    }
+                                    LatLng driverPosition = new LatLng(ride.getDriver_lat(), ride.getDriver_lon());
+                                    updateDistanceText(driverPosition, pickUpLatLan);
                                 }
-                                LatLng driverPosition = new LatLng(ride.getDriver_lat(), ride.getDriver_lon());
-                                updateDistanceText(driverPosition, pickUpLatLan);
                             }
                         }
                     }
@@ -1227,7 +1231,7 @@ private void searchLocation(String locationName, boolean isPickup) {
         loadTaxiDetails(ride.getDriver_id());
         if (ride.getDriver_lat() != 0) {
             driverLatLng = new LatLng(ride.getDriver_lat(), ride.getDriver_lon());
-            if (pickUpLatLan == null) {
+            if (pickUpLatLan == null && currentLocation != null) {
                 pickUpLatLan = new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude());
             }
             addDriverMarker(driverLatLng);
@@ -1324,19 +1328,31 @@ private void searchLocation(String locationName, boolean isPickup) {
     }
 
     private void glideImage(TaxiInit s) {
-        if (s.getTaxi_images().size() != 0) {
-            String endPoint = baseUrl + "/taxi/image/" + s.getDriver_id() + "/"
-                    + s.getTaxi_images().get(0);
-            Log.e(DriverMainFragment.class.getSimpleName(), endPoint);
-            Glide.with(this)
-                    .load(endPoint)
-                    .apply(new RequestOptions()
-                            .placeholder(R.drawable.local_taxi_fill) // Placeholder image while loading
-                            .error(R.drawable.local_taxi_fill)      // Error image if loading fails
-                            .diskCacheStrategy(DiskCacheStrategy.ALL))
-                    .into(rideBinding.taxiImage);
-        }
+        if (s.getTaxi_images() == null || s.getTaxi_images().isEmpty()) return;
+
+        runOnUiThread(() -> {
+            if (isFinishing() || isDestroyed()) {
+                Log.d("MapsActivity", "Skipping image load: activity finishing");
+                return;
+            }
+
+            String endPoint = baseUrl + "/taxi/image/" + s.getDriver_id() + "/" + s.getTaxi_images().get(0);
+            Log.e("MapsActivity", "Loading image: " + endPoint);
+
+            try {
+                Glide.with(this)
+                        .load(endPoint)
+                        .apply(new RequestOptions()
+                                .placeholder(R.drawable.local_taxi_fill)
+                                .error(R.drawable.local_taxi_fill)
+                                .diskCacheStrategy(DiskCacheStrategy.ALL))
+                        .into(rideBinding.taxiImage);
+            } catch (IllegalArgumentException e) {
+                Log.w("MapsActivity", "Skipped Glide load — activity destroyed", e);
+            }
+        });
     }
+
 
     // Update TextSwitcher with the calculated distance
     private void updateDistanceText(LatLng driver, LatLng pickup) {
@@ -1526,44 +1542,65 @@ private void searchLocation(String locationName, boolean isPickup) {
     private void clearDecline(Decline decline) {
         declineReference.child(decline.getDriver_id()).removeValue();
     }
+    private AlertDialog tripCompleteDialog;
+    private final Object tripDialogLock = new Object();
+
     private void showTripCompletePrompt(Trip trip) {
         if (isFinishing() || isDestroyed()) return;
 
         runOnUiThread(() -> {
-            // Double-check context validity *here*
+            // Double-check activity still valid
             if (isFinishing() || isDestroyed() || getWindow() == null) return;
 
-            try {
-                AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                builder.setTitle("Trip complete!");
-                builder.setMessage("Driver has ended the trip. Charges for the journey: " + trip.getCharges());
-
-                builder.setPositiveButton("OK", (dialog, which) -> {
-                    DatabaseReference tripsRef = FirebaseDatabase.getInstance().getReference("trips");
-                    tripsRef.child(trip.getDriver_id()).removeValue();
-                    tripItemListener.stopTripUpdates();
-                    finish();
-                });
-
-                builder.setCancelable(false);
-                AlertDialog dialog = builder.create();
-
-                // Safety: check window token before showing
-                if (!isFinishing() && !isDestroyed() && dialog.getWindow() != null) {
-                    dialog.show();
+            synchronized (tripDialogLock) {
+                if (tripCompleteDialog != null && tripCompleteDialog.isShowing()) {
+                    Log.d("MapsActivity", "Trip complete dialog already showing — skipping duplicate");
+                    return;
                 }
 
-            } catch (WindowManager.BadTokenException e) {
-                // Gracefully handle race condition
-                Log.w("MapsActivity", "Attempted to show dialog after activity closed", e);
+                try {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                    builder.setTitle("Trip complete!");
+                    builder.setMessage("Driver has ended the trip. Charges for the journey: " + trip.getCharges());
+
+                    builder.setPositiveButton("OK", (dialog, which) -> {
+                        DatabaseReference tripsRef = FirebaseDatabase.getInstance().getReference("trips");
+                        tripsRef.child(trip.getDriver_id()).removeValue();
+                        tripItemListener.stopTripUpdates();
+                        dialog.dismiss();
+                        tripCompleteDialog = null;
+                        finish();
+                    });
+
+                    builder.setCancelable(false);
+                    AlertDialog dialog = builder.create();
+                    tripCompleteDialog = dialog;
+
+                    // Safety: check window token before showing
+                    if (!isFinishing() && !isDestroyed() && dialog.getWindow() != null) {
+                        dialog.show();
+                        Log.d("MapsActivity", "Trip complete dialog shown");
+                    }
+
+                } catch (WindowManager.BadTokenException e) {
+                    Log.w("MapsActivity", "Attempted to show dialog after activity closed", e);
+                    tripCompleteDialog = null;
+                } catch (Exception e) {
+                    Log.e("MapsActivity", "Unexpected error showing trip dialog", e);
+                    tripCompleteDialog = null;
+                }
             }
         });
     }
+
 
     @Override
     public void onTripChanged(Trip trip) {
         if (bottomSheetDialog != null) {
             bottomSheetDialog.dismiss();
+            showTripCompletePrompt(trip);
+            deleteTaxiLocationFromFirebase();
+        }else {
             showTripCompletePrompt(trip);
             deleteTaxiLocationFromFirebase();
         }

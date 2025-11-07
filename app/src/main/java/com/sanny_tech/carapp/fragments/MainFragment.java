@@ -131,6 +131,7 @@ public class MainFragment extends Fragment implements LoaderManager.LoaderCallba
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         fragmentMainBinding = DataBindingUtil.inflate(inflater, R.layout.fragment_main, container, false);
+        
         if (getArguments() != null) {
             isLoggedIn = getArguments().getBoolean("isLoggedIn", false);
             if (isLoggedIn) {

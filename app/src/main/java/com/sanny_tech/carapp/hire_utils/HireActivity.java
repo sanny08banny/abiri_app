@@ -38,13 +38,17 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.sanny_tech.carapp.R;
 import com.sanny_tech.carapp.activities.AddPhoneNumberActivity;
+import com.sanny_tech.carapp.activities.MainActivity;
 import com.sanny_tech.carapp.activities.ManageProfiles;
 import com.sanny_tech.carapp.asynctasks.BookCarLoader;
+import com.sanny_tech.carapp.asynctasks.TokenIdLoader;
+import com.sanny_tech.carapp.asynctasks.TokensLoader;
 import com.sanny_tech.carapp.databinding.ActivityHireBinding;
 import com.sanny_tech.carapp.dialogs.ProgressDialogFragment;
 import com.sanny_tech.carapp.entities.Car;
 import com.sanny_tech.carapp.entities.NewBookingRequest;
 import com.sanny_tech.carapp.enums.ActionType;
+import com.sanny_tech.carapp.enums.TokenAction;
 import com.sanny_tech.carapp.utils.IpAddressManager;
 import com.sanny_tech.carapp.utils.SimCardManager;
 
@@ -141,8 +145,23 @@ public class HireActivity extends AppCompatActivity implements
         hireBinding.nextButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                loadHire();
-                hireManager = new HireManager(HireActivity.this, receivedCar.getCar_id());
+                showProgreeBar();
+                TokensLoader tokenIdLoader = new TokensLoader(HireActivity.this, null,
+                        TokenAction.GET);
+                tokenIdLoader.registerListener(72, (loader, data) -> {
+                    if (data != null) {
+                        double tokens = Double.parseDouble(data);
+                        if (tokens > 0.0){
+                            loadHire();
+                            hireManager = new HireManager(HireActivity.this, receivedCar.getCar_id());
+                        }
+                    } else {
+                        hideProgreeBar();
+                        Toast.makeText(HireActivity.this, "You do not have enough tokens!!", Toast.LENGTH_SHORT).show();
+                        Log.d("TokenLoader", "failed to fetch tokens");
+                    }
+                });
+                tokenIdLoader.forceLoad();
             }
         });
 
@@ -174,7 +193,6 @@ public class HireActivity extends AppCompatActivity implements
     }
 
     private void loadHire() {
-        showProgreeBar();
         reference.addListenerForSingleValueEvent(new ValueEventListener() {
             Hire activeHire;
 
